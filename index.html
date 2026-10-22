@@ -1,0 +1,1408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Build anesthesia simulation facilitator sheets, learner handouts and AI handoffs.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Sim Case Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* Layout: case library rail on the left, one long form on the right; stacks to a single column on phones. */
+:root{
+  --bg:#f2f5f8; --surface:#ffffff; --surface-2:#e7edf2; --ink:#17212b; --muted:#566472; --line:#d3dbe3;
+  --accent:#1d5e8c; --accent-ink:#ffffff; --accent-soft:#dcebf6;
+  --tbc:#9a5600; --tbc-bg:#fcefd9; --ok:#23704a; --ok-bg:#dff2e7; --danger:#b3261e; --danger-bg:#fbe3e1;
+  --hr:#1c8a4a; --bp:#c0362c; --spo2:#0a7ea3; --etco2:#a87b00; --rr:#6c55b8; --temp:#566472;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e141a; --surface:#151d25; --surface-2:#1c2832; --ink:#e2e8ee; --muted:#93a2b0; --line:#2a3743;
+  --accent:#6fb0de; --accent-ink:#0a1520; --accent-soft:#1b3346;
+  --tbc:#f1b45a; --tbc-bg:#3a2a11; --ok:#6fd09b; --ok-bg:#15301f; --danger:#ff8a80; --danger-bg:#3b1a18;
+  --hr:#4fd685; --bp:#ff6f61; --spo2:#45c8ef; --etco2:#f2c94c; --rr:#ad98ff; --temp:#93a2b0;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --surface:#151d25; --surface-2:#1c2832; --ink:#e2e8ee; --muted:#93a2b0; --line:#2a3743;
+  --accent:#6fb0de; --accent-ink:#0a1520; --accent-soft:#1b3346;
+  --tbc:#f1b45a; --tbc-bg:#3a2a11; --ok:#6fd09b; --ok-bg:#15301f; --danger:#ff8a80; --danger-bg:#3b1a18;
+  --hr:#4fd685; --bp:#ff6f61; --spo2:#45c8ef; --etco2:#f2c94c; --rr:#ad98ff; --temp:#93a2b0;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:290px minmax(0,1fr);min-height:100vh}
+/* ---------- library rail ---------- */
+.rail{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:12px;
+  padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand b{font-size:17px;letter-spacing:-.01em}
+.brand span{font-size:12.5px;color:var(--muted)}
+.rail-actions{display:flex;gap:8px}
+.search{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg)}
+.list{display:flex;flex-direction:column;gap:4px;margin:0;padding:0;list-style:none}
+.item{display:flex;flex-direction:column;gap:3px;text-align:left;width:100%;padding:10px 10px;border:1px solid transparent;border-radius:var(--r);background:none}
+.item:hover{background:var(--surface-2)}
+.item[aria-current="true"]{background:var(--accent-soft);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.item .t{font-weight:600;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+.item .m{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.rail-note{font-size:12px;color:var(--muted);margin-top:auto;border-top:1px solid var(--line);padding-top:12px}
+.mobile-pick{display:none}
+
+/* ---------- buttons & chips ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);font-size:13.5px;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}
+.btn.danger.solid{background:var(--danger);color:var(--surface);border-color:var(--danger)}
+.btn.ghost{border-color:transparent;background:none}
+.btn.small{padding:4px 8px;font-size:12.5px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;letter-spacing:.03em;padding:1px 7px;border-radius:999px;white-space:nowrap}
+.chip.tbc{background:var(--tbc-bg);color:var(--tbc)}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.st-draft{background:var(--surface-2);color:var(--muted)}
+.chip.st-review{background:var(--accent-soft);color:var(--accent)}
+.chip.st-ready{background:var(--ok-bg);color:var(--ok)}
+button.chip{border:0;cursor:pointer}
+
+/* ---------- main ---------- */
+.main{min-width:0;display:flex;flex-direction:column}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-block:10px;padding-left:24px;padding-right:max(24px,env(safe-area-inset-right,0px))}
+.tabs{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tabs button{border:0;background:none;padding:6px 12px;font-size:13.5px;font-weight:500;color:var(--muted)}
+.tabs button[aria-pressed="true"]{background:var(--surface-2);color:var(--ink)}
+.save{font-size:12.5px;color:var(--muted);min-width:0}
+.save.err{color:var(--danger)}
+.spacer{flex:1}
+.wrap{width:100%;max-width:1080px;margin:0 auto;padding-block:24px 80px;padding-left:24px;padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+.banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-radius:var(--r);background:var(--accent-soft);font-size:14px}
+.banner.warn{background:var(--tbc-bg);color:var(--ink)}
+
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.sec-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec-h h2{margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.grid{display:grid;gap:14px}
+.g3{grid-template-columns:2fr 1fr 1fr}
+.g2{grid-template-columns:1fr 1fr}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.lab{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.help{font-size:12.8px;color:var(--muted);line-height:1.45;margin:0}
+.tips-off .help{display:none}
+input[type=text],select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);line-height:1.45}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent);background:var(--surface)}
+textarea{resize:vertical;min-height:64px;overflow:hidden}
+.field.is-tbc textarea,.field.is-tbc input{border-color:color-mix(in srgb,var(--tbc) 45%,var(--line))}
+::placeholder{color:color-mix(in srgb,var(--muted) 75%,transparent)}
+.title-input{font-size:22px;font-weight:600;letter-spacing:-.01em;padding:6px 10px;background:transparent;border-color:transparent}
+.title-input:hover{border-color:var(--line)}
+
+/* vitals: monitor channel colors */
+.vitals{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.vital{display:flex;flex-direction:column;gap:3px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);min-width:0}
+.vital label{font-family:var(--f-mono);font-size:11px;font-weight:600;letter-spacing:.06em}
+.vital small{font-size:10.5px;color:var(--muted)}
+.vital input{border:0;background:none;padding:0;font-family:var(--f-mono);font-size:18px;font-weight:600;box-shadow:none!important;font-variant-numeric:tabular-nums}
+.vital input:focus{background:none}
+.vital:focus-within{border-color:var(--accent)}
+.v-hr label,.v-hr input{color:var(--hr)} .v-bp label,.v-bp input{color:var(--bp)} .v-spo2 label,.v-spo2 input{color:var(--spo2)}
+.v-etco2 label,.v-etco2 input{color:var(--etco2)} .v-rr label,.v-rr input{color:var(--rr)} .v-temp label,.v-temp input{color:var(--temp)} .v-rhythm label,.v-rhythm input{color:var(--hr)}
+.v-rhythm input{font-size:14px;padding-top:3px}
+
+/* stages */
+.stage{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.stage-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:var(--surface-2)}
+.stage-n{font-family:var(--f-mono);font-weight:600;font-size:13px;color:var(--accent);min-width:1.5em}
+.stage-h input{flex:1;min-width:160px;font-weight:600;background:var(--surface)}
+.stage-tools{display:flex;gap:4px}
+.stage-b{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stage-b .full{grid-column:1/-1}
+.add-stage{align-self:flex-start}
+
+/* empty state / sheet */
+.empty{display:flex;flex-direction:column;gap:12px;align-items:flex-start;padding:40px 24px;max-width:560px}
+.empty h1{margin:0;font-size:22px}
+.empty p{margin:0;color:var(--muted)}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:28px 30px;display:flex;flex-direction:column;gap:12px;font-size:14px}
+.sheet h1{margin:0;font-size:20px}
+.sheet .meta{color:var(--muted);font-size:13px}
+.sheet p{margin:0;white-space:pre-wrap}
+.sheet h3{margin:8px 0 0;font-size:16px}
+.tbcw{color:var(--tbc);font-weight:600}
+.tscroll{overflow-x:auto}
+.sheet table{border-collapse:collapse;width:100%;min-width:760px;font-size:13px}
+.sheet th{background:var(--surface-2);text-align:left;padding:8px;border:1px solid var(--line);vertical-align:bottom}
+.sheet td{padding:8px;border:1px solid var(--line);vertical-align:top;white-space:pre-wrap}
+.sheet tbody tr:nth-child(odd) td{background:color-mix(in srgb,var(--surface-2) 45%,var(--surface))}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13.5px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:var(--r);font-size:13.5px;z-index:20;max-width:calc(100% - 32px)}
+.foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:6px}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.mono{font-family:var(--f-mono);font-size:12.5px;line-height:1.5}
+textarea.mono{overflow:auto;resize:vertical}
+#promptOut{min-height:280px;background:var(--surface-2)}
+.mono-i{font-family:var(--f-mono);font-size:.92em;background:var(--surface-2);padding:0 4px;border-radius:4px;overflow-wrap:anywhere}
+.found{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg)}
+.found .m{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.pre{margin:0;white-space:pre-wrap;font-size:13.5px}
+.ai-sec{border-color:color-mix(in srgb,var(--tbc) 45%,var(--line));background:color-mix(in srgb,var(--tbc-bg) 55%,var(--surface))}
+.tabs{flex-wrap:wrap}
+.sec > .sec-body{display:flex;flex-direction:column;gap:14px}
+.sec.collapsed{padding-block:12px}
+.sec-toggle{display:inline-flex;align-items:center;gap:10px;border:0;background:none;padding:2px 4px 2px 0;color:inherit;cursor:pointer;border-radius:6px}
+.sec-toggle:hover h2,.sec-toggle:hover .stage-n{color:var(--accent)}
+.caret{flex:none;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px);transition:transform .15s ease}
+.sec-toggle[aria-expanded="false"] .caret{transform:rotate(-45deg)}
+.sec-tools{display:flex;gap:4px;justify-content:flex-end;margin-bottom:-10px}
+.stage.collapsed .stage-h{border-bottom:0}
+.check{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg);cursor:pointer;font-size:14px}
+.check input{margin-top:3px;width:16px;height:16px;accent-color:var(--accent);flex:none}
+/* readable sheets */
+.sheet p{white-space:normal}
+.sheet ul,.sheet ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.sheet li{padding-left:2px}
+.sheet li::marker{color:var(--accent)}
+.sheet td p + p{margin-top:4px}
+.sheet ul.sub{margin-top:4px;font-weight:400;list-style:disc}
+.sheet li:has(> ul.sub){font-weight:600}
+.blk{gap:4px!important}
+.blk h4{margin-bottom:4px!important}
+.sheet p + ul,.sheet p + ol,.sheet ul + p,.sheet ol + p,.sheet ul + ol,.sheet ol + ul{margin-top:6px}
+.fsheet{gap:22px;font-size:14.5px;line-height:1.55}
+.fsheet h3{margin:6px 0 -6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.blk{display:flex;flex-direction:column;gap:6px;min-width:0}
+.blk h4{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.blk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px 32px}
+.blk.summary{padding:14px 16px;border-radius:var(--r);background:var(--surface-2)}
+.vchips{display:flex;flex-wrap:wrap;gap:6px}
+.vchip{font-family:var(--f-mono);font-size:13px;padding:3px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.vchip b{font-size:11px;letter-spacing:.04em}
+.vchip small{color:var(--muted);font-size:10.5px}
+.vchip.v-hr,.vchip.v-rhythm{color:var(--hr)} .vchip.v-bp{color:var(--bp)} .vchip.v-spo2{color:var(--spo2)} .vchip.v-etco2{color:var(--etco2)} .vchip.v-rr{color:var(--rr)}
+.fsheet table{font-size:13.5px;line-height:1.5;min-width:780px}
+.fsheet th{padding:10px 12px;font-size:12.5px}
+.fsheet td{padding:12px;white-space:normal}
+.fsheet td ul{gap:6px}
+.sname{font-weight:700;color:var(--accent);margin-bottom:6px}
+.lsheet ul,.lsheet ol{gap:6px}
+#scenarioSec{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.next-step{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.next-step .help{flex:1 1 240px;min-width:0}
+.lbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.lbar .help{flex:1 1 260px;min-width:0}
+.lbar .spacer{flex:0 0 0}
+.lsheet{max-width:760px;gap:18px;padding:32px 36px}
+.lsheet section{display:flex;flex-direction:column;gap:4px}
+.lsheet h3{margin:0;font-size:13px;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.lsheet p{font-size:15px;line-height:1.6}
+.lrules{border-top:1px solid var(--line);padding-top:14px}
+.lrules p{color:var(--muted);font-size:14px}
+
+@media (max-width:900px){
+  .vitals{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .g3{grid-template-columns:1fr 1fr}
+  .g3 .field:first-child{grid-column:1/-1}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .list,.search,.rail-note{display:none}
+  .mobile-pick{display:block}
+  .bar{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .sec{padding:14px}
+  .stage-b,.g2{grid-template-columns:1fr}
+  .vitals{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sheet{padding:18px 16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<script>
+/* GitHub Pages demo: stands in for Claude's shared storage. Cases save in this browser only. */
+(function(){
+  if (window.claude) return;
+  window.__LOCAL_DEMO = true;
+  var KEY = 'simcase:demo:cases';
+  var SAMPLE = {"title": "Example – Post-induction collapse (shoulder)", "level": "CA-1", "duration": "15 + 20 min", "status": "review", "scenario": "72F with COPD and OSA for right total shoulder after an effective interscalene block.\nResident induces with propofol and hand-ventilates fast.\nOver ~2 min BP and EtCO2 fall from auto-PEEP (breath stacking).\nIf the learner disconnects the circuit and lets her exhale, BP recovers.\nIf they only give pressors, she keeps drifting down until they call for help.\nEnd when the cause is found and fixed, or at 15 min.", "objective": "1. Recognize hypotension and falling EtCO2 after induction\n2. Build a differential that includes auto-PEEP\n3. Call for help early", "patient": "Age/sex: 72F\nWeight: 85 kg (BMI 32)\nProcedure: right total shoulder replacement\nHistory: COPD (no home O2), HTN, DM, OSA (poor CPAP use)\nMedications: lisinopril (took today), metformin\nBlock/regional: effective interscalene, done 30 min ago", "learnerBrief": "You are the anesthesia resident.\nThe block is done and the patient is in the OR.\nPrepare and induce. Your attending can be called.", "roles": "Attending: available by phone, arrives if called\nSurgeon: in the room, impatient to start\nNurse: follows orders, does not volunteer ideas", "setup": "- Supine, awake, 2 L nasal cannula\n- 20G IV left hand, standard monitors\n- Mock induction and emergency drugs on the cart", "vitals": {"hr": "82", "rhythm": "Sinus", "bp": "148/86", "spo2": "94", "rr": "18", "etco2": "", "temp": "36.6"}, "vent": "Mode: none at start\nAfter intubation: VC, Vt 450, RR 12, PEEP 5, FiO2 1.0", "stages": [{"id": "ex1", "name": "Before induction", "trigger": "Scenario start", "event": "- Patient arrives awake after an effective block", "actions": "- Checks patient, machine, suction and drugs\n- States an airway plan", "cues": "- Give the vignette\n- Nurse: \"Ready when you are.\"", "lleap": "- Baseline vitals as in Initial settings\n- Patient awake and talking"}, {"id": "ex2", "name": "Induction", "trigger": "Learner gives induction drug", "event": "- Apneic after propofol\n- Learner hand-ventilates fast\nHidden cause: breath stacking starts", "actions": "- Preoxygenates to EtO2 > 80%\n- Gives propofol 1.5 mg/kg = 130 mg IV\n- Ventilates at a normal rate", "cues": "- IF ventilation rate > 20 → go to stage 3 after 60 s\n- Nurse: \"Do you want the rocuronium now?\"", "lleap": "- SpO2: 94 → 99 over 120 s\n- RR: 18 → 0 over 30 s after propofol"}, {"id": "ex3", "name": "After induction", "trigger": "60 s of fast ventilation", "event": "- BP and EtCO2 fall\nHidden cause: auto-PEEP", "actions": "- Says the change out loud\n- Checks circuit and ventilation\n- Disconnects and lets her exhale\n- Calls for help", "cues": "- IF disconnected → stage 4\n- IF only pressors → BP keeps falling\n- IF nothing by 3 min → Surgeon: \"Is everything OK up there?\"", "lleap": "- BP: 128/76 → 72/40 over 90 s\n- EtCO2: 38 → 18 over 90 s\n- HR: 82 → 112 over 60 s\n- Breath sounds: decreased bilaterally"}, {"id": "ex4", "name": "Recovery", "trigger": "Circuit disconnected for 20–30 s", "event": "- BP and EtCO2 recover", "actions": "- Resumes ventilation at a lower rate and longer expiration\n- Reassesses and explains to the team", "cues": "- IF rate stays high → BP falls again after 60 s", "lleap": "- BP: 72/40 → 118/70 over 60 s\n- EtCO2: 18 → 34 over 60 s\n- HR: 112 → 90 over 60 s"}], "end": "End when: cause identified and ventilation corrected, or 15 min\nFinal vitals: BP 118/70, HR 90, EtCO2 34", "debrief": "1. Post-induction hypotension: build the differential\n2. Dynamic hyperinflation in COPD and how to spot it\n3. Calling for help early\nReferences:\n- Add your department's preferred references", "llmNotes": "", "aiNotes": "", "createdAt": 1792630000000, "updatedAt": 1792630000000, "updatedBy": null, "rev": "example1"};
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ return null; } }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} }
+  var store = load();
+  if (!store) { store = {'example-01': SAMPLE}; save(); }
+  var listeners = new Set();
+  var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
+  function snap(){
+    var md = {fromCache:false, hasPendingWrites:false};
+    var docs = Object.keys(store).map(function(id){ return {id:id, exists:true, data:function(){ return clone(store[id]); }, metadata:md}; });
+    return {docs:docs, size:docs.length, empty:!docs.length, metadata:md, docChanges:function(){ return []; }};
+  }
+  function emit(){ var s = snap(); listeners.forEach(function(f){ try { f(s); } catch(e){ console.error(e); } }); }
+  function rid(){ return Math.random().toString(36).slice(2, 12); }
+  function docRef(id){
+    return {id:id, path:'cases/' + id,
+      set:function(d){ store[id] = clone(d); save(); setTimeout(emit, 0); return Promise.resolve(); },
+      update:function(d){ store[id] = Object.assign(store[id] || {}, clone(d)); save(); setTimeout(emit, 0); return Promise.resolve(); },
+      delete:function(){ delete store[id]; save(); setTimeout(emit, 0); return Promise.resolve(); },
+      get:function(){ return Promise.resolve({id:id, exists:!!store[id], data:function(){ return store[id] && clone(store[id]); }}); }};
+  }
+  var db = {
+    collection:function(p){ return {path:p, doc:function(id){ return docRef(id || rid()); },
+      onSnapshot:function(cb){ listeners.add(cb); setTimeout(function(){ cb(snap()); }, 0); return function(){ listeners.delete(cb); }; }}; },
+    doc:function(p){ return docRef(String(p).split('/').pop()); }
+  };
+  var downloads = { save:function(r){
+    var blob = r.data instanceof Blob ? r.data : new Blob([r.data]);
+    var url = URL.createObjectURL(blob), a = document.createElement('a');
+    var fname = String(r.filename).replace(/[\u2013\u2014]/g, '-').normalize('NFKD').replace(/[^\x20-\x7e]/g, '').replace(/\s+/g, ' ').trim() || 'download';
+    a.href = url; a.download = fname; a.rel = 'noopener'; a.style.display = 'none'; document.body.appendChild(a); a.click();
+    setTimeout(function(){ a.remove(); }, 1000);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+    return Promise.resolve({status:'saved'});
+  }};
+  window.claude = { use:function(n){ return Promise.resolve(n === 'db' ? db : n === 'downloads' ? downloads : null); } };
+  window.addEventListener('storage', function(e){ if (e.key === KEY) { store = load() || {}; emit(); } });
+})();
+</script>
+<div class="app" id="app">
+  <aside class="rail">
+    <div class="brand"><b>Sim Case Builder</b><span>Anesthesia simulation · facilitator sheets</span></div>
+    <div class="rail-actions">
+      <button class="btn primary" id="newBtn" type="button">New case</button>
+      <button class="btn" id="importBtn" type="button">Import</button>
+      <button class="btn" id="dupBtn" type="button" disabled>Duplicate</button>
+    </div>
+    <select class="mobile-pick" id="mobilePick" aria-label="Open a case"></select>
+    <input class="search" id="search" type="text" placeholder="Search cases" aria-label="Search cases">
+    <ul class="list" id="list"></ul>
+    <div class="rail-note"><b>Demo version.</b> Cases save in this browser only, so other people won't see yours. Clearing browser data erases them.</div>
+  </aside>
+  <main class="main">
+    <div class="bar" id="bar" hidden>
+      <div class="tabs" role="group" aria-label="View">
+        <button type="button" id="tabEdit" aria-pressed="true">Edit</button>
+        <button type="button" id="tabSheet" aria-pressed="false">Facilitator</button>
+        <button type="button" id="tabLearner" aria-pressed="false">Learner</button>
+        <button type="button" id="tabHandoff" aria-pressed="false">AI handoff</button>
+        <button type="button" id="tabImport" aria-pressed="false">Import</button>
+      </div>
+      <span id="tbcSummary"></span>
+      <span class="save" id="saveState"></span>
+      <span class="spacer"></span>
+      <button class="btn ghost small" id="tipsBtn" type="button">Hide tips</button>
+      <button class="btn" id="exportBtn" type="button">Export to Word</button>
+    </div>
+    <div class="wrap" id="view">
+      <div class="empty"><h1>Loading cases…</h1><p>Connecting to the shared case library.</p></div>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- field definitions (labels + guidance shown to every author) ---------- */
+const STATUS = [['draft','Draft'],['review','In review'],['ready','Ready to run']];
+const HELP = {
+  title:'A name facilitators will recognize in the list. Example: "Post-induction collapse – shoulder".',
+  level:'Who this is for: CA-1, CA-2, CA-3, fellow, or mixed.',
+  duration:'Scenario minutes + debrief minutes. Example: 15 + 20 min.',
+  objective:'1–3 objectives the learner should show in the room. Start each with an action verb: recognize, manage, communicate, call for help.',
+  patient:'What the learner gets in the vignette: age/sex, procedure, history, meds, allergies, airway exam, labs, prior anesthetics. Keep the hidden cause out of here. It goes in the stages.',
+  roles:'Who is in the room. For each actor (confederate): who they play and what they should or should not do. Example: "Surgeon: pushes to start, asks \'is it the block?\'".',
+  setup:'Room and mannequin at the start: position, airway, IV/arterial line, monitors, drugs and equipment available, and any deliberate error you plant (empty suction, wrong drug).',
+  initial:'Starting monitor values you will set in LLEAP. Leave a box empty if it does not apply (e.g. EtCO2 before induction).',
+  vent:'Ventilator mode and settings if intubated (mode, Vt, RR, PEEP, FiO2), plus any other starting state (breath sounds, pupils, temp).',
+  stageName:'Short name for this stage. Example: "Induction".',
+  trigger:'What moves the case into this stage: a learner action, time elapsed, or your call. Example: "Learner gives induction drug" or "2 min after intubation".',
+  event:'What happens to the patient, and the hidden cause behind it.',
+  actions:'What you hope to see the learner do here. These lines become your debrief talking points.',
+  cues:'What you say or hand over to steer the case: actor lines, lab results, and IF/THEN branches. Example: "IF epinephrine given → stage 4. IF no treatment by 3 min → surgeon asks what\'s going on."',
+  lleap:'Exact mannequin changes: target vitals, how fast they change (trend time), sounds, and anything physical you do (e.g. remove left breath sounds).',
+  end:'When you stop the scenario: the end point (e.g. cause found and treated, help arrives, or a time limit) and the final vitals.',
+  debrief:'2–4 teaching points tied to your objectives, plus any algorithm, guideline or reference to share.',
+  scenario:'Start here. Write the whole case the way you picture it, in plain words: the patient, the setting, what goes wrong and why, how it evolves, what a good learner should do, and how it ends. This is the minimum. Once it is written, AI handoff can build every other field from it.',
+  learnerBrief:'What you read to the learner before they walk in: who they are, what they are asked to do, and who they can call. Goes on the learner pre-brief. Never include the hidden cause.',
+  llmNotes:'Anything not in your scenario: learner level, teaching focus, local limits (drugs on your cart, equipment, mannequin model). Saved with the case and added to the prompt.',
+  aiNotes:'Review each line, fix the case where needed, then mark as checked. These notes are not exported to Word.'
+};
+const PH = {
+  objective:'e.g. Recognize hypotension and falling EtCO2 after induction; build a differential; treat and call for help.',
+  patient:'Age/sex: 72F\nWeight: 85 kg (BMI 32)\nProcedure: right total shoulder replacement\nHistory: COPD, HTN, DM, OSA (poor CPAP use)\nMedications: lisinopril, metformin',
+  roles:'Attending: available by phone, arrives if called\nSurgeon: in the room, impatient to start\nNurse: follows orders, does not volunteer ideas',
+  setup:'- Supine, awake, on 2 L nasal cannula\n- 20G IV left hand, standard monitors\n- Mock induction and emergency drugs on the cart',
+  vent:'e.g. Not intubated at start. After intubation: VC, Vt 450, RR 12, PEEP 5, FiO2 1.0.',
+  event:'e.g. BP and EtCO2 fall over 60 s. Hidden cause: …',
+  actions:'- Recognizes the BP and EtCO2 change and says it out loud\n- Checks the circuit and ventilation\n- Calls for help',
+  cues:'- IF circuit disconnected → BP recovers over 60 s\n- IF only pressors → BP keeps falling\n- IF nothing by 3 min → Surgeon: "Is everything OK up there?"',
+  lleap:'- BP: 128/76 → 72/40 over 90 s\n- EtCO2: 38 → 18 over 90 s\n- HR: 82 → 112 over 60 s',
+  end:'e.g. End when the learner identifies the cause and treats it, or at 15 min.',
+  debrief:'1. Post-induction hypotension: build the differential\n2. Dynamic hyperinflation in COPD\nReferences:\n- …',
+  scenario:'e.g. 72F with COPD and OSA for total shoulder after an interscalene block. Resident induces with propofol and hand-ventilates fast. Over 2 min BP drops to 70/40 and EtCO2 falls from auto-PEEP. A good learner checks the circuit, disconnects, lets her exhale, and BP recovers. If they only give pressors, she keeps dropping until they call for help. End when the cause is found and fixed. Teach: post-induction hypotension differential, dynamic hyperinflation in COPD.',
+  learnerBrief:'e.g. You are the anesthesia resident for this case. The block is done and the patient is in the OR. Prepare and induce. Your attending is in the next room and can be called.',
+  llmNotes:'e.g. CA-1 learners. Keep it to 15 min. We have phenylephrine, ephedrine, epinephrine; no vasopressin on the cart.'
+};
+const VITALS = [
+  ['hr','HR','bpm'],['rhythm','Rhythm',''],['bp','BP','mmHg'],['spo2','SpO₂','%'],
+  ['rr','RR','/min'],['etco2','EtCO₂','mmHg'],['temp','Temp','°C']
+];
+const DEFAULT_STAGES = ['Before induction','Induction','After induction','Learner intervention'];
+
+/* ---------- state ---------- */
+const S = {
+  db:null, user:null, myId:null, canWrite:true, noStore:false,
+  cases:new Map(), loaded:false, currentId:null, draft:null,
+  editSeq:0, savedSeq:0, saveTimer:null, saving:null, ownRevs:new Set(),
+  view:'edit', filter:'', names:{}, remoteChanged:false, confirmDel:false, err:'',
+  importText:'', confirmReplace:false, collapsed:new Set(), learnerMode:'pre', askFirst:true
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const ls = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+};
+
+function blankCase(){
+  return {
+    title:'Untitled case', level:'', duration:'', status:'draft',
+    scenario:'', objective:'', patient:'', learnerBrief:'', roles:'', setup:'',
+    vitals:{hr:'',rhythm:'',bp:'',spo2:'',rr:'',etco2:'',temp:''}, vent:'',
+    stages: DEFAULT_STAGES.map(n => ({id:rid(), name:n, trigger:'', event:'', actions:'', cues:'', lleap:''})),
+    end:'', debrief:'', llmNotes:'', aiNotes:'',
+    createdAt:Date.now(), updatedAt:Date.now(), updatedBy:S.myId || null, rev:''
+  };
+}
+
+/* ---------- AI handoff + import ---------- */
+function fileSlug(t){
+  return (String(t || 'simulation-case').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)) || 'simulation-case';
+}
+function caseForAI(c){
+  return {
+    format:'sim-case/v1', title:c.title, level:c.level, duration:c.duration,
+    scenario:c.scenario, objective:c.objective, patient:c.patient, learnerBrief:c.learnerBrief, roles:c.roles, setup:c.setup,
+    vitals:Object.assign({}, c.vitals), vent:c.vent,
+    stages:c.stages.map(s => ({name:s.name, trigger:s.trigger, event:s.event, actions:s.actions, cues:s.cues, lleap:s.lleap})),
+    end:c.end, debrief:c.debrief, aiNotes:''
+  };
+}
+function buildPrompt(c){
+  const n = tbcList(c).length;
+  return [
+'# Simulation case handoff (format sim-case/v1)',
+'',
+'You are an expert anesthesiologist and simulation educator. You are completing a facilitator sheet for a high-fidelity anesthesia simulation run on a Laerdal SimMan mannequin controlled with LLEAP. A facilitator must be able to run the case from this sheet without improvising.',
+'',
+'## Your task',
+'0. The creator\'s case scenario (below, and in the "scenario" field) is the source of truth. Build the case from it: keep its patient, its hidden cause, its evolution and its ending. Do not invent a different case. Where the scenario is silent, choose what fits it best and list the choice in aiNotes. Return "scenario" exactly as written.',
+'1. Fill every field that is empty or contains "TBC" (currently ' + n + '). If most fields are empty, build them all from the scenario.',
+'2. Add the detail a facilitator needs: exact vitals at each stage, drug doses and onset times, how fast the physiology changes, IF/THEN branches, and the end point.',
+'3. Keep what the author wrote. Change it only if it is clinically wrong or contradicts the case, and say what you changed in "aiNotes".',
+'4. Check the whole case for consistency: the hidden cause must explain every vital sign change, and every expected action must have a cue or branch that responds to it.',
+'',
+'## House style (follow exactly so every case reads the same)',
+'- Units: HR bpm, BP systolic/diastolic mmHg (MAP in parentheses inside stages), SpO2 %, RR /min, EtCO2 mmHg, Temp °C. In "vitals", give values only without units, e.g. "88", "142/84".',
+'- Drugs: generic name, mg/kg basis and total dose for this patient\'s weight, route, and onset. Example: "propofol 1.5 mg/kg = 120 mg IV, onset 30–45 s". If weight is missing, assume one and list it in aiNotes.',
+'- trigger: one line saying what moves the case into the stage (a learner action, elapsed time, or facilitator call).',
+'- event: what happens to the patient, then "Hidden cause: ..." on its own line.',
+'- actions: one action per line, each starting with a verb: what you hope to see the learner do. These are debrief talking points, not a checklist.',
+'- cues: one branch per line as "IF <learner action> → <response or go to stage N>". Always include an "IF not done by <time> → ..." escalation line. Write actor lines in quotes with the role, e.g. Surgeon: "Is everything OK up there?"',
+'- lleap: one change per line as "<parameter>: <start> → <target> over <N> s". Add sounds (breath, heart, voice) and anything physical the operator does.',
+'- end: the end point (e.g. cause identified and treated, help arrives, or a time limit) and the final vitals.',
+'- This is a training tool, not an assessment. Never use pass/fail, scoring, grading, "critical action" or "success criteria" language anywhere in the case.',
+'- debrief: 3–4 teaching points tied to the objectives, then 1–2 real references (guideline or review). Never invent a citation; if unsure, name the guideline only.',
+'- patient = the vignette the learner is given. learnerBrief = 2–4 sentences read to the learner before entering: their role, the task, and who they can call. Never put the hidden cause in either.',
+'- The learner handout after the debrief is built from objective, patient, each stage\'s name and event, the actions, and debrief, so write those so a learner can read them.',
+'- Use 3–6 stages. Inside JSON strings use \\n for new lines.',
+'',
+'## Readability (every field, and the readable copy)',
+'The case is read fast, in the room, by a facilitator running a mannequin. Never write paragraphs.',
+'- One idea per line, at most ~15 words. Put each item on its own line (\\n between lines).',
+'- Lists start each line with "- ". Steps or a sequence use "1. ", "2. ", "3. ".',
+'- Structured facts use "Label: value" lines (the label is shown in bold automatically).',
+'- No other markdown: no **bold**, no # headings, no tables inside fields.',
+'Field layouts:',
+'- objective: numbered, 1–3 lines.',
+'- patient: "Label: value" lines in this order: Age/sex, Weight, Procedure, History, Medications, Allergies, Airway, Labs, Prior anesthesia, Block/regional (skip what does not apply).',
+'- learnerBrief: 2–4 short lines.',
+'- roles: one line per role, "Role: who plays it and what they do or say".',
+'- setup: "- " bullets (position, airway, access, monitors, drugs, equipment, planted errors).',
+'- vent: "Label: value" lines (Mode, Vt, RR, PEEP, FiO2, other).',
+'- trigger: one line.',
+'- event: 1–3 "- " bullets, then a last line "Hidden cause: ...".',
+'- actions: "- " bullets, one action each.',
+'- cues: "- IF ... → ..." one branch per line; actor lines as "Surgeon: \\"...\\"".',
+'- lleap: "- <parameter>: <start> → <target> over <N> s", one change per line; sounds and physical actions as "- " bullets too.',
+'- end: "End when: ..." line, then "Final vitals: ..." line.',
+'- debrief: numbered teaching points (1., 2., 3.), then a line "References:" followed by "- " bullets.',
+'Example (lleap):',
+'- BP: 128/76 → 72/40 over 90 s',
+'- EtCO2: 38 → 18 over 90 s',
+'- HR: 82 → 112 over 60 s',
+'- Breath sounds: decreased bilaterally',
+'',
+...(S.askFirst ? [
+'## Step 1: ask questions first (do this before building anything)',
+'Read the scenario and the current case, then reply ONLY with the questions whose answers would most improve this case. Do not build the case or the file yet.',
+'- Ask 4–8 numbered questions, grouped under: Clinical details, Learners and logistics, Debrief and teaching.',
+'- Ask only what the scenario leaves open and what would change the case: e.g. patient weight, the exact hidden cause or how severe it gets, airway and lines at the start, positioning, which drugs are on the cart, learner level, number of learners, run time, actors available, whether the case may progress to arrest, how the case should end, and which teaching points matter most.',
+'- Make each question quick to answer: offer 2–3 likely options and say which one you would choose by default.',
+'- End with one line: "Answer what you can, or reply \'go\' and I\'ll use the defaults."',
+'After the author answers (or says "go"), do Step 2. Put the author\'s answers into the case, and list any defaults you used in aiNotes.',
+'',
+'## Step 2: build the case (two outputs)'
+] : ['## Output: build the case (two outputs)']),
+'Do not ask more questions at this step. Where something is still unknown, choose the most reasonable option and note it in aiNotes. Produce both outputs below, with identical content.',
+'',
+'### Output A: readable copy (for the case creator to review)',
+'A clean, human-readable version of the finished case, so the creator can read and check it before importing.',
+'- File name: ' + fileSlug(c.title) + ' - readable copy (a .docx or .pdf if you can create files; otherwise write it in your reply as formatted text).',
+'- Order: title and learner level; "AI notes to check" first; Case summary (the creator\'s scenario); Objective; Patient; Learner brief; Roles; Setup; Initial settings (vitals and ventilator); then each stage under its own heading "Stage N: <name>" with Trigger, Patient/clinical event, Expected learner actions, Facilitator cues, LLEAP & physical actions; then End point; Debrief points.',
+'- Use headings and short lines. No JSON in this copy.',
+'',
+'### Output B: the import file',
+'The same case as an import file for the Sim Case Builder. It must be valid JSON (UTF-8, double quotes, no comments, no trailing commas).',
+'- File name: ' + fileSlug(c.title) + '.simcase.json',
+'- If you can create downloadable files, create that .json file, and also show the same JSON in one ```json code block at the very end of your reply as a backup.',
+'- If you cannot create files, put the file content in one ```json code block at the very end of your reply, after the readable copy. Use no other code blocks anywhere in the reply.',
+'- Use the same keys and structure as the case below, keep "format": "sim-case/v1", and return every field filled in (the whole case, not only the changes). All values are strings, except "stages", which is a list.',
+'- In "aiNotes" (one item per line): the assumptions you made, anything you changed, and anything the author must decide or verify, such as doses against the local formulary.',
+'The author will upload the file (or paste the code block) in the Import tab. Anything that is not valid JSON in this shape will be rejected.',
+'',
+'## Creator\'s case scenario (source of truth)',
+(c.scenario || '').trim() || 'Not written yet.',
+'',
+'## Extra instructions from the author',
+(c.llmNotes || '').trim() || 'None. Use your judgment and list your choices in aiNotes.',
+'',
+'## Current case',
+'```json',
+JSON.stringify(caseForAI(c), null, 2),
+'```'
+  ].join('\n');
+}
+function parseImport(text){
+  const t = String(text || '').trim();
+  if (!t) return {empty:true};
+  const cands = [t];
+  const fences = [...t.matchAll(/```[ \t]*([a-zA-Z]*)[^\n]*\n([\s\S]*?)```/g)];
+  fences.filter(m => /json/i.test(m[1])).reverse().forEach(m => cands.push(m[2]));
+  fences.filter(m => !/json/i.test(m[1])).reverse().forEach(m => cands.push(m[2]));
+  const fmt = t.lastIndexOf('"format"');
+  if (fmt > 0) { const a2 = t.lastIndexOf('{', fmt), b2 = t.lastIndexOf('}'); if (a2 >= 0 && b2 > a2) cands.push(t.slice(a2, b2 + 1)); }
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a >= 0 && b > a) cands.push(t.slice(a, b + 1));
+  let src = null, fallback = null;
+  for (const c of cands) {
+    try { const o = JSON.parse(c); if (o && typeof o === 'object' && !Array.isArray(o)) { if (Array.isArray(o.stages)) { src = o; break; } if (!fallback) fallback = o; } } catch(e){}
+  }
+  if (!src) src = fallback;
+  if (!src) return {error:/\?\s*$/m.test(t) && !/```/.test(t)
+    ? 'This looks like the AI\'s questions, not the case file. Answer them in the AI chat (or reply "go"), then bring back the file it creates.'
+    : 'No valid case JSON found. Paste the AI\'s whole reply, including the ```json block. If the AI added text inside the JSON, ask it to "return only the JSON block".'};
+  if (!Array.isArray(src.stages)) return {error:'This JSON has no "stages" list, so it does not look like a case from the AI handoff prompt.'};
+  const str = v => v == null ? '' : Array.isArray(v) ? v.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join('\n') : typeof v === 'object' ? JSON.stringify(v) : String(v);
+  const c = {
+    title:str(src.title) || 'Imported case', level:str(src.level), duration:str(src.duration), status:'draft',
+    scenario:str(src.scenario), objective:str(src.objective), patient:str(src.patient), learnerBrief:str(src.learnerBrief), roles:str(src.roles), setup:str(src.setup),
+    vitals:{}, vent:str(src.vent), end:str(src.end), debrief:str(src.debrief), aiNotes:str(src.aiNotes),
+    stages:src.stages.slice(0, 12).map(s => ({id:rid(), name:str(s && s.name), trigger:str(s && s.trigger), event:str(s && s.event), actions:str(s && s.actions), cues:str(s && s.cues), lleap:str(s && s.lleap)}))
+  };
+  VITALS.forEach(([k]) => { c.vitals[k] = str(src.vitals && src.vitals[k]); });
+  return {case: normalize(c)};
+}
+function normalize(c){
+  const b = blankCase();
+  const o = Object.assign(b, clone(c || {}));
+  o.vitals = Object.assign(blankCase().vitals, o.vitals || {});
+  o.stages = Array.isArray(o.stages) ? o.stages.map(s => Object.assign({id:rid(),name:'',trigger:'',event:'',actions:'',cues:'',lleap:''}, s)) : [];
+  return o;
+}
+
+/* ---------- completeness ---------- */
+const isTbc = v => !v || !String(v).trim() || /\bTBC\b/i.test(String(v));
+function initialTbc(c){ const v = c.vitals || {}; return ['hr','bp','spo2'].some(k => isTbc(v[k])) || Object.values(v).some(x => x && /\bTBC\b/i.test(x)); }
+function tbcList(c){
+  const out = [];
+  if (isTbc(c.scenario)) out.push('scenario');
+  ['objective','patient','learnerBrief','roles','setup'].forEach(k => { if (isTbc(c[k])) out.push(k); });
+  if (initialTbc(c)) out.push('initial');
+  if (c.vent && /\bTBC\b/i.test(c.vent)) out.push('vent');
+  (c.stages||[]).forEach((s,i) => ['trigger','event','actions','cues','lleap'].forEach(k => { if (isTbc(s[k])) out.push('stages.'+i+'.'+k); }));
+  ['end','debrief'].forEach(k => { if (isTbc(c[k])) out.push(k); });
+  return out;
+}
+
+/* ---------- time + names ---------- */
+function ago(t){
+  if (!t) return '';
+  const s = Math.max(0, (Date.now() - t) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s/60) + ' min ago';
+  if (s < 86400) return Math.floor(s/3600) + ' h ago';
+  const d = new Date(t); return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+}
+const whoName = id => !id ? (window.__LOCAL_DEMO ? 'you' : 'Claude') : (id === S.myId ? 'you' : (S.names[id] || 'a colleague'));
+async function resolveNames(){
+  if (!S.user || !S.user.profiles) return;
+  const ids = [...new Set([...S.cases.values()].map(c => c.updatedBy).filter(Boolean))];
+  if (!ids.length) return;
+  try {
+    const ps = await S.user.profiles(ids);
+    let changed = false;
+    ids.forEach(id => { const n = (ps && ps[id] && ps[id].name) || ''; if (n && S.names[id] !== n){ S.names[id] = n; changed = true; } });
+    if (changed) { renderList(); renderSaveState(); }
+  } catch(e){}
+}
+
+/* ---------- library ---------- */
+function sortedCases(){
+  return [...S.cases.entries()].map(([id,c]) => ({id, c})).sort((a,b) => (b.c.updatedAt||0) - (a.c.updatedAt||0));
+}
+function renderList(){
+  const list = $('#list'), pick = $('#mobilePick');
+  const f = S.filter.trim().toLowerCase();
+  const rows = sortedCases().filter(({c}) => !f || [c.title,c.patient,c.objective,c.level].join(' ').toLowerCase().includes(f));
+  list.innerHTML = rows.length ? rows.map(({id,c}) => {
+    const cc = id === S.currentId && S.draft ? S.draft : c;
+    const n = tbcList(cc).length;
+    const st = STATUS.find(s => s[0] === cc.status) || STATUS[0];
+    return `<li><button type="button" class="item" data-id="${esc(id)}" aria-current="${id===S.currentId}">
+      <span class="t">${esc(cc.title || 'Untitled case')}</span>
+      <span class="m"><span class="chip st-${esc(st[0])}">${esc(st[1])}</span>${n ? `<span class="chip tbc">${n} TBC</span>` : `<span class="chip ok">Complete</span>`}<span>${esc(ago(cc.updatedAt))}</span></span>
+    </button></li>`;
+  }).join('') : `<li class="help" style="padding:8px 4px">${S.cases.size ? 'No cases match your search.' : 'No cases yet.'}</li>`;
+  pick.innerHTML = (S.cases.size ? '' : '<option value="">No cases yet</option>') + sortedCases().map(({id,c}) => {
+    const cc = id === S.currentId && S.draft ? S.draft : c;
+    return `<option value="${esc(id)}" ${id===S.currentId?'selected':''}>${esc(cc.title || 'Untitled case')}</option>`;
+  }).join('');
+  $('#dupBtn').disabled = !S.currentId || !S.canWrite;
+  $('#newBtn').disabled = !S.canWrite || S.noStore;
+}
+
+/* ---------- editor ---------- */
+function fieldHtml(path, label, key, val, opts = {}){
+  const tbc = opts.noTbc ? false : isTbc(val);
+  const id = 'f-' + path.replace(/\./g,'-');
+  return `<div class="field ${tbc?'is-tbc':''} ${opts.cls||''}" data-field="${esc(path)}">
+    <label class="lab" for="${id}">${esc(label)} ${opts.noTbc ? '' : `<span class="chip tbc" ${tbc?'':'hidden'}>TBC</span>`}</label>
+    <p class="help">${esc(HELP[key]||'')}</p>
+    ${opts.input
+      ? `<input type="text" id="${id}" data-path="${esc(path)}" value="${esc(val)}" placeholder="${esc(PH[key]||'')}" ${S.canWrite?'':'disabled'}>`
+      : `<textarea id="${id}" data-path="${esc(path)}" rows="${opts.rows||3}" placeholder="${esc(PH[key]||'')}" ${S.canWrite?'':'disabled'}>${esc(val)}</textarea>`}
+  </div>`;
+}
+function stageHtml(s, i, total){
+  const p = 'stages.' + i + '.';
+  const dis = S.canWrite ? '' : 'disabled';
+  const key = 'stage:' + s.id, col = S.collapsed.has(key);
+  return `<div class="stage ${col?'collapsed':''}" data-stage="${i}" data-sec="${esc(key)}">
+    <div class="stage-h">
+      <button type="button" class="sec-toggle" data-toggle="${esc(key)}" aria-expanded="${!col}" aria-label="Show or hide stage ${i+1}"><span class="caret" aria-hidden="true"></span><span class="stage-n">${i+1}</span></button>
+      <input type="text" id="f-stage-${esc(s.id)}-name" data-path="${p}name" value="${esc(s.name)}" placeholder="Stage name" aria-label="Stage ${i+1} name" title="${esc(HELP.stageName)}" ${dis}>
+      <span class="chip tbc" data-secchip="${esc(key)}" hidden></span>
+      <div class="stage-tools">
+        <button type="button" class="btn small ghost" data-act="up" data-i="${i}" ${i===0||!S.canWrite?'disabled':''} aria-label="Move stage up">Up</button>
+        <button type="button" class="btn small ghost" data-act="down" data-i="${i}" ${i===total-1||!S.canWrite?'disabled':''} aria-label="Move stage down">Down</button>
+        <button type="button" class="btn small ghost danger" data-act="rm" data-i="${i}" ${!S.canWrite?'disabled':''}>Remove</button>
+      </div>
+    </div>
+    <div class="stage-b sec-body" ${col?'hidden':''}>
+      ${fieldHtml(p+'trigger','Trigger','trigger',s.trigger,{rows:2})}
+      ${fieldHtml(p+'event','Patient / clinical event','event',s.event,{rows:2})}
+      ${fieldHtml(p+'actions','Expected learner actions','actions',s.actions)}
+      ${fieldHtml(p+'cues','Facilitator cues','cues',s.cues)}
+      ${fieldHtml(p+'lleap','LLEAP & physical actions','lleap',s.lleap,{cls:'full'})}
+    </div>
+  </div>`;
+}
+function renderEditor(){
+  const c = S.draft, v = $('#view');
+  const st = STATUS.map(([k,l]) => `<option value="${k}" ${c.status===k?'selected':''}>${l}</option>`).join('');
+  const dis = S.canWrite ? '' : 'disabled';
+  const vt = tbcList(c).includes('initial');
+  const aiNotes = (c.aiNotes || '').trim();
+  v.innerHTML = `
+    ${banners()}
+    ${aiNotes ? `<div class="sec ai-sec">
+      <div class="sec-h"><h2>AI notes to check</h2><span class="spacer"></span>${S.canWrite ? '<button type="button" class="btn small" data-act="clearAi">Mark as checked</button>' : ''}</div>
+      ${fieldHtml('aiNotes','What the AI assumed, changed, or wants verified','aiNotes',c.aiNotes,{rows:3,noTbc:true})}
+    </div>` : ''}
+    <div class="sec">
+      <input class="title-input" type="text" id="f-title" data-path="title" value="${esc(c.title)}" aria-label="Case title" placeholder="Case title" ${dis}>
+      <p class="help" style="padding:0 10px">${esc(HELP.title)}</p>
+      <div class="grid g3">
+        <div class="field"><label class="lab" for="f-level">Learner level</label><p class="help">${esc(HELP.level)}</p>
+          <input type="text" id="f-level" data-path="level" value="${esc(c.level)}" placeholder="e.g. CA-2" ${dis}></div>
+        <div class="field"><label class="lab" for="f-duration">Duration</label><p class="help">${esc(HELP.duration)}</p>
+          <input type="text" id="f-duration" data-path="duration" value="${esc(c.duration)}" placeholder="e.g. 15 + 20 min" ${dis}></div>
+        <div class="field"><label class="lab" for="f-status">Status</label><p class="help">Set to "Ready to run" once every TBC is filled and the case has been checked.</p>
+          <select id="f-status" data-path="status" ${dis}>${st}</select></div>
+      </div>
+    </div>
+    <div class="sec-tools">
+      <button type="button" class="btn ghost small" data-act="collapseAll">Collapse all</button>
+      <button type="button" class="btn ghost small" data-act="expandAll">Expand all</button>
+    </div>
+    <div ${secAttrs('scenario')} id="scenarioSec">
+      ${secHead('scenario','1 · Case scenario (start here)')}
+      <div class="sec-body" ${S.collapsed.has('scenario')?'hidden':''}>
+      ${fieldHtml('scenario','Your case, in your words','scenario',c.scenario,{rows:6})}
+      <div class="next-step">
+        <span class="help">${(c.scenario||'').trim() ? 'Ready for the AI. It will fill every section below from your scenario, then you review and import.' : 'Write the scenario first. The AI handoff unlocks once it has text.'}</span>
+        <button type="button" class="btn ${(c.scenario||'').trim() ? 'primary' : ''} small" data-act="goHandoff">2 · Go to AI handoff</button>
+      </div>
+      </div>
+    </div>
+    <div ${secAttrs('overview')}>
+      ${secHead('overview','Case overview')}
+      <div class="sec-body" ${S.collapsed.has('overview')?'hidden':''}>
+      ${fieldHtml('objective','Objective','objective',c.objective)}
+      ${fieldHtml('patient','Patient','patient',c.patient,{rows:4})}
+      ${fieldHtml('learnerBrief','Learner brief','learnerBrief',c.learnerBrief,{rows:3})}
+      <div class="grid g2">
+        ${fieldHtml('roles','Roles','roles',c.roles)}
+        ${fieldHtml('setup','Setup','setup',c.setup)}
+      </div>
+      </div>
+    </div>
+    <div ${secAttrs('initial')}>
+      ${secHead('initial','Initial settings')}
+      <div class="sec-body" ${S.collapsed.has('initial')?'hidden':''}>
+      <div class="field ${vt?'is-tbc':''}" data-field="initial">
+        <span class="lab">Starting vitals <span class="chip tbc" ${vt?'':'hidden'}>TBC</span></span>
+        <p class="help">${esc(HELP.initial)} HR, BP and SpO₂ are needed for the case to count as complete.</p>
+        <div class="vitals">
+          ${VITALS.map(([k,l,u]) => `<div class="vital v-${k}"><label for="f-v-${k}">${l}</label>
+            <input type="text" id="f-v-${k}" data-path="vitals.${k}" value="${esc(c.vitals[k])}" placeholder="–" inputmode="${k==='rhythm'?'text':'decimal'}" ${dis}><small>${u||'&nbsp;'}</small></div>`).join('')}
+        </div>
+      </div>
+      ${fieldHtml('vent','Ventilator & other settings','vent',c.vent,{rows:2,noTbc:true})}
+      </div>
+    </div>
+    <div ${secAttrs('stages')} id="stagesSec">
+      ${secHead('stages','Scenario progression')}
+      <div class="sec-body" ${S.collapsed.has('stages')?'hidden':''}>
+      <p class="help">One card per stage. Each row of the Word table comes from one card. Click a stage number to fold it.</p>
+      <div id="stages" style="display:flex;flex-direction:column;gap:14px">${c.stages.map((s,i) => stageHtml(s,i,c.stages.length)).join('')}</div>
+      <button type="button" class="btn add-stage" id="addStage" ${dis}>Add stage</button>
+      </div>
+    </div>
+    <div ${secAttrs('end')}>
+      ${secHead('end','End & debrief')}
+      <div class="sec-body" ${S.collapsed.has('end')?'hidden':''}>
+      ${fieldHtml('end','End point','end',c.end)}
+      ${fieldHtml('debrief','Debrief points','debrief',c.debrief,{rows:4})}
+      </div>
+    </div>
+    <div class="foot" id="foot">${footHtml()}</div>`;
+  v.querySelectorAll('textarea').forEach(autosize);
+  updateSecChips();
+  renderTop();
+}
+/* ---------- collapsible sections ---------- */
+function secAttrs(key){ return `data-sec="${esc(key)}" class="sec ${S.collapsed.has(key)?'collapsed':''}"`; }
+function secHead(key, title){
+  const col = S.collapsed.has(key);
+  return `<div class="sec-h"><button type="button" class="sec-toggle" data-toggle="${esc(key)}" aria-expanded="${!col}"><span class="caret" aria-hidden="true"></span><h2>${esc(title)}</h2></button><span class="chip tbc" data-secchip="${esc(key)}" hidden></span></div>`;
+}
+function secCounts(c){
+  const cnt = {scenario:0, overview:0, initial:0, stages:0, end:0};
+  tbcList(c).forEach(k => {
+    if (k === 'scenario') cnt.scenario++;
+    else if (k.startsWith('stages.')) { cnt.stages++; const s = c.stages[+k.split('.')[1]]; if (s) cnt['stage:'+s.id] = (cnt['stage:'+s.id]||0) + 1; }
+    else if (['objective','patient','learnerBrief','roles','setup'].includes(k)) cnt.overview++;
+    else if (k === 'initial' || k === 'vent') cnt.initial++;
+    else if (k === 'end' || k === 'debrief') cnt.end++;
+  });
+  return cnt;
+}
+function updateSecChips(){
+  if (!S.draft) return;
+  const cnt = secCounts(S.draft);
+  document.querySelectorAll('[data-secchip]').forEach(el => { const n = cnt[el.dataset.secchip] || 0; el.hidden = !n; el.textContent = n + ' TBC'; });
+}
+function saveCollapsed(){ ls.set('simcase:collapsed', JSON.stringify([...S.collapsed])); }
+function toggleSec(key, open){
+  const want = open === undefined ? !S.collapsed.has(key) : !open;
+  want ? S.collapsed.add(key) : S.collapsed.delete(key);
+  saveCollapsed();
+  const sec = document.querySelector(`[data-sec="${CSS.escape(key)}"]`);
+  if (!sec) return;
+  sec.classList.toggle('collapsed', want);
+  const body = sec.querySelector(':scope > .sec-body'); if (body) body.hidden = want;
+  const b = sec.querySelector('[data-toggle]'); if (b) b.setAttribute('aria-expanded', String(!want));
+  if (!want) sec.querySelectorAll('textarea').forEach(autosize);
+}
+function footHtml(){
+  if (!S.canWrite) return '';
+  return S.confirmDel
+    ? `<div class="confirm"><span>Delete this case for everyone? This cannot be undone.</span>
+        <button type="button" class="btn danger solid small" data-act="delYes">Delete case</button>
+        <button type="button" class="btn small" data-act="delNo">Keep it</button></div>`
+    : `<button type="button" class="btn danger small" data-act="del">Delete case</button>`;
+}
+function banners(){
+  let h = '';
+  if (S.noStore) h += `<div class="banner warn">Saving isn't available in this view. Open this page in Claude while signed in to see and edit the shared cases.</div>`;
+  else if (!S.canWrite) h += `<div class="banner">You can view these cases but not edit them. Ask the owner for Contributor access to make changes.</div>`;
+  if (S.remoteChanged) h += `<div class="banner warn"><span>Someone else just changed this case. Your unsaved edits are kept until you choose.</span>
+      <button type="button" class="btn small" data-act="loadRemote">Load their version</button></div>`;
+  return h;
+}
+function autosize(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
+
+function renderTop(){
+  $('#bar').hidden = !S.draft;
+  if (!S.draft) return;
+  const n = tbcList(S.draft).length;
+  $('#tbcSummary').innerHTML = n
+    ? `<button type="button" class="chip tbc" id="nextTbc" title="Jump to the next field still marked TBC">${n} TBC · next</button>`
+    : `<span class="chip ok">All fields filled</span>`;
+  $('#tabEdit').setAttribute('aria-pressed', S.view === 'edit');
+  $('#tabSheet').setAttribute('aria-pressed', S.view === 'sheet');
+  $('#tabHandoff').setAttribute('aria-pressed', S.view === 'handoff');
+  $('#tabLearner').setAttribute('aria-pressed', S.view === 'learner');
+  $('#exportBtn').textContent = S.view === 'learner' ? (S.learnerMode === 'pre' ? 'Export pre-brief to Word' : 'Export handout to Word') : 'Export to Word';
+  $('#tabImport').setAttribute('aria-pressed', S.view === 'import');
+  renderSaveState();
+}
+function renderSaveState(){
+  const el = $('#saveState'); if (!el || !S.draft) return;
+  el.classList.toggle('err', !!S.err);
+  if (S.err) { el.textContent = S.err; return; }
+  if (S.noStore) { el.textContent = 'Not saved'; return; }
+  if (S.editSeq > S.savedSeq) { el.textContent = S.saving ? 'Saving…' : 'Unsaved changes'; return; }
+  el.textContent = 'Saved · edited by ' + whoName(S.draft.updatedBy) + ' ' + ago(S.draft.updatedAt);
+}
+function refreshFieldTbc(path){
+  const tl = tbcList(S.draft);
+  const fieldKey = path.startsWith('vitals.') ? 'initial' : path;
+  const f = document.querySelector(`[data-field="${CSS.escape(fieldKey)}"]`);
+  if (f){
+    const on = tl.includes(fieldKey);
+    f.classList.toggle('is-tbc', on);
+    const chip = f.querySelector('.chip.tbc'); if (chip) chip.hidden = !on;
+  }
+  updateSecChips(); renderTop(); renderList();
+}
+
+/* ---------- sheet view ---------- */
+const show = v => isTbc(v) && !String(v||'').trim() ? '<span class="tbcw">TBC</span>' : esc(v).replace(/\bTBC\b/gi, '<span class="tbcw">TBC</span>');
+function vitalsLine(c){
+  const parts = VITALS.filter(([k]) => c.vitals[k]).map(([k,l,u]) => `${l} ${c.vitals[k]}${u && k!=='rhythm' ? ' '+u : ''}`);
+  return parts.join(' · ');
+}
+/* Readable text: "- " bullets, "1. " numbering, bold "Label:" prefixes. Shared by the sheets and Word export. */
+const BULLET_RE = /^[-•*–]\s+(.*)$/, NUM_RE = /^(\d+)[.)]\s+(.*)$/, LABEL_RE = /^([A-Za-z][^:→>]{0,30}?):\s+(.+)$/, HEAD_RE = /^([A-Za-z][^:→>]{0,30}):$/;
+const cleanMd = s => String(s).replace(/\*\*(.+?)\*\*/g, '$1').replace(/^#+\s*/, '');
+/* Split "Label: value" (bold label), or a label-only line "References:" (bold whole). IF-branches are never labels. */
+function splitLabel(raw){
+  if (/^IF\b/.test(raw)) return null;
+  let m = raw.match(LABEL_RE); if (m && !/^https?$/i.test(m[1])) return [m[1] + ':', m[2]];
+  m = raw.match(HEAD_RE); if (m) return [raw, ''];
+  return null;
+}
+function inl(s){
+  const raw = cleanMd(s);
+  const tb = h => h.replace(/\bTBC\b/g, '<span class="tbcw">TBC</span>');
+  const lab = splitLabel(raw);
+  return lab ? `<b>${tb(esc(lab[0]))}</b>${lab[1] ? ' ' + tb(esc(lab[1])) : ''}` : tb(esc(raw));
+}
+function fmtHtml(text){
+  const t = String(text || '');
+  if (!t.trim()) return '<p><span class="tbcw">TBC</span></p>';
+  let out = '', list = null, liOpen = false, nested = false;
+  const closeNested = () => { if (nested) { out += '</ul>'; nested = false; } };
+  const closeLi = () => { closeNested(); if (liOpen) { out += '</li>'; liOpen = false; } };
+  const close = () => { closeLi(); if (list) { out += `</${list}>`; list = null; } };
+  for (const r of t.split('\n')) {
+    const l = r.trim(); if (!l) { close(); continue; }
+    let m;
+    if ((m = l.match(BULLET_RE))) {
+      if (list === 'ol' && liOpen) { if (!nested) { out += '<ul class="sub">'; nested = true; } out += `<li>${inl(m[1])}</li>`; }
+      else { if (list !== 'ul') { close(); out += '<ul>'; list = 'ul'; } out += `<li>${inl(m[1])}</li>`; }
+    } else if ((m = l.match(NUM_RE))) {
+      if (list !== 'ol') { close(); out += `<ol start="${+m[1]}">`; list = 'ol'; } else closeLi();
+      out += `<li>${inl(m[2])}`; liOpen = true;
+    } else { close(); out += `<p>${inl(l)}</p>`; }
+  }
+  close(); return out;
+}
+function vitalsChips(c){
+  const vs = VITALS.filter(([k]) => c.vitals[k]);
+  return vs.length ? `<div class="vchips">${vs.map(([k,l,u]) => `<span class="vchip v-${k}"><b>${l}</b> ${esc(c.vitals[k])}${u && k!=='rhythm' ? ' <small>'+u+'</small>' : ''}</span>`).join('')}</div>` : '<p><span class="tbcw">TBC</span></p>';
+}
+const blk = (h, inner, cls='') => `<section class="blk ${cls}"><h4>${esc(h)}</h4>${inner}</section>`;
+function renderSheet(){
+  const c = S.draft, v = $('#view');
+  const meta = [c.level && 'Learners: '+c.level, c.duration && 'Duration: '+c.duration, (STATUS.find(s=>s[0]===c.status)||STATUS[0])[1]].filter(Boolean).join(' · ');
+  v.innerHTML = `${banners()}<div class="sheet fsheet">
+    <div><h1>${esc(c.title || 'Untitled case')}</h1><div class="meta">${esc(meta)}</div></div>
+    ${(c.scenario||'').trim() ? blk('Case summary', fmtHtml(c.scenario), 'summary') : ''}
+    <div class="blk-grid">
+      ${blk('Objective', fmtHtml(c.objective))}
+      ${blk('Patient', fmtHtml(c.patient))}
+      ${blk('Learner brief', fmtHtml(c.learnerBrief))}
+      ${blk('Roles', fmtHtml(c.roles))}
+      ${blk('Setup', fmtHtml(c.setup))}
+      ${blk('Initial settings', vitalsChips(c) + (c.vent ? fmtHtml(c.vent) : ''))}
+    </div>
+    <h3>Scenario progression</h3>
+    <div class="tscroll"><table>
+      <thead><tr><th>Stage and trigger</th><th>Patient or clinical event</th><th>Expected learner actions</th><th>Facilitator cues</th><th>LLEAP and physical actions</th></tr></thead>
+      <tbody>${c.stages.map((s,i) => `<tr>
+        <td><div class="sname">${i+1} · ${esc(s.name)}</div>${fmtHtml(s.trigger)}</td>
+        <td>${fmtHtml(s.event)}</td><td>${fmtHtml(s.actions)}</td><td>${fmtHtml(s.cues)}</td><td>${fmtHtml(s.lleap)}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <div class="blk-grid">
+      ${blk('End point', fmtHtml(c.end))}
+      ${blk('Debrief', fmtHtml(c.debrief))}
+    </div>
+  </div>`;
+  renderTop();
+}
+function renderMain(){
+  if (S.view === 'import') { renderImport(); return; }
+  if (!S.draft) { renderEmpty(); return; }
+  if (S.view === 'sheet') renderSheet();
+  else if (S.view === 'learner') renderLearner();
+  else if (S.view === 'handoff') renderHandoff();
+  else renderEditor();
+}
+/* ---------- learner handout ---------- */
+const PREBRIEF_RULES = 'Treat the mannequin as a real patient. Say out loud what you notice and what you are doing. Ask for anything you would ask for in a real OR, and call for help when you would in real life. Mistakes here are expected and stay in this room.';
+function learnerDoc(c, mode){
+  if (mode === 'pre') {
+    return {
+      title:'Simulation case' + (c.level ? ' · ' + c.level : ''),
+      sub:'Pre-brief · read before the scenario',
+      blocks:[
+        {h:'Your role and task', text:c.learnerBrief},
+        {h:'Patient', text:c.patient},
+        {h:'Before you start', text:PREBRIEF_RULES, fixed:true}
+      ]
+    };
+  }
+  const happened = c.stages.map((s,i) => {
+    const ev = String(s.event || 'TBC').split('\n').map(l => l.trim()).filter(Boolean).map(l => BULLET_RE.test(l) ? l : '- ' + l.replace(NUM_RE, '$2'));
+    return [`${i+1}. ${s.name || 'Stage ' + (i+1)}`].concat(ev).join('\n');
+  }).join('\n');
+  const seen = new Set();
+  const actions = c.stages.flatMap(s => String(s.actions || '').split('\n'))
+    .map(l => l.replace(/^[\s\-•*]+/, '').trim()).filter(l => l && !/^TBC\b/i.test(l) && !seen.has(l.toLowerCase()) && seen.add(l.toLowerCase()))
+    .map(l => '- ' + l.replace(/\s*\[(critical|key)\]/ig, '')).join('\n');
+  return {
+    title:c.title || 'Simulation case',
+    sub:'Debrief handout' + (c.level ? ' · ' + c.level : ''),
+    blocks:[
+      {h:'Objectives', text:c.objective},
+      {h:'The scenario', text:c.patient},
+      {h:'What happened', text:c.stages.length ? happened : ''},
+      {h:'Key actions', text:actions},
+      {h:'Debrief points', text:c.debrief}
+    ]
+  };
+}
+function learnerText(c, mode){
+  const d = learnerDoc(c, mode);
+  return [d.title, d.sub, ''].concat(d.blocks.flatMap(b => [b.h.toUpperCase(), String(b.text || '').trim() || 'TBC', ''])).join('\n').trim();
+}
+function renderLearner(){
+  const c = S.draft, v = $('#view'), mode = S.learnerMode;
+  const d = learnerDoc(c, mode);
+  v.innerHTML = `${banners()}
+    <div class="lbar">
+      <div class="tabs" role="group" aria-label="Handout version">
+        <button type="button" data-act="lmode" data-mode="pre" aria-pressed="${mode==='pre'}">Before the case</button>
+        <button type="button" data-act="lmode" data-mode="post" aria-pressed="${mode==='post'}">After the debrief</button>
+      </div>
+      <span class="help">${mode === 'pre' ? 'Give this to the learner before they walk in. It shows only the learner brief and the patient vignette, with no hidden cause or vitals.' : 'Give this out after the debrief. It reveals what happened and why, the key actions, and the teaching points.'}</span>
+      <span class="spacer"></span>
+      <button type="button" class="btn small" id="copyLearner">Copy text</button>
+    </div>
+    <div class="sheet lsheet">
+      <div><h1>${esc(d.title)}</h1><div class="meta">${esc(d.sub)}</div></div>
+      ${d.blocks.map(b => `<section class="${b.fixed ? 'lrules' : ''}"><h3>${esc(b.h)}</h3>${b.fixed ? `<p>${esc(b.text)}</p>` : fmtHtml(b.text)}</section>`).join('')}
+    </div>`;
+  renderTop();
+}
+async function copyLearner(){
+  const text = learnerText(S.draft, S.learnerMode);
+  try { await navigator.clipboard.writeText(text); toast('Handout text copied'); }
+  catch(e) { toast('Copy is blocked here. Use Export to Word instead.'); }
+}
+function renderHandoff(){
+  const c = S.draft, v = $('#view'), n = tbcList(c).length;
+  if (!(c.scenario || '').trim()) {
+    v.innerHTML = `${banners()}
+      <div class="sec">
+        <div class="sec-h"><h2>AI handoff</h2></div>
+        <div class="empty" style="padding:8px 0">
+          <h1>Write the case scenario first</h1>
+          <p>The AI builds the whole case from your scenario: the patient and how the case evolves, in your own words. It's the first box on the Edit tab.</p>
+          <button type="button" class="btn primary" data-act="goScenario">Go to Case scenario</button>
+        </div>
+      </div>`;
+    renderTop(); return;
+  }
+  v.innerHTML = `${banners()}
+    <div class="sec">
+      <div class="sec-h"><h2>AI handoff</h2><span class="help">Send this case to Claude or another AI to fill in the clinical detail in the same standard format every time.</span></div>
+      <ol class="steps">
+        <li>Your case scenario is included automatically. Add extra instructions below if you want (optional).</li>
+        <li>Copy the prompt, or download it as a file.</li>
+        <li>Paste it into Claude (or any AI chat) and send.${S.askFirst ? ' The AI asks you a few questions first. Answer them, or reply "go" to use its defaults.' : ''}</li>
+        <li>The AI returns two things: a <b>readable copy</b> for you to review, and an import file, <span class="mono-i">${esc(fileSlug(c.title))}.simcase.json</span>.</li>
+        <li>Read the copy. If it looks right, open <b>Import</b> and upload the .json file. If the AI only wrote text, paste its whole reply instead.</li>
+      </ol>
+      ${fieldHtml('llmNotes','Extra instructions for the AI (optional)','llmNotes',c.llmNotes,{rows:3,noTbc:true})}
+      <label class="check" for="askFirst">
+        <input type="checkbox" id="askFirst" ${S.askFirst ? 'checked' : ''}>
+        <span><b>AI asks questions before building the case</b> (recommended)<br><span class="help">It asks 4–8 quick questions (weight, severity, cart, learners, how it ends), each with a default you can accept. Turn off to get the import file in one step.</span></span>
+      </label>
+      <div class="foot">
+        <button type="button" class="btn primary" id="copyPrompt">Copy prompt</button>
+        <button type="button" class="btn" id="dlPrompt">Download as .md</button>
+        <span class="help">${n ? n + ' field' + (n===1?'':'s') + ' still TBC will be filled in.' : 'No TBC fields left. The AI will check and tighten the case.'}</span>
+      </div>
+      <div class="field">
+        <label class="lab" for="promptOut">Prompt preview</label>
+        <p class="help">This is exactly what gets copied: the task, the house style every case follows, your instructions, and the case as JSON.</p>
+        <textarea id="promptOut" class="mono" rows="14" readonly>${esc(buildPrompt(c))}</textarea>
+      </div>
+    </div>`;
+  v.querySelectorAll('textarea:not(#promptOut)').forEach(autosize);
+  renderTop();
+}
+function importResultHtml(){
+  const r = parseImport(S.importText);
+  if (r.empty) return '';
+  if (r.error) return `<div class="banner warn">${esc(r.error)}</div>`;
+  const c = r.case, n = tbcList(c).length;
+  const notes = (c.aiNotes || '').trim();
+  const canReplace = S.draft && S.canWrite && !S.noStore;
+  const replaceUi = !canReplace ? '' : S.confirmReplace
+    ? `<div class="confirm"><span>Replace "${esc(S.draft.title)}" for everyone? Its current content will be overwritten.</span>
+        <button type="button" class="btn primary small" data-act="replaceYes">Replace case</button>
+        <button type="button" class="btn small" data-act="replaceNo">Cancel</button></div>`
+    : `<button type="button" class="btn primary" data-act="replace">Replace "${esc(S.draft.title)}"</button>`;
+  return `<div class="found">
+      <div class="lab">Found: ${esc(c.title)}</div>
+      <div class="m">${c.stages.length} stage${c.stages.length===1?'':'s'} · ${n ? `<span class="chip tbc">${n} TBC left</span>` : '<span class="chip ok">All fields filled</span>'}</div>
+      ${notes ? `<div class="field"><span class="lab">AI notes to check</span><p class="pre">${esc(notes)}</p></div>` : ''}
+      <div class="foot">${replaceUi}
+        ${S.canWrite && !S.noStore ? `<button type="button" class="btn ${canReplace?'':'primary'}" data-act="importNew">Import as new case</button>` : '<span class="help">You need edit access to import.</span>'}</div>
+    </div>`;
+}
+function renderImport(){
+  const v = $('#view');
+  v.innerHTML = `${S.draft ? banners() : ''}
+    <div class="sec">
+      <div class="sec-h"><h2>Import from AI</h2><span class="help">Bring back a case the AI filled in from the handoff prompt.</span></div>
+      <div class="field">
+        <label class="lab" for="importIn">AI reply</label>
+        <p class="help">Upload the <b>.simcase.json</b> file the AI created, or paste its whole reply. The page finds the case in it and checks it before anything changes. Imported cases start as Draft.</p>
+        <textarea id="importIn" class="mono" rows="10" placeholder='Paste here, starting with \`\`\`json { "format": "sim-case/v1", ...'>${esc(S.importText)}</textarea>
+      </div>
+      <div class="foot">
+        <label class="btn primary" for="importFile">Upload .simcase.json</label><input type="file" id="importFile" accept=".json,.txt,.md" hidden>
+        <button type="button" class="btn ghost" data-act="importClear">Clear</button>
+      </div>
+      <div id="importResult">${importResultHtml()}</div>
+    </div>`;
+  renderTop();
+}
+function refreshImport(){ const el = $('#importResult'); if (el) el.innerHTML = importResultHtml(); }
+async function applyImport(asNew){
+  const r = parseImport(S.importText); if (!r.case) return;
+  if (asNew) { await createCase(null, r.case); S.importText = ''; S.view = 'edit'; renderMain(); return; }
+  if (!S.draft) return;
+  const keep = {createdAt:S.draft.createdAt, llmNotes:S.draft.llmNotes, scenario:(S.draft.scenario||'').trim() ? S.draft.scenario : r.case.scenario, rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy};
+  S.draft = Object.assign(r.case, keep);
+  S.importText = ''; S.confirmReplace = false; S.view = 'edit';
+  changed(); renderMain(); renderList(); window.scrollTo(0,0);
+  toast('Case replaced. Check the AI notes at the top.');
+}
+function renderEmpty(){
+  $('#bar').hidden = true;
+  const v = $('#view');
+  if (S.noStore) {
+    v.innerHTML = `<div class="empty"><h1>Shared cases aren't available here</h1><p>Open this page in Claude while signed in to see the case library and edit cases.</p></div>`;
+  } else if (!S.loaded) {
+    v.innerHTML = `<div class="empty"><h1>Loading cases…</h1><p>Connecting to the shared case library.</p></div>`;
+  } else {
+    v.innerHTML = `<div class="empty"><h1>No cases yet</h1><p>Each case becomes a facilitator sheet: objective, patient, roles, setup, starting vitals, a stage-by-stage table, and debrief points. Every box tells you what goes in it.</p>
+      ${S.canWrite ? '<div class="foot"><button type="button" class="btn primary" data-act="new">Create the first case</button><button type="button" class="btn" data-act="goImport">Import a case file</button></div>' : ''}</div>`;
+  }
+}
+
+/* ---------- edits + saving ---------- */
+function setPath(o, path, val){
+  const ks = path.split('.'); let t = o;
+  for (let i = 0; i < ks.length - 1; i++) t = t[/^\d+$/.test(ks[i]) ? +ks[i] : ks[i]];
+  t[ks[ks.length-1]] = val;
+}
+function changed(){
+  S.editSeq++; S.err = '';
+  clearTimeout(S.saveTimer);
+  S.saveTimer = setTimeout(save, 1100);
+  renderSaveState();
+}
+async function save(){
+  clearTimeout(S.saveTimer);
+  if (!S.db || !S.draft || !S.currentId || !S.canWrite) return;
+  if (S.saving) { await S.saving.catch(()=>{}); if (S.editSeq > S.savedSeq) return save(); return; }
+  if (S.editSeq <= S.savedSeq) return;
+  const seq = S.editSeq, id = S.currentId, rev = rid();
+  S.ownRevs.add(rev);
+  const body = clone(S.draft);
+  body.rev = rev; body.updatedAt = Date.now(); body.updatedBy = S.myId || null;
+  S.saving = S.db.doc('cases/' + id).set(body);
+  renderSaveState();
+  try {
+    await S.saving;
+    if (S.currentId === id && S.draft) { S.draft.rev = rev; S.draft.updatedAt = body.updatedAt; S.draft.updatedBy = body.updatedBy; }
+    S.savedSeq = Math.max(S.savedSeq, seq);
+  } catch(e) {
+    if (e && e.code === 'invalid_argument' && S.user && (await safeCan()) !== true) { S.canWrite = false; S.err = 'You have view-only access, so changes were not saved.'; renderMain(); }
+    else S.err = e && e.code === 'quota_exceeded' ? 'The case library is full. Delete old cases to save.' : 'Could not save. Check your connection; your edits are still here.';
+  } finally {
+    S.saving = null; renderSaveState(); renderList();
+    if (S.editSeq > S.savedSeq && !S.err) S.saveTimer = setTimeout(save, 600);
+  }
+}
+async function safeCan(){ try { return await S.user.can('data.write'); } catch(e){ return null; } }
+async function flush(){ if (S.editSeq > S.savedSeq) await save(); }
+
+async function openCase(id){
+  if (id === S.currentId) return;
+  await flush();
+  const c = S.cases.get(id); if (!c) return;
+  S.currentId = id; S.draft = normalize(c); S.editSeq = S.savedSeq = 0; S.remoteChanged = false; S.confirmDel = false; S.err = '';
+  ls.set('simcase:last', id);
+  renderList(); renderMain(); window.scrollTo(0,0);
+}
+async function createCase(fromDraft, imported){
+  if (!S.db || !S.canWrite) return;
+  await flush();
+  const id = S.db.collection('cases').doc().id;
+  const body = fromDraft ? normalize(fromDraft) : imported ? normalize(imported) : blankCase();
+  if (fromDraft) { body.title = (body.title || 'Untitled case') + ' (copy)'; body.status = 'draft'; body.stages.forEach(s => s.id = rid()); }
+  body.createdAt = body.updatedAt = Date.now(); body.updatedBy = S.myId || null;
+  body.rev = rid(); S.ownRevs.add(body.rev);
+  try {
+    await S.db.doc('cases/' + id).set(body);
+    S.cases.set(id, body);
+    S.currentId = null; await openCase(id);
+    toast(fromDraft ? 'Duplicated. You are editing the copy.' : imported ? 'Imported as a new case. Check the AI notes at the top.' : 'New case created');
+    const t = $('#f-title'); if (t && !fromDraft && !imported) { t.focus(); t.select(); }
+  } catch(e) { toast(e && e.code === 'quota_exceeded' ? 'The case library is full. Delete old cases first.' : 'Could not create the case. Try again.'); }
+}
+async function deleteCase(){
+  const id = S.currentId; if (!id) return;
+  clearTimeout(S.saveTimer); S.editSeq = S.savedSeq;
+  try {
+    await S.db.doc('cases/' + id).delete();
+    S.cases.delete(id); S.currentId = null; S.draft = null; S.confirmDel = false;
+    const next = sortedCases()[0]; if (next) await openCase(next.id); else { renderList(); renderMain(); }
+    toast('Case deleted');
+  } catch(e){ toast('Could not delete the case. Try again.'); }
+}
+
+/* ---------- live updates ---------- */
+function onCases(snap){
+  const m = new Map(); snap.docs.forEach(d => { if (d.exists) m.set(d.id, d.data()); });
+  S.cases = m; S.loaded = true;
+  if (S.currentId) {
+    const c = m.get(S.currentId);
+    if (!c) { if (!snap.metadata.fromCache) { S.draft = null; S.currentId = null; toast('This case was deleted by someone else.'); } }
+    else if (c.rev && c.rev !== S.draft.rev && !S.ownRevs.has(c.rev)) {
+      const busy = S.editSeq > S.savedSeq || (document.activeElement && $('#view').contains(document.activeElement) && document.activeElement.matches('input,textarea,select'));
+      if (busy) { if (!S.remoteChanged) { S.remoteChanged = true; renderMain(); } }
+      else { S.draft = normalize(c); renderMain(); }
+    }
+  }
+  if (!S.currentId) {
+    const last = ls.get('simcase:last');
+    const pick = (last && m.has(last)) ? last : (sortedCases()[0] || {}).id;
+    if (pick) { S.currentId = null; openCase(pick); }
+    else renderMain();
+  }
+  renderList(); resolveNames();
+}
+
+/* ---------- Word export (.docx built in the page) ---------- */
+const X = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
+function runs(text, o = {}){
+  const t = String(text ?? '');
+  const rpr = `<w:rPr>${o.b?'<w:b/>':''}${o.color?`<w:color w:val="${o.color}"/>`:''}${o.sz?`<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>`:''}</w:rPr>`;
+  return t.split('\n').map((line,i) => `${i?`<w:r>${rpr}<w:br/></w:r>`:''}<w:r>${rpr}<w:t xml:space="preserve">${X(line)}</w:t></w:r>`).join('');
+}
+const val = v => (String(v ?? '').trim() ? String(v) : 'TBC');
+const para = (inner, o = {}) => `<w:p><w:pPr><w:spacing w:before="${o.before||0}" w:after="${o.after ?? 100}"/>${o.style?`<w:pStyle w:val="${o.style}"/>`:''}</w:pPr>${inner}</w:p>`;
+/* Text → Word paragraphs with real hanging-indent bullets/numbers and bold "Label:" prefixes. */
+function docParas(text, o = {}){
+  const sz = o.sz, after = o.after ?? 60, ind = o.ind || 300;
+  const t = String(text || '');
+  const lines = t.trim() ? t.split('\n').map(l => l.trim()).filter(Boolean) : ['TBC'];
+  let inNum = false;
+  return lines.map(raw => {
+    let m, mark = '', body = cleanMd(raw), left = ind;
+    if ((m = body.match(BULLET_RE))) { mark = '•'; body = m[1]; if (inNum) left = ind * 2; }
+    else if ((m = body.match(NUM_RE))) { mark = m[1] + '.'; body = m[2]; inNum = true; }
+    else inNum = false;
+    const ro = {sz, color:o.color};
+    const lab = splitLabel(body);
+    const text_ = lab ? runs(lab[0] + (lab[1] ? ' ' : ''), {...ro, b:true}) + (lab[1] ? runs(lab[1], ro) : '') : runs(body, ro);
+    const pPr = `<w:pPr><w:spacing w:before="0" w:after="${after}"/>${mark ? `<w:tabs><w:tab w:val="left" w:pos="${left}"/></w:tabs><w:ind w:left="${left}" w:hanging="${ind}"/>` : ''}</w:pPr>`;
+    return `<w:p>${pPr}${mark ? runs(mark, ro) + '<w:r><w:tab/></w:r>' : ''}${text_}</w:p>`;
+  }).join('');
+}
+const secHeadDoc = (label, before = 180) => para(runs(label, {b:true, sz:22, color:'1D5E8C'}), {before, after:60});
+const labeled = (label, text) => secHeadDoc(label) + docParas(text);
+function cell(inner, w, fill){
+  return `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:tcMar><w:top w:w="80" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tcMar></w:tcPr>${inner}</w:tc>`;
+}
+function buildDocument(c){
+  const W = [2300, 2700, 3150, 3250, 3144];
+  const meta = [c.level && 'Learners: '+c.level, c.duration && 'Duration: '+c.duration, (STATUS.find(s=>s[0]===c.status)||STATUS[0])[1]].filter(Boolean).join('  ·  ');
+  const vl = vitalsLine(c);
+  const head = ['Stage and trigger','Patient or clinical event','Expected learner actions','Facilitator cues','LLEAP and physical actions'];
+  const hdrRow = `<w:tr><w:trPr><w:tblHeader/></w:trPr>${head.map((h,i) => cell(para(runs(h,{b:true,sz:20}),{after:0}), W[i], 'E7EDF2')).join('')}</w:tr>`;
+  const rows = c.stages.map((s,i) => {
+    const fill = i % 2 ? 'FFFFFF' : 'F5F6F7';
+    const first = para(runs((i+1)+' · '+(s.name||''),{b:true,sz:20,color:'1D5E8C'}),{after:60}) + docParas(s.trigger,{sz:19,after:50,ind:220});
+    return `<w:tr><w:trPr><w:cantSplit/></w:trPr>${cell(first,W[0],fill)}${[s.event,s.actions,s.cues,s.lleap].map((t,k) => cell(docParas(t,{sz:19,after:50,ind:220}),W[k+1],fill)).join('')}</w:tr>`;
+  }).join('');
+  const border = 'w:val="single" w:sz="4" w:space="0" w:color="C9D2DB"';
+  const table = `<w:tbl><w:tblPr><w:tblW w:w="${W.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:tblLayout w:type="fixed"/>
+    <w:tblBorders><w:top ${border}/><w:left ${border}/><w:bottom ${border}/><w:right ${border}/><w:insideH ${border}/><w:insideV ${border}/></w:tblBorders></w:tblPr>
+    <w:tblGrid>${W.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${hdrRow}${rows}</w:tbl>`;
+  const body = [
+    para(runs(c.title || 'Untitled case', {b:true, sz:32}), {after:40}),
+    meta ? para(runs(meta, {color:'566472', sz:20}), {after:160}) : '',
+    (c.scenario||'').trim() ? labeled('Case summary', c.scenario) : '',
+    labeled('Objective', c.objective),
+    labeled('Patient', c.patient),
+    labeled('Learner brief', c.learnerBrief),
+    labeled('Roles', c.roles),
+    labeled('Setup', c.setup),
+    secHeadDoc('Initial settings') + docParas(vl || 'TBC') + (c.vent ? docParas(c.vent) : ''),
+    para(runs('Scenario progression', {b:true, sz:26}), {before:240, after:120}),
+    table,
+    para('', {after:60}),
+    labeled('End point', c.end),
+    labeled('Debrief', c.debrief)
+  ].join('');
+  return wrapDoc(body, true);
+}
+function wrapDoc(body, landscape){
+  const sect = landscape
+    ? '<w:pgSz w:w="15840" w:h="12240" w:orient="landscape"/><w:pgMar w:top="605" w:right="648" w:bottom="576" w:left="648" w:header="720" w:footer="346" w:gutter="0"/>'
+    : '<w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080" w:header="720" w:footer="346" w:gutter="0"/>';
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>${body}
+<w:sectPr>${sect}</w:sectPr></w:body></w:document>`;
+}
+function learnerDocument(c, mode){
+  const d = learnerDoc(c, mode);
+  const body = [
+    para(runs(d.title, {b:true, sz:32}), {after:40}),
+    para(runs(d.sub, {color:'566472', sz:20}), {after:240}),
+    ...d.blocks.map(b => para(runs(b.h, {b:true, sz:24, color:'1D5E8C'}), {before:220, after:80}) + docParas(b.text, b.fixed ? {color:'566472', after:80} : {after:80, ind:340}))
+  ].join('');
+  return wrapDoc(body, false);
+}
+const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="en-US"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="100" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+async function buildDocx(docXml){
+  if (!window.JSZip) throw new Error('nozip');
+  const z = new JSZip();
+  z.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`);
+  z.file('_rels/.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  z.file('word/_rels/document.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+  z.file('word/document.xml', docXml);
+  z.file('word/styles.xml', STYLES);
+  return z.generateAsync({type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+async function exportWord(){
+  const btn = $('#exportBtn');
+  const dl = window.claude ? await window.claude.use('downloads') : null;
+  if (!dl) { toast('Word export isn\'t available in this view. Open the page in Claude to download.'); return; }
+  btn.disabled = true;
+  try {
+    const learner = S.view === 'learner';
+    const blob = await buildDocx(learner ? learnerDocument(S.draft, S.learnerMode) : buildDocument(S.draft));
+    const name = (S.draft.title || 'Simulation case').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim().slice(0,80) || 'Simulation case';
+    const suffix = learner ? (S.learnerMode === 'pre' ? ' - learner pre-brief' : ' - debrief handout') : ' - facilitator';
+    await dl.save({filename: name + suffix + '.docx', data: blob});
+    toast('Word file saved');
+  } catch(e) {
+    const code = e && e.code;
+    if (code === 'declined') toast('Export cancelled');
+    else if (code === 'rate_limited') toast('A save prompt is already open. Finish that one first.');
+    else if (e && e.message === 'nozip') toast('The Word builder did not load. Reload the page and try again.');
+    else toast('Could not export the Word file.');
+  } finally { btn.disabled = false; }
+}
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){
+  let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role','status'); document.body.appendChild(t); }
+  t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.id === 'search') { S.filter = el.value; renderList(); return; }
+  if (el.id === 'importIn') { S.importText = el.value; S.confirmReplace = false; refreshImport(); return; }
+  const p = el.dataset && el.dataset.path; if (!p || !S.draft || !S.canWrite) return;
+  setPath(S.draft, p, el.value);
+  if (el.tagName === 'TEXTAREA') autosize(el);
+  changed(); refreshFieldTbc(p);
+  if (p === 'llmNotes') { const out = $('#promptOut'); if (out) out.value = buildPrompt(S.draft); }
+  if (p === 'scenario') {
+    const has = !!el.value.trim(), ns = document.querySelector('.next-step');
+    if (ns) {
+      ns.querySelector('.help').textContent = has ? 'Ready for the AI. It will fill every section below from your scenario, then you review and import.' : 'Write the scenario first. The AI handoff unlocks once it has text.';
+      ns.querySelector('button').classList.toggle('primary', has);
+    }
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'mobilePick' && e.target.value) openCase(e.target.value);
+  if (e.target.id === 'askFirst') { S.askFirst = e.target.checked; ls.set('simcase:askFirst', S.askFirst ? 'on' : 'off'); renderHandoff(); return; }
+  if (e.target.id === 'importFile') {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    if (f.size > 2e6) { toast('That file is too large to be a case file.'); return; }
+    const rd = new FileReader();
+    rd.onload = () => { S.importText = String(rd.result || ''); S.confirmReplace = false; renderImport(); toast('File loaded: ' + f.name); };
+    rd.onerror = () => toast('Could not read that file.');
+    rd.readAsText(f);
+    e.target.value = '';
+  }
+});
+async function copyPrompt(){
+  const text = buildPrompt(S.draft);
+  try { await navigator.clipboard.writeText(text); toast('Prompt copied. Paste it into Claude or another AI.'); }
+  catch(e) { const out = $('#promptOut'); if (out) { out.focus(); out.select(); } toast('Press Ctrl+C (Cmd+C on Mac) to copy the selected prompt.'); }
+}
+async function downloadPrompt(){
+  const dl = window.claude ? await window.claude.use('downloads') : null;
+  if (!dl) { toast('Downloads aren\'t available in this view. Use Copy prompt instead.'); return; }
+  try { await dl.save({filename: fileSlug(S.draft.title) + '-ai-handoff.md', data: buildPrompt(S.draft)}); toast('Prompt file saved'); }
+  catch(e) { toast(e && e.code === 'declined' ? 'Download cancelled' : 'Could not save the file. Use Copy prompt instead.'); }
+}
+document.addEventListener('focusout', () => { if (S.editSeq > S.savedSeq) { clearTimeout(S.saveTimer); S.saveTimer = setTimeout(save, 250); } });
+document.addEventListener('click', e => {
+  const item = e.target.closest('.item[data-id]'); if (item) { openCase(item.dataset.id); return; }
+  const tg = e.target.closest('[data-toggle]'); if (tg) { toggleSec(tg.dataset.toggle); return; }
+  const ca = e.target.closest('[data-act="collapseAll"],[data-act="expandAll"]');
+  if (ca) {
+    if (ca.dataset.act === 'collapseAll') document.querySelectorAll('[data-sec]').forEach(el => S.collapsed.add(el.dataset.sec));
+    else S.collapsed.clear();
+    saveCollapsed(); renderEditor(); return;
+  }
+  const b = e.target.closest('button'); if (!b) return;
+  const act = b.dataset.act;
+  if (b.id === 'newBtn' || act === 'new') return createCase();
+  if (b.id === 'dupBtn') return S.draft && createCase(S.draft);
+  if (b.id === 'tabEdit') { S.view = 'edit'; renderMain(); return; }
+  if (b.id === 'tabSheet') { S.view = 'sheet'; renderMain(); return; }
+  if (b.id === 'tabHandoff') { S.view = 'handoff'; renderMain(); return; }
+  if (b.id === 'tabLearner') { S.view = 'learner'; renderMain(); return; }
+  if (act === 'goHandoff') { flush(); S.view = 'handoff'; renderMain(); window.scrollTo(0,0); return; }
+  if (act === 'goScenario') {
+    S.view = 'edit'; S.collapsed.delete('scenario'); saveCollapsed(); renderMain();
+    const t = $('#f-scenario'); if (t) { t.scrollIntoView({block:'center'}); t.focus({preventScroll:true}); }
+    return;
+  }
+  if (act === 'lmode') { S.learnerMode = b.dataset.mode === 'post' ? 'post' : 'pre'; renderLearner(); return; }
+  if (b.id === 'copyLearner') return copyLearner();
+  if (b.id === 'tabImport' || b.id === 'importBtn' || act === 'goImport') { S.view = 'import'; S.confirmReplace = false; renderMain(); window.scrollTo(0,0); return; }
+  if (b.id === 'copyPrompt') return copyPrompt();
+  if (b.id === 'dlPrompt') return downloadPrompt();
+  if (act === 'importClear') { S.importText = ''; S.confirmReplace = false; renderImport(); return; }
+  if (act === 'importNew') return applyImport(true);
+  if (act === 'replace') { S.confirmReplace = true; refreshImport(); return; }
+  if (act === 'replaceNo') { S.confirmReplace = false; refreshImport(); return; }
+  if (act === 'replaceYes') return applyImport(false);
+  if (act === 'clearAi') { S.draft.aiNotes = ''; changed(); renderEditor(); toast('AI notes cleared'); return; }
+  if (b.id === 'exportBtn') return exportWord();
+  if (b.id === 'tipsBtn') { const off = !document.body.classList.contains('tips-off'); document.body.classList.toggle('tips-off', off); b.textContent = off ? 'Show tips' : 'Hide tips'; ls.set('simcase:tips', off ? 'off' : 'on'); return; }
+  if (b.id === 'nextTbc') {
+    if (S.view !== 'edit') { S.view = 'edit'; renderMain(); }
+    const first = document.querySelector('.field.is-tbc');
+    if (first) {
+      let p = first.closest('[data-sec]');
+      while (p) { if (S.collapsed.has(p.dataset.sec)) toggleSec(p.dataset.sec, true); p = p.parentElement && p.parentElement.closest('[data-sec]'); } first.scrollIntoView({block:'center', behavior:'smooth'}); const inp = first.querySelector('textarea,input'); if (inp) setTimeout(() => inp.focus({preventScroll:true}), 300); }
+    return;
+  }
+  if (b.id === 'addStage') {
+    S.draft.stages.push({id:rid(), name:'Stage ' + (S.draft.stages.length + 1), trigger:'', event:'', actions:'', cues:'', lleap:''});
+    changed(); renderEditor();
+    const last = document.querySelector('.stage:last-child input'); if (last) { last.focus(); last.select(); }
+    return;
+  }
+  if (act === 'up' || act === 'down' || act === 'rm') {
+    const i = +b.dataset.i, st = S.draft.stages;
+    if (act === 'rm') st.splice(i, 1);
+    else { const j = act === 'up' ? i - 1 : i + 1; if (j < 0 || j >= st.length) return; [st[i], st[j]] = [st[j], st[i]]; }
+    changed(); renderEditor(); return;
+  }
+  if (act === 'del') { S.confirmDel = true; $('#foot').innerHTML = footHtml(); return; }
+  if (act === 'delNo') { S.confirmDel = false; $('#foot').innerHTML = footHtml(); return; }
+  if (act === 'delYes') return deleteCase();
+  if (act === 'loadRemote') {
+    const c = S.cases.get(S.currentId);
+    if (c) { clearTimeout(S.saveTimer); S.editSeq = S.savedSeq; S.draft = normalize(c); }
+    S.remoteChanged = false; renderMain(); return;
+  }
+});
+window.addEventListener('resize', () => document.querySelectorAll('#view textarea').forEach(autosize));
+setInterval(() => { renderSaveState(); }, 30000);
+
+/* ---------- boot ---------- */
+if (ls.get('simcase:askFirst') === 'off') S.askFirst = false;
+try { const cs = JSON.parse(ls.get('simcase:collapsed') || '[]'); if (Array.isArray(cs)) S.collapsed = new Set(cs.map(String)); } catch(e){}
+if (ls.get('simcase:tips') === 'off') { document.body.classList.add('tips-off'); $('#tipsBtn').textContent = 'Show tips'; }
+renderList();
+(async () => {
+  const C = window.claude;
+  const [db, user] = C ? await Promise.all([C.use('db'), C.use('user')]) : [null, null];
+  S.db = db; S.user = user;
+  if (!db) { S.noStore = true; S.loaded = true; renderList(); renderMain(); return; }
+  if (user) {
+    try { S.myId = await user.id(); } catch(e){}
+    const w = await safeCan(); if (w === false) S.canWrite = false;
+  }
+  renderList();
+  db.collection('cases').onSnapshot(onCases, err => {
+    S.err = 'Lost connection to the case library. Reload the page.'; renderSaveState(); toast(S.err);
+  });
+})();
+})();
+</script>
+</body>
+</html>

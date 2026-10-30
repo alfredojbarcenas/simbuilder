@@ -1,11 +1,6 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Build anesthesia simulation facilitator sheets, learner handouts and AI handoffs.">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Sim Case Builder</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -210,6 +205,74 @@ textarea.mono{overflow:auto;resize:vertical}
 .lsheet p{font-size:15px;line-height:1.6}
 .lrules{border-top:1px solid var(--line);padding-top:14px}
 .lrules p{color:var(--muted);font-size:14px}
+/* mannequin orders */
+.osheet{gap:14px}
+.osheet h3.osec{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.osheet h3.osec:first-of-type{border-top:0;padding-top:0}
+.ocards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px}
+.ocard{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;background:var(--bg);display:flex;flex-direction:column;gap:4px;min-width:0}
+.ocard h4{margin:0 0 4px;font-size:14.5px;color:var(--accent)}
+.ocard p{font-size:13.5px}
+.otext{display:flex;flex-direction:column;gap:4px}
+.sheet table.otbl{min-width:560px}
+.onote{color:var(--muted);font-size:12.5px!important;border-top:1px solid var(--line);padding-top:10px}
+/* facilitator stage boxes */
+.initline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
+.initlab{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--accent)}
+.initline p{margin:0}
+.initvent{font-size:13.5px;color:var(--muted)}
+.stgs{display:flex;flex-direction:column;gap:14px}
+.stg{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.stg-h{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;padding:10px 14px;background:var(--surface-2)}
+.stg-n{font-weight:700;color:var(--accent);font-size:15px}
+.stg-t{color:var(--muted);font-size:14px}
+.stg-row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.stg-c{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-top:1px solid var(--line);min-width:0}
+.stg-row3 .stg-c + .stg-c{border-left:1px solid var(--line)}
+.stg-c h5{margin:0;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stg-full{background:color-mix(in srgb,var(--surface-2) 40%,var(--surface))}
+.blk.setup p b{color:var(--ink)}
+.scols,.rcols{columns:2;column-gap:32px}
+.rcols p{break-inside:avoid;margin-bottom:4px}
+.sgrp{break-inside:avoid;display:flex;flex-direction:column;gap:2px;margin-bottom:12px}
+.sgrp ul{margin-top:2px!important}
+@media (max-width:760px){.scols,.rcols{columns:1}}
+@media (max-width:760px){.stg-row3{grid-template-columns:1fr}.stg-row3 .stg-c + .stg-c{border-left:0}}
+/* update preview */
+.chgs{display:flex;flex-direction:column;gap:10px}
+.chg{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.chg-l{padding:8px 12px;font-weight:600;font-size:13.5px;background:var(--surface-2)}
+.chg-b{display:grid;grid-template-columns:1fr 1fr}
+.chg-b > div{padding:10px 12px;min-width:0;display:flex;flex-direction:column;gap:4px;max-height:260px;overflow:auto}
+.chg-b span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.chg-old{color:var(--muted);border-right:1px solid var(--line)}
+.chg-new span{color:var(--ok)}
+.chg-b .pre{font-size:13px;overflow-wrap:anywhere}
+@media (max-width:760px){.chg-b{grid-template-columns:1fr}.chg-old{border-right:0;border-bottom:1px solid var(--line)}}
+/* imaging */
+.imgbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.imgs{display:flex;flex-direction:column;gap:12px}
+.imgc{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;padding:12px;border:1px solid var(--line);border-radius:var(--r);background:var(--bg)}
+.imgt{display:flex;align-items:center;justify-content:center;background:#000;border-radius:6px;overflow:hidden;min-height:140px;max-height:220px}
+.imgt img{max-width:100%;max-height:220px;object-fit:contain;display:block}
+.imgx{color:#ccc;font-size:12.5px;padding:12px;text-align:center}
+.imgf{display:flex;flex-direction:column;gap:10px;min-width:0}
+.imgtools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.imgrow{display:flex;gap:10px;flex-wrap:wrap}
+.imgmini{display:flex;flex-direction:column;gap:4px;width:120px;text-decoration:none;color:var(--ink);font-size:12.5px}
+.imgmini img{width:120px;height:80px;object-fit:cover;border-radius:6px;background:#000;border:1px solid var(--line)}
+.imgnote{font-size:13.5px;margin-top:6px!important;color:var(--muted)}
+@media (max-width:760px){.imgc{grid-template-columns:1fr}}
+.target{font-size:14px;padding:8px 12px;border-radius:var(--r);background:var(--accent-soft);align-self:flex-start}
+.banner.ok-b{background:var(--ok-bg);color:var(--ink)}
+.banner.danger-b{background:var(--danger-bg);color:var(--ink);border:1px solid color-mix(in srgb,var(--danger) 40%,transparent)}
+.switchbar{position:sticky;top:64px;z-index:4;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.cno{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.cno.big{font-size:13px;padding:0 10px;color:var(--accent);font-weight:600}
+.sortbar{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.sortbar .tabs button{padding:4px 9px;font-size:12.5px}
+@media (max-width:760px){.sortbar{display:none}}
+.orders-field textarea{font-family:var(--f-mono);font-size:13px;line-height:1.55}
 
 @media (max-width:900px){
   .vitals{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -230,53 +293,7 @@ textarea.mono{overflow:auto;resize:vertical}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
-</head>
-<body>
-<script>
-/* GitHub Pages demo: stands in for Claude's shared storage. Cases save in this browser only. */
-(function(){
-  if (window.claude) return;
-  window.__LOCAL_DEMO = true;
-  var KEY = 'simcase:demo:cases';
-  var SAMPLE = {"title": "Example – Post-induction collapse (shoulder)", "level": "CA-1", "duration": "15 + 20 min", "status": "review", "scenario": "72F with COPD and OSA for right total shoulder after an effective interscalene block.\nResident induces with propofol and hand-ventilates fast.\nOver ~2 min BP and EtCO2 fall from auto-PEEP (breath stacking).\nIf the learner disconnects the circuit and lets her exhale, BP recovers.\nIf they only give pressors, she keeps drifting down until they call for help.\nEnd when the cause is found and fixed, or at 15 min.", "objective": "1. Recognize hypotension and falling EtCO2 after induction\n2. Build a differential that includes auto-PEEP\n3. Call for help early", "patient": "Age/sex: 72F\nWeight: 85 kg (BMI 32)\nProcedure: right total shoulder replacement\nHistory: COPD (no home O2), HTN, DM, OSA (poor CPAP use)\nMedications: lisinopril (took today), metformin\nBlock/regional: effective interscalene, done 30 min ago", "learnerBrief": "You are the anesthesia resident.\nThe block is done and the patient is in the OR.\nPrepare and induce. Your attending can be called.", "roles": "Attending: available by phone, arrives if called\nSurgeon: in the room, impatient to start\nNurse: follows orders, does not volunteer ideas", "setup": "- Supine, awake, 2 L nasal cannula\n- 20G IV left hand, standard monitors\n- Mock induction and emergency drugs on the cart", "vitals": {"hr": "82", "rhythm": "Sinus", "bp": "148/86", "spo2": "94", "rr": "18", "etco2": "", "temp": "36.6"}, "vent": "Mode: none at start\nAfter intubation: VC, Vt 450, RR 12, PEEP 5, FiO2 1.0", "stages": [{"id": "ex1", "name": "Before induction", "trigger": "Scenario start", "event": "- Patient arrives awake after an effective block", "actions": "- Checks patient, machine, suction and drugs\n- States an airway plan", "cues": "- Give the vignette\n- Nurse: \"Ready when you are.\"", "lleap": "- Baseline vitals as in Initial settings\n- Patient awake and talking"}, {"id": "ex2", "name": "Induction", "trigger": "Learner gives induction drug", "event": "- Apneic after propofol\n- Learner hand-ventilates fast\nHidden cause: breath stacking starts", "actions": "- Preoxygenates to EtO2 > 80%\n- Gives propofol 1.5 mg/kg = 130 mg IV\n- Ventilates at a normal rate", "cues": "- IF ventilation rate > 20 → go to stage 3 after 60 s\n- Nurse: \"Do you want the rocuronium now?\"", "lleap": "- SpO2: 94 → 99 over 120 s\n- RR: 18 → 0 over 30 s after propofol"}, {"id": "ex3", "name": "After induction", "trigger": "60 s of fast ventilation", "event": "- BP and EtCO2 fall\nHidden cause: auto-PEEP", "actions": "- Says the change out loud\n- Checks circuit and ventilation\n- Disconnects and lets her exhale\n- Calls for help", "cues": "- IF disconnected → stage 4\n- IF only pressors → BP keeps falling\n- IF nothing by 3 min → Surgeon: \"Is everything OK up there?\"", "lleap": "- BP: 128/76 → 72/40 over 90 s\n- EtCO2: 38 → 18 over 90 s\n- HR: 82 → 112 over 60 s\n- Breath sounds: decreased bilaterally"}, {"id": "ex4", "name": "Recovery", "trigger": "Circuit disconnected for 20–30 s", "event": "- BP and EtCO2 recover", "actions": "- Resumes ventilation at a lower rate and longer expiration\n- Reassesses and explains to the team", "cues": "- IF rate stays high → BP falls again after 60 s", "lleap": "- BP: 72/40 → 118/70 over 60 s\n- EtCO2: 18 → 34 over 60 s\n- HR: 112 → 90 over 60 s"}], "end": "End when: cause identified and ventilation corrected, or 15 min\nFinal vitals: BP 118/70, HR 90, EtCO2 34", "debrief": "1. Post-induction hypotension: build the differential\n2. Dynamic hyperinflation in COPD and how to spot it\n3. Calling for help early\nReferences:\n- Add your department's preferred references", "llmNotes": "", "aiNotes": "", "createdAt": 1792630000000, "updatedAt": 1792630000000, "updatedBy": null, "rev": "example1"};
-  function load(){ try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch(e){ return null; } }
-  function save(){ try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e){} }
-  var store = load();
-  if (!store) { store = {'example-01': SAMPLE}; save(); }
-  var listeners = new Set();
-  var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
-  function snap(){
-    var md = {fromCache:false, hasPendingWrites:false};
-    var docs = Object.keys(store).map(function(id){ return {id:id, exists:true, data:function(){ return clone(store[id]); }, metadata:md}; });
-    return {docs:docs, size:docs.length, empty:!docs.length, metadata:md, docChanges:function(){ return []; }};
-  }
-  function emit(){ var s = snap(); listeners.forEach(function(f){ try { f(s); } catch(e){ console.error(e); } }); }
-  function rid(){ return Math.random().toString(36).slice(2, 12); }
-  function docRef(id){
-    return {id:id, path:'cases/' + id,
-      set:function(d){ store[id] = clone(d); save(); setTimeout(emit, 0); return Promise.resolve(); },
-      update:function(d){ store[id] = Object.assign(store[id] || {}, clone(d)); save(); setTimeout(emit, 0); return Promise.resolve(); },
-      delete:function(){ delete store[id]; save(); setTimeout(emit, 0); return Promise.resolve(); },
-      get:function(){ return Promise.resolve({id:id, exists:!!store[id], data:function(){ return store[id] && clone(store[id]); }}); }};
-  }
-  var db = {
-    collection:function(p){ return {path:p, doc:function(id){ return docRef(id || rid()); },
-      onSnapshot:function(cb){ listeners.add(cb); setTimeout(function(){ cb(snap()); }, 0); return function(){ listeners.delete(cb); }; }}; },
-    doc:function(p){ return docRef(String(p).split('/').pop()); }
-  };
-  var downloads = { save:function(r){
-    var blob = r.data instanceof Blob ? r.data : new Blob([r.data]);
-    var url = URL.createObjectURL(blob), a = document.createElement('a');
-    var fname = String(r.filename).replace(/[\u2013\u2014]/g, '-').normalize('NFKD').replace(/[^\x20-\x7e]/g, '').replace(/\s+/g, ' ').trim() || 'download';
-    a.href = url; a.download = fname; a.rel = 'noopener'; a.style.display = 'none'; document.body.appendChild(a); a.click();
-    setTimeout(function(){ a.remove(); }, 1000);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
-    return Promise.resolve({status:'saved'});
-  }};
-  window.claude = { use:function(n){ return Promise.resolve(n === 'db' ? db : n === 'downloads' ? downloads : null); } };
-  window.addEventListener('storage', function(e){ if (e.key === KEY) { store = load() || {}; emit(); } });
-})();
-</script>
+
 <div class="app" id="app">
   <aside class="rail">
     <div class="brand"><b>Sim Case Builder</b><span>Anesthesia simulation · facilitator sheets</span></div>
@@ -286,9 +303,10 @@ textarea.mono{overflow:auto;resize:vertical}
       <button class="btn" id="dupBtn" type="button" disabled>Duplicate</button>
     </div>
     <select class="mobile-pick" id="mobilePick" aria-label="Open a case"></select>
-    <input class="search" id="search" type="text" placeholder="Search cases" aria-label="Search cases">
+    <input class="search" id="search" type="text" placeholder="Search title or case number" aria-label="Search cases">
+    <div class="sortbar"><span>Sort</span><div class="tabs" role="group" aria-label="Sort cases"><button type="button" data-act="sort" data-sort="edited" id="sortEdited" aria-pressed="true">Last edited</button><button type="button" data-act="sort" data-sort="number" id="sortNumber" aria-pressed="false">Case number</button></div></div>
     <ul class="list" id="list"></ul>
-    <div class="rail-note"><b>Demo version.</b> Cases save in this browser only, so other people won't see yours. Clearing browser data erases them.</div>
+    <div class="rail-note">Demo: cases save in this browser only. Changes save automatically.</div>
   </aside>
   <main class="main">
     <div class="bar" id="bar" hidden>
@@ -296,6 +314,7 @@ textarea.mono{overflow:auto;resize:vertical}
         <button type="button" id="tabEdit" aria-pressed="true">Edit</button>
         <button type="button" id="tabSheet" aria-pressed="false">Facilitator</button>
         <button type="button" id="tabLearner" aria-pressed="false">Learner</button>
+        <button type="button" id="tabOrders" aria-pressed="false">Mannequin orders</button>
         <button type="button" id="tabHandoff" aria-pressed="false">AI handoff</button>
         <button type="button" id="tabImport" aria-pressed="false">Import</button>
       </div>
@@ -312,6 +331,76 @@ textarea.mono{overflow:auto;resize:vertical}
 </div>
 
 <script>
+/* Standalone demo shim: replaces claude.ai capabilities with browser storage.
+   Cases -> localStorage. Images -> IndexedDB. Downloads -> normal file download. */
+(() => {
+  window.__SIM_DEMO = true;
+  const KEY = 'simcase-demo:cases';
+  const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(15)), b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; } };
+  const write = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) { const er = new Error('Browser storage is full'); er.code = 'quota_or_state'; throw er; } };
+  const subs = new Set();
+  const emit = () => {
+    const o = read();
+    const snap = { docs: Object.keys(o).map(id => ({ id, exists: true, data: () => JSON.parse(JSON.stringify(o[id])) })), metadata: { fromCache: false } };
+    subs.forEach(cb => { try { cb(snap); } catch (e) { console.error(e); } });
+  };
+  window.addEventListener('storage', e => { if (e.key === KEY) emit(); });
+  const docRef = path => {
+    const id = path.split('/').pop();
+    return {
+      id,
+      async set(body) { const o = read(); o[id] = body; write(o); setTimeout(emit, 0); },
+      async delete() { const o = read(); delete o[id]; write(o); setTimeout(emit, 0); },
+      async get() { const o = read(); return { id, exists: id in o, data: () => o[id] }; }
+    };
+  };
+  const db = {
+    collection: () => ({ doc: () => docRef('cases/' + rid()), onSnapshot(cb) { subs.add(cb); setTimeout(emit, 0); return () => subs.delete(cb); } }),
+    doc: docRef
+  };
+
+  /* images in IndexedDB, exposed as object URLs */
+  window.__simImgUrls = {};
+  const idb = () => new Promise((res, rej) => { const r = indexedDB.open('simcase-demo', 1); r.onupgradeneeded = () => r.result.createObjectStore('images'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const tx = async (mode, fn) => { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction('images', mode); const out = fn(t.objectStore('images')); t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); };
+  const loadImages = async () => {
+    try {
+      const d = await idb();
+      await new Promise(res => {
+        const c = d.transaction('images').objectStore('images').openCursor();
+        c.onsuccess = () => { const cur = c.result; if (!cur) return res(); window.__simImgUrls[cur.key] = URL.createObjectURL(cur.value); cur.continue(); };
+        c.onerror = () => res();
+      });
+    } catch (e) {}
+  };
+  const assets = {
+    async upload(file) {
+      const id = 'img_' + rid();
+      try { await tx('readwrite', s => s.put(file, id)); }
+      catch (e) { const er = new Error('storage'); er.code = 'quota_or_state'; throw er; }
+      window.__simImgUrls[id] = URL.createObjectURL(file);
+      return { id };
+    },
+    async delete(id) { try { await tx('readwrite', s => s.delete(id)); } catch (e) {} if (window.__simImgUrls[id]) { URL.revokeObjectURL(window.__simImgUrls[id]); delete window.__simImgUrls[id]; } }
+  };
+
+  const downloads = {
+    async save({ filename, data }) {
+      const blob = data instanceof Blob ? data : new Blob([data], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+  };
+
+  const user = { async id() { return 'local'; }, async can() { return true; }, async profiles() { return {}; } };
+  const ready = loadImages();
+  const caps = { db, user, assets, downloads };
+  window.claude = { async use(name) { await ready; return caps[name] || null; } };
+})();
+</script>
+
+<script>
 (() => {
 'use strict';
 
@@ -321,10 +410,11 @@ const HELP = {
   title:'A name facilitators will recognize in the list. Example: "Post-induction collapse – shoulder".',
   level:'Who this is for: CA-1, CA-2, CA-3, fellow, or mixed.',
   duration:'Scenario minutes + debrief minutes. Example: 15 + 20 min.',
+  summary:'For the facilitator only: a short abstract of the whole finished case in 3 short paragraphs (blank line between): 1) patient and setting; 2) what goes wrong, the hidden cause and how it evolves; 3) the management you hope to see, how it ends, and the teaching focus. The AI handoff writes it from the finished case. Learners never see it.',
   objective:'1–3 objectives the learner should show in the room. Start each with an action verb: recognize, manage, communicate, call for help.',
-  patient:'What the learner gets in the vignette: age/sex, procedure, history, meds, allergies, airway exam, labs, prior anesthetics. Keep the hidden cause out of here. It goes in the stages.',
+  patient:'The handoff the resident reads before the case, written like a verbal sign-out: age, weight, procedure, history, meds, allergies, airway, labs, prior anesthetics, any block. It becomes the learner pre-brief. Keep the hidden cause out of here. It goes in the stages.',
   roles:'Who is in the room. For each actor (confederate): who they play and what they should or should not do. Example: "Surgeon: pushes to start, asks \'is it the block?\'".',
-  setup:'Room and mannequin at the start: position, airway, IV/arterial line, monitors, drugs and equipment available, and any deliberate error you plant (empty suction, wrong drug).',
+  setup:'A checklist for setting up the room fast. Put each item on its own line starting with "- ", grouped under short headings: Patient, Monitors & lines, Airway, Drugs, Equipment, Planted error (skip any that do not apply).',
   initial:'Starting monitor values you will set in LLEAP. Leave a box empty if it does not apply (e.g. EtCO2 before induction).',
   vent:'Ventilator mode and settings if intubated (mode, Vt, RR, PEEP, FiO2), plus any other starting state (breath sounds, pupils, temp).',
   stageName:'Short name for this stage. Example: "Induction".',
@@ -336,25 +426,29 @@ const HELP = {
   end:'When you stop the scenario: the end point (e.g. cause found and treated, help arrives, or a time limit) and the final vitals.',
   debrief:'2–4 teaching points tied to your objectives, plus any algorithm, guideline or reference to share.',
   scenario:'Start here. Write the whole case the way you picture it, in plain words: the patient, the setting, what goes wrong and why, how it evolves, what a good learner should do, and how it ends. This is the minimum. Once it is written, AI handoff can build every other field from it.',
-  learnerBrief:'What you read to the learner before they walk in: who they are, what they are asked to do, and who they can call. Goes on the learner pre-brief. Never include the hidden cause.',
+  learnerBrief:'Two short lines for the learner pre-brief: "Role:" (e.g. Senior anesthesia resident) and "Task:" (e.g. Prepare, induce and manage the case, or Cover a lunch break). No patient details here; those go in the patient handoff. Never include the hidden cause.',
+  handoff:'Written: learners read the patient handoff on the pre-brief. Verbal: a provider in the room gives it aloud, so learners get no written handoff; the facilitator sheet keeps the full text as that provider\'s script.',
   llmNotes:'Anything not in your scenario: learner level, teaching focus, local limits (drugs on your cart, equipment, mannequin model). Saved with the case and added to the prompt.',
-  aiNotes:'Review each line, fix the case where needed, then mark as checked. These notes are not exported to Word.'
+  aiNotes:'Notes you marked "later" in the AI chat. Fix the case where needed, then mark as checked. These notes are not exported to Word.',
+  orders:'Everything the operator needs to program the mannequin, with no clinical decisions left. The AI handoff writes this. Format: "## " starts a section, "### " starts a patient state card, lines starting with "|" form a table (first row = column names), "Label: value" lines and numbered lists work as everywhere else.'
 };
 const PH = {
+  summary:'e.g. A 72-year-old woman with COPD and OSA is induced for a shoulder replacement after an interscalene block.\n\nRapid hand ventilation causes dynamic hyperinflation (auto-PEEP), so BP and EtCO2 fall over two minutes.\n\nThe learner should recognize the pattern, disconnect the circuit and let her exhale; BP then recovers, while pressors alone only buy time. Ends when the cause is treated, or at 15 min. Teaching focus: post-induction hypotension and auto-PEEP in COPD.',
   objective:'e.g. Recognize hypotension and falling EtCO2 after induction; build a differential; treat and call for help.',
-  patient:'Age/sex: 72F\nWeight: 85 kg (BMI 32)\nProcedure: right total shoulder replacement\nHistory: COPD, HTN, DM, OSA (poor CPAP use)\nMedications: lisinopril, metformin',
+  patient:'e.g. Mrs. R is a 72-year-old woman, 85 kg, here for a right total shoulder replacement after a fall. She has COPD without home oxygen, hypertension, diabetes and OSA, and uses her CPAP inconsistently. She takes lisinopril (including this morning) and metformin. Her interscalene block was done 30 minutes ago and is working well.',
   roles:'Attending: available by phone, arrives if called\nSurgeon: in the room, impatient to start\nNurse: follows orders, does not volunteer ideas',
-  setup:'- Supine, awake, on 2 L nasal cannula\n- 20G IV left hand, standard monitors\n- Mock induction and emergency drugs on the cart',
+  setup:'Patient:\n- Supine, awake, 2 L nasal cannula\nMonitors & lines:\n- Standard ASA monitors\n- 20G IV left hand\nDrugs:\n- Propofol 200 mg/20 mL, labeled\n- Phenylephrine 100 mcg/mL\nEquipment:\n- Bag-valve mask, suction on\nPlanted error:\n- None',
   vent:'e.g. Not intubated at start. After intubation: VC, Vt 450, RR 12, PEEP 5, FiO2 1.0.',
   event:'e.g. BP and EtCO2 fall over 60 s. Hidden cause: …',
-  actions:'- Recognizes the BP and EtCO2 change and says it out loud\n- Checks the circuit and ventilation\n- Calls for help',
+  actions:'1. Recognizes the BP and EtCO2 change and says it out loud\n2. Checks the circuit and ventilation\n3. Calls for help',
   cues:'- IF circuit disconnected → BP recovers over 60 s\n- IF only pressors → BP keeps falling\n- IF nothing by 3 min → Surgeon: "Is everything OK up there?"',
-  lleap:'- BP: 128/76 → 72/40 over 90 s\n- EtCO2: 38 → 18 over 90 s\n- HR: 82 → 112 over 60 s',
+  lleap:'1. BP: 128/76 → 72/40 over 90 s\n2. EtCO2: 38 → 18 over 90 s\n3. HR: 82 → 112 over 60 s',
   end:'e.g. End when the learner identifies the cause and treats it, or at 15 min.',
-  debrief:'1. Post-induction hypotension: build the differential\n2. Dynamic hyperinflation in COPD\nReferences:\n- …',
+  debrief:'e.g. Post-induction hypotension has a wide differential; walk through it out loud.\n\nIn COPD, fast ventilation traps air and drops venous return. Disconnecting is diagnostic and treatment.\n\nReferences:\n…',
   scenario:'e.g. 72F with COPD and OSA for total shoulder after an interscalene block. Resident induces with propofol and hand-ventilates fast. Over 2 min BP drops to 70/40 and EtCO2 falls from auto-PEEP. A good learner checks the circuit, disconnects, lets her exhale, and BP recovers. If they only give pressors, she keeps dropping until they call for help. End when the cause is found and fixed. Teach: post-induction hypotension differential, dynamic hyperinflation in COPD.',
-  learnerBrief:'e.g. You are the anesthesia resident for this case. The block is done and the patient is in the OR. Prepare and induce. Your attending is in the next room and can be called.',
-  llmNotes:'e.g. CA-1 learners. Keep it to 15 min. We have phenylephrine, ephedrine, epinephrine; no vasopressin on the cart.'
+  learnerBrief:'Role: Senior anesthesia resident\nTask: Prepare, induce and manage the case.',
+  llmNotes:'e.g. CA-1 learners. Keep it to 15 min. We have phenylephrine, ephedrine, epinephrine; no vasopressin on the cart.',
+  orders:'## 1. Case header\nSimulator: SimMan 3G\nMode: Theme\n...\n\n## 2. Learner events\n| Category | Button label | Exact meaning | Used as trigger in |\n| Drugs | Phenylephrine 100 mcg IV | Bolus given | S3 → S4 |\n\n## 3. Patient states\n### S1 Baseline\nEnter when: scenario start\nCardiovascular: HR 82, sinus rhythm, NIBP 128/76 (93)\n...'
 };
 const VITALS = [
   ['hr','HR','bpm'],['rhythm','Rhythm',''],['bp','BP','mmHg'],['spo2','SpO₂','%'],
@@ -368,7 +462,7 @@ const S = {
   cases:new Map(), loaded:false, currentId:null, draft:null,
   editSeq:0, savedSeq:0, saveTimer:null, saving:null, ownRevs:new Set(),
   view:'edit', filter:'', names:{}, remoteChanged:false, confirmDel:false, err:'',
-  importText:'', confirmReplace:false, collapsed:new Set(), learnerMode:'pre', askFirst:true
+  importText:'', updateText:'', importMode:'new', updateAsk:'', undo:null, sortBy:'edited', pendingSwitch:null, confirmApply:false, assets:null, uploading:false, confirmImg:null, confirmReplace:false, collapsed:new Set(), learnerMode:'pre', askFirst:true, ordersEdit:false
 };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -382,25 +476,33 @@ const ls = {
 function blankCase(){
   return {
     title:'Untitled case', level:'', duration:'', status:'draft',
-    scenario:'', objective:'', patient:'', learnerBrief:'', roles:'', setup:'',
+    scenario:'', summary:'', objective:'', patient:'', handoff:'written', learnerBrief:'', roles:'', setup:'',
     vitals:{hr:'',rhythm:'',bp:'',spo2:'',rr:'',etco2:'',temp:''}, vent:'',
     stages: DEFAULT_STAGES.map(n => ({id:rid(), name:n, trigger:'', event:'', actions:'', cues:'', lleap:''})),
-    end:'', debrief:'', llmNotes:'', aiNotes:'',
+    end:'', debrief:'', orders:'', images:[], llmNotes:'', aiNotes:'',
     createdAt:Date.now(), updatedAt:Date.now(), updatedBy:S.myId || null, rev:''
   };
 }
 
 /* ---------- AI handoff + import ---------- */
+/* Case number: <yyyymmdd>S<nn>, nn = order created that day (local time). A label; the database id stays the key. */
+function nextCaseNo(){
+  const d = new Date(), day = '' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+  let max = 0;
+  S.cases.forEach(c => { const m = String(c.caseNo || '').match(/^(\d{8})S(\d+)$/); if (m && m[1] === day) max = Math.max(max, +m[2]); });
+  return day + 'S' + String(max + 1).padStart(2, '0');
+}
+const filePrefix = c => (c && c.caseNo ? c.caseNo + '-' : '') + fileSlug(c && c.title);
 function fileSlug(t){
   return (String(t || 'simulation-case').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)) || 'simulation-case';
 }
 function caseForAI(c){
   return {
-    format:'sim-case/v1', title:c.title, level:c.level, duration:c.duration,
-    scenario:c.scenario, objective:c.objective, patient:c.patient, learnerBrief:c.learnerBrief, roles:c.roles, setup:c.setup,
+    format:'sim-case/v1', caseId:c.caseNo || S.currentId || '', title:c.title, level:c.level, duration:c.duration,
+    scenario:c.scenario, summary:c.summary || '', objective:c.objective, patient:c.patient, handoff:c.handoff === 'verbal' ? 'verbal' : 'written', learnerBrief:c.learnerBrief, roles:c.roles, setup:c.setup,
     vitals:Object.assign({}, c.vitals), vent:c.vent,
     stages:c.stages.map(s => ({name:s.name, trigger:s.trigger, event:s.event, actions:s.actions, cues:s.cues, lleap:s.lleap})),
-    end:c.end, debrief:c.debrief, aiNotes:''
+    end:c.end, debrief:c.debrief, orders:c.orders || '', aiNotes:''
   };
 }
 function buildPrompt(c){
@@ -411,92 +513,266 @@ function buildPrompt(c){
 'You are an expert anesthesiologist and simulation educator. You are completing a facilitator sheet for a high-fidelity anesthesia simulation run on a Laerdal SimMan mannequin controlled with LLEAP. A facilitator must be able to run the case from this sheet without improvising.',
 '',
 '## Your task',
-'0. The creator\'s case scenario (below, and in the "scenario" field) is the source of truth. Build the case from it: keep its patient, its hidden cause, its evolution and its ending. Do not invent a different case. Where the scenario is silent, choose what fits it best and list the choice in aiNotes. Return "scenario" exactly as written.',
+'0. The creator\'s case scenario (below, and in the "scenario" field) is the source of truth. Build the case from it: keep its patient, its hidden cause, its evolution and its ending. Do not invent a different case. Where the scenario is silent, choose what fits it best and list the choice in the AI notes to check. Return "scenario" exactly as written.',
 '1. Fill every field that is empty or contains "TBC" (currently ' + n + '). If most fields are empty, build them all from the scenario.',
 '2. Add the detail a facilitator needs: exact vitals at each stage, drug doses and onset times, how fast the physiology changes, IF/THEN branches, and the end point.',
-'3. Keep what the author wrote. Change it only if it is clinically wrong or contradicts the case, and say what you changed in "aiNotes".',
+'3. Keep what the author wrote. Change it only if it is clinically wrong or contradicts the case, and list what you changed in the AI notes to check.',
 '4. Check the whole case for consistency: the hidden cause must explain every vital sign change, and every expected action must have a cue or branch that responds to it.',
+'5. Write the Mannequin orders (section below): everything the operator needs to program the mannequin, with no clinical decision left to make.',
 '',
 '## House style (follow exactly so every case reads the same)',
 '- Units: HR bpm, BP systolic/diastolic mmHg (MAP in parentheses inside stages), SpO2 %, RR /min, EtCO2 mmHg, Temp °C. In "vitals", give values only without units, e.g. "88", "142/84".',
-'- Drugs: generic name, mg/kg basis and total dose for this patient\'s weight, route, and onset. Example: "propofol 1.5 mg/kg = 120 mg IV, onset 30–45 s". If weight is missing, assume one and list it in aiNotes.',
+'- Drugs: generic name, mg/kg basis and total dose for this patient\'s weight, route, and onset. Example: "propofol 1.5 mg/kg = 120 mg IV, onset 30–45 s". If weight is missing, assume one and list it in the AI notes to check.',
 '- trigger: one line saying what moves the case into the stage (a learner action, elapsed time, or facilitator call).',
-'- event: what happens to the patient, then "Hidden cause: ..." on its own line.',
-'- actions: one action per line, each starting with a verb: what you hope to see the learner do. These are debrief talking points, not a checklist.',
+'- event: what happens to the patient, in prose, then "Hidden cause: ..." on its own line.',
+'- actions: what you hope to see the learner do, numbered in the expected order. These are debrief talking points, not a checklist.',
 '- cues: one branch per line as "IF <learner action> → <response or go to stage N>". Always include an "IF not done by <time> → ..." escalation line. Write actor lines in quotes with the role, e.g. Surgeon: "Is everything OK up there?"',
-'- lleap: one change per line as "<parameter>: <start> → <target> over <N> s". Add sounds (breath, heart, voice) and anything physical the operator does.',
+'- lleap: numbered in time order, one change per line as "<parameter>: <start> → <target> over <N> s". Add sounds (breath, heart, voice) and anything physical the operator does.',
 '- end: the end point (e.g. cause identified and treated, help arrives, or a time limit) and the final vitals.',
 '- This is a training tool, not an assessment. Never use pass/fail, scoring, grading, "critical action" or "success criteria" language anywhere in the case.',
-'- debrief: 3–4 teaching points tied to the objectives, then 1–2 real references (guideline or review). Never invent a citation; if unsure, name the guideline only.',
-'- patient = the vignette the learner is given. learnerBrief = 2–4 sentences read to the learner before entering: their role, the task, and who they can call. Never put the hidden cause in either.',
+'- debrief: 2–4 teaching points tied to the objectives, 1–2 sentences each, then 1–2 real references (guideline or review). Never invent a citation; if unsure, name the guideline only.',
+'- summary = an abstract of the entire finished case for the facilitator: patient and setting, what goes wrong and the hidden cause, how it evolves stage by stage, the management you hope to see, how it ends, and the teaching focus. Write it last, from the finished case, in your own words. Do not copy or lightly reword the scenario. Learners never see it.',
+'- patient = the patient handoff, written as a narrative sign-out. learnerBrief = exactly two lines: "Role: <the learner\'s role, e.g. Senior anesthesia resident>" and "Task: <what they are asked to do, e.g. Prepare, induce and manage the case, or Cover a lunch break>". No patient details in learnerBrief; they belong only in patient. Never put the hidden cause in either.',
+'- handoff = "written" (learners read the patient handoff on the pre-brief) or "verbal" (a provider in the room gives it aloud; learners get no written handoff). Keep the value in the current case unless the author says otherwise. If verbal, write patient as the script that provider says aloud, in first person ("This is Mrs R, she is 72..."), and add that provider to roles (e.g. "Day-team resident: gives the verbal handoff at the start, then leaves").',
 '- The learner handout after the debrief is built from objective, patient, each stage\'s name and event, the actions, and debrief, so write those so a learner can read them.',
 '- Use 3–6 stages. Inside JSON strings use \\n for new lines.',
 '',
 '## Readability (every field, and the readable copy)',
-'The case is read fast, in the room, by a facilitator running a mannequin. Never write paragraphs.',
-'- One idea per line, at most ~15 words. Put each item on its own line (\\n between lines).',
-'- Lists start each line with "- ". Steps or a sequence use "1. ", "2. ", "3. ".',
-'- Structured facts use "Label: value" lines (the label is shown in bold automatically).',
-'- No other markdown: no **bold**, no # headings, no tables inside fields.',
+'Write short, plain sentences in short paragraphs (2–4 sentences). Use lists ONLY for things that happen in order or branch (actions, cues and lleap) and for the setup checklist. Everything else is prose, never bullets.',
+'- Lists: numbered "1. ", "2. " for a sequence; "- " only for IF branches in cues. One item per line (\\n between lines).',
+'- No markdown: no **bold**, no # headings, no tables inside fields. The only exception is "orders" (see Mannequin orders).',
 'Field layouts:',
-'- objective: numbered, 1–3 lines.',
-'- patient: "Label: value" lines in this order: Age/sex, Weight, Procedure, History, Medications, Allergies, Airway, Labs, Prior anesthesia, Block/regional (skip what does not apply).',
-'- learnerBrief: 2–4 short lines.',
-'- roles: one line per role, "Role: who plays it and what they do or say".',
-'- setup: "- " bullets (position, airway, access, monitors, drugs, equipment, planted errors).',
-'- vent: "Label: value" lines (Mode, Vt, RR, PEEP, FiO2, other).',
-'- trigger: one line.',
-'- event: 1–3 "- " bullets, then a last line "Hidden cause: ...".',
-'- actions: "- " bullets, one action each.',
-'- cues: "- IF ... → ..." one branch per line; actor lines as "Surgeon: \\"...\\"".',
-'- lleap: "- <parameter>: <start> → <target> over <N> s", one change per line; sounds and physical actions as "- " bullets too.',
-'- end: "End when: ..." line, then "Final vitals: ..." line.',
-'- debrief: numbered teaching points (1., 2., 3.), then a line "References:" followed by "- " bullets.',
+'- summary: 3 short paragraphs of prose with a blank line between them: (1) patient and setting; (2) what goes wrong, the hidden cause, and how it evolves; (3) the management you hope to see, how it ends, and the teaching focus. 2–3 sentences each.',
+'- Keep everything above the stages short and easy to scan: a facilitator should read it in about 2 minutes. Too much text will not be read. The stages carry the detail.',
+'- objective: 1–3 short sentences of prose.',
+'- patient: a verbal handoff the resident would receive, in prose (one short paragraph, at most 6 sentences), e.g. "Mrs. R is a 72-year-old woman, 85 kg, here for a right total shoulder replacement after a fall. She has COPD without home oxygen, hypertension..." Cover age, weight, procedure, history, medications, allergies, airway, labs, prior anesthesia and any block, as they fit. Never reveal the hidden cause.',
+'- learnerBrief: two lines, "Role: ..." and "Task: ...", each a short phrase.',
+'- roles: one short sentence per role, each on its own line and starting with the role, e.g. "Surgeon: in the room and impatient to start."',
+'- setup: a room checklist, not prose, so the room can be set up fast. Group items under these heading lines, each on its own line (skip a group that does not apply): "Patient:", "Monitors & lines:", "Airway:", "Drugs:", "Equipment:", "Planted error:". Under each heading, one short, concrete item per line starting with "- " (e.g. "- Propofol 200 mg/20 mL, labeled syringe").',
+'- vent: one or two sentences.',
+'- trigger: one sentence.',
+'- event: 1–3 sentences of prose, then a last line "Hidden cause: ...".',
+'- actions: numbered in the order you expect them, one action per line, each starting with a verb.',
+'- cues: one IF branch per line as "- IF <learner action> → <response or go to stage N>"; actor lines in quotes with the role.',
+'- lleap: numbered in time order, one change per line as "<parameter>: <start> → <target> over <N> s"; sounds and physical actions as their own numbered lines.',
+'- end: prose: when to stop, then the final vitals.',
+'- debrief: one short paragraph per teaching point (blank line between them), then a line "References:" with one reference per line.',
 'Example (lleap):',
-'- BP: 128/76 → 72/40 over 90 s',
-'- EtCO2: 38 → 18 over 90 s',
-'- HR: 82 → 112 over 60 s',
-'- Breath sounds: decreased bilaterally',
+'1. BP: 128/76 → 72/40 over 90 s',
+'2. EtCO2: 38 → 18 over 90 s',
+'3. HR: 82 → 112 over 60 s',
+'4. Breath sounds: decreased bilaterally',
+'',
+'## AI notes to check (at the end of every readable-copy reply)',
+'- List what you assumed, chose where the scenario was silent, changed from the author\'s text, or want verified (e.g. doses against the local formulary). Number them and give each a suggested fix, e.g. "3. Assumed 85 kg. Suggested fix: use the real weight."',
+'- The author answers each note with: fix (apply the suggested fix, or the fix the author describes), keep (leave the case as it is), or later (leave it as it is and keep it as a reminder in the app). An answered note disappears from the list in your next reply; only unanswered notes stay listed.',
+'- If the author replies APPROVED while notes are still unanswered, do not create the file yet: list the unanswered notes once more and ask "fix, keep or later?" for each. Create the file only after every note is answered. "Keep the rest" means keep for all unanswered notes.',
+'- Never log the changes you made during review; the author already saw them.',
+'',
+'## Mannequin orders (last section of the readable copy; the "orders" field in the import file)',
+'After the debrief points, add a section titled "Mannequin orders". It lets the operator program the Laerdal SimMan in SimDesigner/LLEAP without making any clinical decision. Use the same stages, names and values as the case. Fill every item; write "unchanged" instead of leaving a blank. Use generic parameter names, because exact names vary by SimMan model and software version.',
+'Format (the app turns it into tables and cards, so follow it exactly): each part starts with a line "## <number>. <title>"; each patient state starts with a line "### S<n> <clinical name>"; a table is a set of lines that start and end with "|", first row = column names, no separator row; everything else is "Label: value" lines or numbered lists. No **bold**.',
+'Parts, in this order:',
+'- Part 1 "## 1. Case header": one "Label: value" line each for Simulator (SimMan 3G, SimMan Essential or ALS; if unknown, assume SimMan 3G and note it), Mode (Theme unless the author asks for Automatic), Style (Linear, or Hub if any state has 2 or more IF branches), Automatic airway handling (ON by default; OFF only if the case programs the airway itself, e.g. laryngospasm or failed intubation), Run time and hard stop.',
+'- Part 2 "## 2. Learner events": table | Category | Button label | Exact meaning | Used as trigger in |. Categories: Airway, Breathing, Circulation, Drugs, Communication, Other. Button labels max 5 words. Drugs as "name dose route" (e.g. "Phenylephrine 100 mcg IV"); for a titrated drug add one generic "<drug> given" button. Every expected action and every IF condition in the cues needs a button. "Used as trigger in" names the transition (e.g. "S2 → S3") or says "debrief only".',
+'- Part 3 "## 3. Patient states": one "### S<n> <name>" card per stage, in order, named clinically because the name shows on the operator screen (never "Frame 2"). Each card has these "Label: value" lines: Enter when; Transition time (whole state, plus any parameter that differs); Cardiovascular (HR, exact rhythm name, NIBP sys/dia (MAP), ABP/CVP/PAP if lines, pulses carotid/radial/femoral normal/weak/absent); Respiratory (RR, SpO2, EtCO2 and capnogram shape normal/obstructive/flat, breath sounds left and right, lung compliance and airway resistance normal/increased, chest rise); Airway (tongue edema, pharyngeal swelling, laryngospasm, trismus, bronchial occlusion L/R, secretions, or "none"); Neuro and other (eyes, pupils size and reactivity, voice or vocal sound, convulsions, cyanosis, temperature, bleeding, urine output); Monitor display (waveforms shown, alarms on/off); Instructor messages (exact pop-up text and when it fires); Operator hand actions; Labs/images (name and when; de-identified or public-domain only).',
+'- Part 4 "## 4. Transitions": table | From | To | Trigger (event / timer / AND / OR) | Transition time | Note |, one row per transition.',
+'- Part 5, treatments that change vitals without a state change. In Theme mode title it "## 5. Manual responses" (the operator changes these values by hand when the learner does the action); in Automatic mode title it "## 5. Auto responses". Table | In states | IF event | THEN parameter: start → target over N s | Max effect / repeats | Goto state? |. Example row: | Any | Phenylephrine 100 mcg IV | BP +15/+8 over 30 s, lasts 3 min | max 3 doses | no |',
+'- Part 6 "## 6. Timers": table | Timer | Starts at | Fires at (≥ N s) | Only if (event not logged) | Then (goto / message) |, one row for every "IF not done by" cue.',
+'- Part 7 "## 7. Variables": table | Name | Counts / flags what | Used by |, only if needed; otherwise the single line "None needed."',
+'- Part 8 "## 8. End": end condition(s), final state values, and what the operator says to stop.',
+'- Part 9 "## 9. Build checklist", numbered: 1. New scenario → simulator → scenario info. 2. Airway handling setting. 3. Learner events (part 2). 4. One phase. 5. States S1…Sn (part 3). 6. Transitions and times (part 4). 7. Auto responses (part 5); in Theme mode skip this and keep part 5 at hand while running. 8. Timers and instructor messages (parts 6 and 3). 9. Check compatibility, then save the .scx to the LLEAP scenario folder. 10. Test in LLEAP Lite: right path, wrong treatment, no action.',
+'Before sending the readable copy, check the orders and fix anything that fails: every trigger has a button and every button is used or marked "debrief only"; no blank parameters; the hidden cause explains every vital change, and treatments move vitals the right way by plausible amounts and times; every state has an exit (transition or timer), so there are no dead ends; no two transitions or responses change the same parameter at the same time.',
 '',
 ...(S.askFirst ? [
 '## Step 1: ask questions first (do this before building anything)',
 'Read the scenario and the current case, then reply ONLY with the questions whose answers would most improve this case. Do not build the case or the file yet.',
 '- Ask 4–8 numbered questions, grouped under: Clinical details, Learners and logistics, Debrief and teaching.',
-'- Ask only what the scenario leaves open and what would change the case: e.g. patient weight, the exact hidden cause or how severe it gets, airway and lines at the start, positioning, which drugs are on the cart, learner level, number of learners, run time, actors available, whether the case may progress to arrest, how the case should end, and which teaching points matter most.',
+'- Ask only what the scenario leaves open and what would change the case: e.g. patient weight, the exact hidden cause or how severe it gets, airway and lines at the start, positioning, which drugs are on the cart, learner level, number of learners, whether the patient handoff is written on the pre-brief or given verbally by a provider in the room, run time, actors available, whether the case may progress to arrest, how the case should end, and which teaching points matter most.',
 '- Make each question quick to answer: offer 2–3 likely options and say which one you would choose by default.',
 '- End with one line: "Answer what you can, or reply \'go\' and I\'ll use the defaults."',
-'After the author answers (or says "go"), do Step 2. Put the author\'s answers into the case, and list any defaults you used in aiNotes.',
+'After the author answers (or says "go"), do Step 2. Put the author\'s answers into the case, and list any defaults you used in the AI notes to check.',
 '',
-'## Step 2: build the case (two outputs)'
-] : ['## Output: build the case (two outputs)']),
-'Do not ask more questions at this step. Where something is still unknown, choose the most reasonable option and note it in aiNotes. Produce both outputs below, with identical content.',
+'## Step 2: build the case (readable copy only)'
+] : ['## Step 1: build the case (readable copy only)']),
+'Do not ask more questions at this step. Where something is still unknown, choose the most reasonable option and list it under "AI notes to check". Send ONLY the readable copy described below. Do NOT create the import file, any JSON, or any code block yet: the author reviews the case first.',
 '',
-'### Output A: readable copy (for the case creator to review)',
-'A clean, human-readable version of the finished case, so the creator can read and check it before importing.',
-'- File name: ' + fileSlug(c.title) + ' - readable copy (a .docx or .pdf if you can create files; otherwise write it in your reply as formatted text).',
-'- Order: title and learner level; "AI notes to check" first; Case summary (the creator\'s scenario); Objective; Patient; Learner brief; Roles; Setup; Initial settings (vitals and ventilator); then each stage under its own heading "Stage N: <name>" with Trigger, Patient/clinical event, Expected learner actions, Facilitator cues, LLEAP & physical actions; then End point; Debrief points.',
+'### The readable copy (for the case creator to review)',
+'A clean, human-readable version of the finished case, so the creator can read and check it before anything is imported.',
+'- File name: ' + filePrefix(c) + ' - readable copy (a .docx or .pdf if you can create files; otherwise write it in your reply as formatted text).',
+'- Order: title and learner level; Case summary (your abstract of the finished case, not the creator\'s scenario); Objective; Patient handoff (say whether it is written or verbal); Learner role & task; Roles; Setup; Initial settings (vitals and ventilator); then each stage under its own heading "Stage N: <name>" with Trigger, Patient/clinical event, Expected learner actions, Facilitator cues, LLEAP & physical actions; then End point; Debrief points; then Mannequin orders; then "AI notes to check" last, right before the closing line (see AI notes to check).',
 '- Use headings and short lines. No JSON in this copy.',
+'- End the reply with exactly this line: "Review the case and tell me what to change. Answer each AI note with fix, keep or later. When everything is correct, reply APPROVED and I will create the import file."',
 '',
-'### Output B: the import file',
-'The same case as an import file for the Sim Case Builder. It must be valid JSON (UTF-8, double quotes, no comments, no trailing commas).',
-'- File name: ' + fileSlug(c.title) + '.simcase.json',
+'## Step ' + (S.askFirst ? 3 : 2) + ': review and revise (repeat until approved)',
+'The author reviews the readable copy and asks for changes.',
+'- Apply every requested change. Keep the whole case consistent: if a change affects vitals, doses, cues, LLEAP lines or the debrief elsewhere, update those too.',
+'- Reply with a short list "Changes made this round", then ONLY the sections you changed, each under its usual heading (a changed state card or table in the Mannequin orders counts as a section). Do not resend unchanged sections; the case is long.',
+'- Send the full readable copy again only when the author replies "full copy".',
+'- Still no JSON and no code blocks. End every reply with the open AI notes to check (if any), then this line: "Tell me what else to change, answer the open AI notes (fix, keep or later), reply full copy to see the whole case, or reply APPROVED to create the import file."',
+'- Only the word APPROVED (on its own, any capitalization) means approval. "Looks good", "fine", "ok" or approval plus a change request is NOT approval: apply any changes and ask again.',
+'',
+'## Step ' + (S.askFirst ? 4 : 3) + ': the import file (only after the author replies APPROVED)',
+'Create the import file only now. It must contain the whole current case: the full readable copy with every change from the review applied, including the Mannequin orders. Do not change anything else.',
+'It must be valid JSON (UTF-8, double quotes, no comments, no trailing commas).',
+'- File name: ' + filePrefix(c) + '.simcase.json',
 '- If you can create downloadable files, create that .json file, and also show the same JSON in one ```json code block at the very end of your reply as a backup.',
-'- If you cannot create files, put the file content in one ```json code block at the very end of your reply, after the readable copy. Use no other code blocks anywhere in the reply.',
+'- If you cannot create files, put the file content in one ```json code block. Use no other code blocks anywhere in the reply.',
+'- Keep "caseId" exactly as it is in the case below; the app uses it to check the file goes into the right case.',
 '- Use the same keys and structure as the case below, keep "format": "sim-case/v1", and return every field filled in (the whole case, not only the changes). All values are strings, except "stages", which is a list.',
-'- In "aiNotes" (one item per line): the assumptions you made, anything you changed, and anything the author must decide or verify, such as doses against the local formulary.',
+'- "orders" holds the Mannequin orders section exactly as in the readable copy, as one string with \\n between lines (keep the "## ", "### " and "|" lines).',
+'- "aiNotes": ONLY the notes the author answered with later, one per line. Otherwise leave it empty (""). Never include notes that were fixed or kept, and never log changes.',
 'The author will upload the file (or paste the code block) in the Import tab. Anything that is not valid JSON in this shape will be rejected.',
+'',
+'## After the import file: later changes',
+'If the author asks for changes after you sent the import file, never resend the whole case. Apply the changes (keeping the case consistent), reply with "Changes made" and each changed part in readable form, then any new AI notes to check (same fix, keep or later rules), and end with: "Tell me what else to change, or reply APPROVED to create the update file." After APPROVED, send only an update file:',
+...updateSpec(c),
 '',
 '## Creator\'s case scenario (source of truth)',
 (c.scenario || '').trim() || 'Not written yet.',
 '',
 '## Extra instructions from the author',
-(c.llmNotes || '').trim() || 'None. Use your judgment and list your choices in aiNotes.',
+(c.llmNotes || '').trim() || 'None. Use your judgment and list your choices in the AI notes to check.',
 '',
 '## Current case',
 '```json',
 JSON.stringify(caseForAI(c), null, 2),
 '```'
   ].join('\n');
+}
+/* ---------- updates (sim-case/update): only the changed parts ---------- */
+function updateSpec(c){
+  return [
+'- One JSON object with "format": "sim-case/update" that contains ONLY what changed. Valid JSON: double quotes, no comments, no trailing commas, \\n for new lines inside strings.',
+'- Text fields (title, level, duration, summary, objective, patient, handoff, learnerBrief, roles, setup, vent, end, debrief): include a field only if it changed, with its full new text.',
+'- "vitals": only the changed keys, e.g. {"bp": "90/50"}.',
+'- "stages": one item per changed stage. "n" is the stage number as it is now (1 = first); include only the changed fields, e.g. {"n": 2, "cues": "..."}. Add a stage at the end: {"n": <next number>, "add": true, "name": "...", "trigger": "...", "event": "...", "actions": "...", "cues": "...", "lleap": "..."}. Remove a stage: {"n": 3, "remove": true}.',
+'- Mannequin orders: for changed parts use "ordersParts", with the part number as key and the whole new part as value, starting with its "## <number>. <title>" line, e.g. {"5": "## 5. Manual responses\\n| In states | IF event | ... |"}. Send the whole "orders" only if most parts changed.',
+'- "caseId": always include it, copied exactly from the case. The app uses it to check the update goes into the right case.',
+'- "aiNotes": ONLY new notes the author answered with later, one per line; leave it out otherwise. Never log the changes.',
+'- File name: ' + filePrefix(c) + '.simcase-update.json. If you can create files, create it and also show the same JSON in one ```json code block as a backup; otherwise put it in one ```json code block. No other code blocks.',
+'The author uploads it in the Import tab under "Update this case". Only the fields in the file change; everything else stays as it is.'
+  ];
+}
+function buildUpdatePrompt(c, ask){
+  return [
+'# Simulation case update (format sim-case/update)',
+'',
+'You are an expert anesthesiologist and simulation educator. Below is a finished high-fidelity anesthesia simulation case (format sim-case/v1) for a Laerdal SimMan mannequin run with LLEAP, and the changes its author wants.',
+'',
+'## Your task',
+'1. Make only the requested changes. Keep everything else exactly as it is.',
+'2. Keep the case consistent: if a change affects vitals, doses, cues, LLEAP lines, the case summary, the debrief or the Mannequin orders ("orders"), update those parts too and say so.',
+'3. Follow the house style the case already uses: units, drugs as "name mg/kg = total dose route, onset", cues as "- IF <action> → <response>", LLEAP lines as "<parameter>: <start> → <target> over <N> s", setup as a grouped checklist, and orders with "## " parts, "### " state cards and "|" table rows.',
+'4. Never use pass/fail, scoring, grading, "critical action" or "success criteria" language.',
+'',
+'## Step 1: show the changes (no file yet)',
+'Reply with a short list "Changes made", then each changed part written out in full under its usual heading, in readable form. Then list any AI notes to check (assumptions or things to verify), numbered, each with a suggested fix; the author answers each with fix, keep or later. No JSON and no code blocks yet. End with: "Tell me what else to change, answer the AI notes (fix, keep or later), or reply APPROVED to create the update file." If notes are still unanswered at APPROVED, ask about them once more before creating the file.',
+'Revise until the author replies APPROVED. Only that word counts as approval.',
+'',
+'## Step 2: the update file (only after APPROVED)',
+...updateSpec(c),
+'',
+'## Changes the author wants',
+String(ask || '').trim() || 'Not written yet. Ask the author what to change before doing anything else.',
+'',
+'## Current case',
+'```json',
+JSON.stringify(caseForAI(c), null, 2),
+'```'
+  ].join('\n');
+}
+const jstr = v => v == null ? '' : Array.isArray(v) ? v.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join('\n') : typeof v === 'object' ? JSON.stringify(v) : String(v);
+function jsonObjects(t){
+  const cands = [t];
+  const fences = [...t.matchAll(/```[ \t]*([a-zA-Z]*)[^\n]*\n([\s\S]*?)```/g)];
+  fences.filter(m => /json/i.test(m[1])).reverse().forEach(m => cands.push(m[2]));
+  fences.filter(m => !/json/i.test(m[1])).reverse().forEach(m => cands.push(m[2]));
+  const fmt = t.lastIndexOf('"format"');
+  if (fmt > 0) { const a2 = t.lastIndexOf('{', fmt), b2 = t.lastIndexOf('}'); if (a2 >= 0 && b2 > a2) cands.push(t.slice(a2, b2 + 1)); }
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a >= 0 && b > a) cands.push(t.slice(a, b + 1));
+  const out = [];
+  for (const c of cands) { try { const o = JSON.parse(c); if (o && typeof o === 'object' && !Array.isArray(o)) out.push(o); } catch(e){} }
+  return out;
+}
+const UP_TOP = [['title','Title'],['level','Learner level'],['duration','Duration'],['scenario','Case scenario'],['summary','Case summary'],['objective','Objective'],['patient','Patient handoff'],['handoff','Handoff (written / verbal)'],['learnerBrief','Learner role & task'],['roles','Roles'],['setup','Setup'],['vent','Ventilator & other settings'],['end','End point'],['debrief','Debrief points']];
+const UP_STAGE = [['name','name'],['trigger','trigger'],['event','patient / clinical event'],['actions','expected learner actions'],['cues','facilitator cues'],['lleap','LLEAP & physical actions']];
+function ordersParts(text){
+  const parts = []; let cur = {num:null, lines:[]};
+  String(text || '').split('\n').forEach(l => {
+    const m = l.trim().match(/^##\s*(\d+)/);
+    if (m && !/^###/.test(l.trim())) { parts.push(cur); cur = {num:m[1], lines:[l]}; } else cur.lines.push(l);
+  });
+  parts.push(cur);
+  return parts.filter(p => p.num || p.lines.some(l => l.trim()));
+}
+function parseUpdate(text, cur){
+  const t = String(text || '').trim();
+  if (!t) return {empty:true};
+  if (!cur) return {error:'Open the case you want to update first.'};
+  const objs = jsonObjects(t);
+  const src = objs.find(o => o.format === 'sim-case/update') || objs.find(o => Array.isArray(o.stages)) || objs.find(o => Object.keys(o).some(k => UP_TOP.some(u => u[0] === k) || ['vitals','stages','orders','ordersParts'].includes(k)));
+  if (!src) return {error:/\?\s*$/m.test(t) && !/```/.test(t)
+    ? 'This looks like the AI\'s questions or its readable changes, not the update file. Reply APPROVED in the AI chat, then bring back the file it creates.'
+    : 'No update found. Paste the AI\'s whole reply, including the ```json block.'};
+  const full = src.format !== 'sim-case/update' && Array.isArray(src.stages) && src.stages.every(s => !s || s.n == null);
+  const next = clone(cur), changes = [], warn = [];
+  const add = (label, old, nw) => { if (String(old || '').trim() !== String(nw || '').trim()) { changes.push({label, old:String(old || ''), nw:String(nw || '')}); return true; } return false; };
+  UP_TOP.forEach(([k,l]) => {
+    if (!(k in src)) return;
+    if (full && k === 'scenario' && (cur.scenario || '').trim()) return;
+    const v = jstr(src[k]);
+    if (full && !v.trim()) return;
+    if (add(l, cur[k], v)) next[k] = v;
+  });
+  if (src.vitals && typeof src.vitals === 'object') VITALS.forEach(([k,l]) => {
+    if (!(k in src.vitals)) return;
+    const v = jstr(src.vitals[k]); if (add('Initial ' + l, cur.vitals[k], v)) next.vitals[k] = v;
+  });
+  if (Array.isArray(src.stages)) {
+    if (full) {
+      src.stages.slice(0, 12).forEach((s, i) => {
+        if (!s || typeof s !== 'object') return;
+        if (i < cur.stages.length) UP_STAGE.forEach(([k,l]) => { const v = jstr(s[k]); if (v.trim() && add(`Stage ${i+1} · ${l}`, cur.stages[i][k], v)) next.stages[i][k] = v; });
+        else { const ns = {id:rid()}; UP_STAGE.forEach(([k]) => ns[k] = jstr(s[k])); next.stages.push(ns); changes.push({label:`New stage ${i+1}: ${ns.name || 'unnamed'}`, old:'', nw:UP_STAGE.map(([k,l]) => ns[k] ? l + ': ' + ns[k] : '').filter(Boolean).join('\n')}); }
+      });
+      for (let i = cur.stages.length - 1; i >= src.stages.length; i--) { changes.push({label:`Remove stage ${i+1}: ${cur.stages[i].name || 'unnamed'}`, old:cur.stages[i].name || '', nw:''}); next.stages.splice(i, 1); }
+    } else {
+      const items = src.stages.filter(s => s && typeof s === 'object');
+      const len = cur.stages.length;
+      items.filter(s => !s.remove && !s.add && +s.n >= 1 && +s.n <= len).forEach(s => {
+        const i = +s.n - 1;
+        UP_STAGE.forEach(([k,l]) => { if (k in s) { const v = jstr(s[k]); if (add(`Stage ${i+1} · ${l}`, cur.stages[i][k], v)) next.stages[i][k] = v; } });
+      });
+      items.filter(s => !s.remove && (s.add || +s.n > len)).sort((a,b) => (+a.n||0) - (+b.n||0)).forEach(s => {
+        const ns = {id:rid()}; UP_STAGE.forEach(([k]) => ns[k] = jstr(s[k])); next.stages.push(ns);
+        changes.push({label:`New stage ${next.stages.length}: ${ns.name || 'unnamed'}`, old:'', nw:UP_STAGE.map(([k,l]) => ns[k] ? l + ': ' + ns[k] : '').filter(Boolean).join('\n')});
+      });
+      items.filter(s => s.remove).map(s => +s.n).filter(n => n >= 1 && n <= len).sort((a,b) => b - a).forEach(n => {
+        changes.push({label:`Remove stage ${n}: ${cur.stages[n-1].name || 'unnamed'}`, old:cur.stages[n-1].name || '', nw:''});
+        next.stages.splice(n - 1, 1);
+      });
+      items.filter(s => !s.add && !s.remove && !(+s.n >= 1)).forEach(() => warn.push('A stage change without a valid "n" (stage number) was skipped.'));
+    }
+  }
+  if ('orders' in src && (!full || jstr(src.orders).trim())) { const v = jstr(src.orders); if (add('Mannequin orders (whole section)', cur.orders, v)) next.orders = v; }
+  if (src.ordersParts && typeof src.ordersParts === 'object') {
+    Object.entries(src.ordersParts).forEach(([key, body]) => {
+      const num = String(key).match(/\d+/); if (!num) { warn.push('An orders part without a number was skipped.'); return; }
+      let v = jstr(body).replace(/\s+$/, '');
+      const parts = ordersParts(next.orders), p = parts.find(x => x.num === num[0]);
+      if (!/^\s*##\s*\d+/.test(v)) v = (p ? p.lines[0] : '## ' + num[0] + '.') + '\n' + v;
+      const old = p ? p.lines.join('\n').replace(/\s+$/, '') : '';
+      if (!add('Mannequin orders · part ' + num[0], old, v)) return;
+      if (p) p.lines = v.split('\n').concat(['']); else parts.push({num:num[0], lines:v.split('\n').concat([''])});
+      next.orders = parts.map(x => x.lines.join('\n')).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    });
+  }
+  const note = jstr(src.aiNotes).trim();
+  if (note && changes.length) next.aiNotes = ((cur.aiNotes || '').trim() ? cur.aiNotes.trim() + '\n' : '') + note;
+  if (!changes.length) return {error: warn.length ? warn.join(' ') : 'No differences found. This file matches the current case.'};
+  return {changes, next, warn, full, note, caseId: jstr(src.caseId).trim()};
 }
 function parseImport(text){
   const t = String(text || '').trim();
@@ -521,18 +797,20 @@ function parseImport(text){
   const str = v => v == null ? '' : Array.isArray(v) ? v.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join('\n') : typeof v === 'object' ? JSON.stringify(v) : String(v);
   const c = {
     title:str(src.title) || 'Imported case', level:str(src.level), duration:str(src.duration), status:'draft',
-    scenario:str(src.scenario), objective:str(src.objective), patient:str(src.patient), learnerBrief:str(src.learnerBrief), roles:str(src.roles), setup:str(src.setup),
-    vitals:{}, vent:str(src.vent), end:str(src.end), debrief:str(src.debrief), aiNotes:str(src.aiNotes),
+    scenario:str(src.scenario), summary:str(src.summary), objective:str(src.objective), patient:str(src.patient), handoff:/verbal/i.test(str(src.handoff)) ? 'verbal' : 'written', learnerBrief:str(src.learnerBrief), roles:str(src.roles), setup:str(src.setup),
+    vitals:{}, vent:str(src.vent), end:str(src.end), debrief:str(src.debrief), orders:str(src.orders), aiNotes:str(src.aiNotes),
     stages:src.stages.slice(0, 12).map(s => ({id:rid(), name:str(s && s.name), trigger:str(s && s.trigger), event:str(s && s.event), actions:str(s && s.actions), cues:str(s && s.cues), lleap:str(s && s.lleap)}))
   };
   VITALS.forEach(([k]) => { c.vitals[k] = str(src.vitals && src.vitals[k]); });
-  return {case: normalize(c)};
+  return {case: normalize(c), caseId: str(src.caseId).trim()};
 }
 function normalize(c){
   const b = blankCase();
   const o = Object.assign(b, clone(c || {}));
   o.vitals = Object.assign(blankCase().vitals, o.vitals || {});
   o.stages = Array.isArray(o.stages) ? o.stages.map(s => Object.assign({id:rid(),name:'',trigger:'',event:'',actions:'',cues:'',lleap:''}, s)) : [];
+  o.handoff = o.handoff === 'verbal' ? 'verbal' : 'written';
+  o.images = Array.isArray(o.images) ? o.images.filter(m => m && m.id).map(m => ({id:String(m.id), title:String(m.title || ''), caption:String(m.caption || ''), at:String(m.at == null ? 'pre' : m.at)})) : [];
   return o;
 }
 
@@ -542,11 +820,12 @@ function initialTbc(c){ const v = c.vitals || {}; return ['hr','bp','spo2'].some
 function tbcList(c){
   const out = [];
   if (isTbc(c.scenario)) out.push('scenario');
-  ['objective','patient','learnerBrief','roles','setup'].forEach(k => { if (isTbc(c[k])) out.push(k); });
+  ['summary','objective','patient','learnerBrief','roles','setup'].forEach(k => { if (isTbc(c[k])) out.push(k); });
   if (initialTbc(c)) out.push('initial');
   if (c.vent && /\bTBC\b/i.test(c.vent)) out.push('vent');
   (c.stages||[]).forEach((s,i) => ['trigger','event','actions','cues','lleap'].forEach(k => { if (isTbc(s[k])) out.push('stages.'+i+'.'+k); }));
   ['end','debrief'].forEach(k => { if (isTbc(c[k])) out.push(k); });
+  if (isTbc(c.orders)) out.push('orders');
   return out;
 }
 
@@ -559,7 +838,7 @@ function ago(t){
   if (s < 86400) return Math.floor(s/3600) + ' h ago';
   const d = new Date(t); return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
 }
-const whoName = id => !id ? (window.__LOCAL_DEMO ? 'you' : 'Claude') : (id === S.myId ? 'you' : (S.names[id] || 'a colleague'));
+const whoName = id => !id ? 'Claude' : (id === S.myId ? 'you' : (S.names[id] || 'a colleague'));
 async function resolveNames(){
   if (!S.user || !S.user.profiles) return;
   const ids = [...new Set([...S.cases.values()].map(c => c.updatedBy).filter(Boolean))];
@@ -574,18 +853,20 @@ async function resolveNames(){
 
 /* ---------- library ---------- */
 function sortedCases(){
-  return [...S.cases.entries()].map(([id,c]) => ({id, c})).sort((a,b) => (b.c.updatedAt||0) - (a.c.updatedAt||0));
+  const rows = [...S.cases.entries()].map(([id,c]) => ({id, c}));
+  if (S.sortBy === 'number') return rows.sort((a,b) => (b.c.caseNo ? 1 : 0) - (a.c.caseNo ? 1 : 0) || String(b.c.caseNo || '').localeCompare(String(a.c.caseNo || '')) || (b.c.updatedAt||0) - (a.c.updatedAt||0));
+  return rows.sort((a,b) => (b.c.updatedAt||0) - (a.c.updatedAt||0));
 }
 function renderList(){
   const list = $('#list'), pick = $('#mobilePick');
   const f = S.filter.trim().toLowerCase();
-  const rows = sortedCases().filter(({c}) => !f || [c.title,c.patient,c.objective,c.level].join(' ').toLowerCase().includes(f));
+  const rows = sortedCases().filter(({c}) => !f || [c.caseNo,c.title,c.patient,c.objective,c.level].join(' ').toLowerCase().includes(f));
   list.innerHTML = rows.length ? rows.map(({id,c}) => {
     const cc = id === S.currentId && S.draft ? S.draft : c;
     const n = tbcList(cc).length;
     const st = STATUS.find(s => s[0] === cc.status) || STATUS[0];
     return `<li><button type="button" class="item" data-id="${esc(id)}" aria-current="${id===S.currentId}">
-      <span class="t">${esc(cc.title || 'Untitled case')}</span>
+      <span class="t">${esc(cc.title || 'Untitled case')}</span>${cc.caseNo ? `<span class="cno">${esc(cc.caseNo)}</span>` : ''}
       <span class="m"><span class="chip st-${esc(st[0])}">${esc(st[1])}</span>${n ? `<span class="chip tbc">${n} TBC</span>` : `<span class="chip ok">Complete</span>`}<span>${esc(ago(cc.updatedAt))}</span></span>
     </button></li>`;
   }).join('') : `<li class="help" style="padding:8px 4px">${S.cases.size ? 'No cases match your search.' : 'No cases yet.'}</li>`;
@@ -594,6 +875,7 @@ function renderList(){
     return `<option value="${esc(id)}" ${id===S.currentId?'selected':''}>${esc(cc.title || 'Untitled case')}</option>`;
   }).join('');
   $('#dupBtn').disabled = !S.currentId || !S.canWrite;
+  $('#sortEdited').setAttribute('aria-pressed', S.sortBy !== 'number'); $('#sortNumber').setAttribute('aria-pressed', S.sortBy === 'number');
   $('#newBtn').disabled = !S.canWrite || S.noStore;
 }
 
@@ -643,9 +925,10 @@ function renderEditor(){
     ${banners()}
     ${aiNotes ? `<div class="sec ai-sec">
       <div class="sec-h"><h2>AI notes to check</h2><span class="spacer"></span>${S.canWrite ? '<button type="button" class="btn small" data-act="clearAi">Mark as checked</button>' : ''}</div>
-      ${fieldHtml('aiNotes','What the AI assumed, changed, or wants verified','aiNotes',c.aiNotes,{rows:3,noTbc:true})}
+      ${fieldHtml('aiNotes','Notes left for later','aiNotes',c.aiNotes,{rows:3,noTbc:true})}
     </div>` : ''}
     <div class="sec">
+      ${c.caseNo ? `<div class="cno big" title="Case number: used in file names and to match AI files to this case">${esc(c.caseNo)}</div>` : ''}
       <input class="title-input" type="text" id="f-title" data-path="title" value="${esc(c.title)}" aria-label="Case title" placeholder="Case title" ${dis}>
       <p class="help" style="padding:0 10px">${esc(HELP.title)}</p>
       <div class="grid g3">
@@ -674,9 +957,12 @@ function renderEditor(){
     <div ${secAttrs('overview')}>
       ${secHead('overview','Case overview')}
       <div class="sec-body" ${S.collapsed.has('overview')?'hidden':''}>
+      ${fieldHtml('summary','Case summary','summary',c.summary,{rows:4})}
       ${fieldHtml('objective','Objective','objective',c.objective)}
-      ${fieldHtml('patient','Patient','patient',c.patient,{rows:4})}
-      ${fieldHtml('learnerBrief','Learner brief','learnerBrief',c.learnerBrief,{rows:3})}
+      <div class="field"><label class="lab" for="f-handoff">Patient handoff is</label><p class="help">${esc(HELP.handoff)}</p>
+        <select id="f-handoff" data-path="handoff" ${S.canWrite?'':'disabled'}><option value="written" ${c.handoff!=='verbal'?'selected':''}>Written: learners read it on the pre-brief</option><option value="verbal" ${c.handoff==='verbal'?'selected':''}>Verbal: given by the provider in the room</option></select></div>
+      ${fieldHtml('patient', c.handoff === 'verbal' ? 'Patient handoff (script for the provider in the room)' : 'Patient handoff','patient',c.patient,{rows:4})}
+      ${fieldHtml('learnerBrief','Learner role & task','learnerBrief',c.learnerBrief,{rows:2})}
       <div class="grid g2">
         ${fieldHtml('roles','Roles','roles',c.roles)}
         ${fieldHtml('setup','Setup','setup',c.setup)}
@@ -728,7 +1014,7 @@ function secCounts(c){
   tbcList(c).forEach(k => {
     if (k === 'scenario') cnt.scenario++;
     else if (k.startsWith('stages.')) { cnt.stages++; const s = c.stages[+k.split('.')[1]]; if (s) cnt['stage:'+s.id] = (cnt['stage:'+s.id]||0) + 1; }
-    else if (['objective','patient','learnerBrief','roles','setup'].includes(k)) cnt.overview++;
+    else if (['summary','objective','patient','learnerBrief','roles','setup'].includes(k)) cnt.overview++;
     else if (k === 'initial' || k === 'vent') cnt.initial++;
     else if (k === 'end' || k === 'debrief') cnt.end++;
   });
@@ -761,9 +1047,12 @@ function footHtml(){
 }
 function banners(){
   let h = '';
+  if (window.__SIM_DEMO) h += `<div class="banner">Demo version. Cases and images save in this browser only, so other people can't see them. Use AI handoff or Word export to move a case elsewhere.</div>`;
   if (S.noStore) h += `<div class="banner warn">Saving isn't available in this view. Open this page in Claude while signed in to see and edit the shared cases.</div>`;
   else if (!S.canWrite) h += `<div class="banner">You can view these cases but not edit them. Ask the owner for Contributor access to make changes.</div>`;
-  if (S.remoteChanged) h += `<div class="banner warn"><span>Someone else just changed this case. Your unsaved edits are kept until you choose.</span>
+  if (S.undo && S.undo.id === S.currentId) h += `<div class="banner"><span>Update applied (${S.undo.n} change${S.undo.n===1?'':'s'}). Check the Facilitator sheet.</span>
+      <button type="button" class="btn small" data-act="undoUpdate">Undo update</button><button type="button" class="btn ghost small" data-act="dismissUndo">Dismiss</button></div>`;
+  if (S.remoteChanged) h +=`<div class="banner warn"><span>Someone else just changed this case. Your unsaved edits are kept until you choose.</span>
       <button type="button" class="btn small" data-act="loadRemote">Load their version</button></div>`;
   return h;
 }
@@ -780,7 +1069,9 @@ function renderTop(){
   $('#tabSheet').setAttribute('aria-pressed', S.view === 'sheet');
   $('#tabHandoff').setAttribute('aria-pressed', S.view === 'handoff');
   $('#tabLearner').setAttribute('aria-pressed', S.view === 'learner');
-  $('#exportBtn').textContent = S.view === 'learner' ? (S.learnerMode === 'pre' ? 'Export pre-brief to Word' : 'Export handout to Word') : 'Export to Word';
+  $('#tabOrders').setAttribute('aria-pressed', S.view === 'orders');
+  $('#exportBtn').hidden = S.view === 'learner' && S.learnerMode === 'img';
+  $('#exportBtn').textContent = S.view === 'learner' ? (S.learnerMode === 'pre' ? 'Export pre-brief to Word' : 'Export handout to Word') : S.view === 'orders' ? 'Export orders to Word' : 'Export to Word';
   $('#tabImport').setAttribute('aria-pressed', S.view === 'import');
   renderSaveState();
 }
@@ -850,32 +1141,53 @@ function vitalsChips(c){
   const vs = VITALS.filter(([k]) => c.vitals[k]);
   return vs.length ? `<div class="vchips">${vs.map(([k,l,u]) => `<span class="vchip v-${k}"><b>${l}</b> ${esc(c.vitals[k])}${u && k!=='rhythm' ? ' <small>'+u+'</small>' : ''}</span>`).join('')}</div>` : '<p><span class="tbcw">TBC</span></p>';
 }
+/* Setup checklist: split into groups at heading lines ("Drugs:") so they can sit in two columns. */
+function setupGroups(text){
+  const groups = []; let cur = null;
+  String(text || '').split('\n').forEach(l => {
+    const t = l.trim(); if (!t) return;
+    if (HEAD_RE.test(cleanMd(t))) { cur = [t]; groups.push(cur); }
+    else { if (!cur) { cur = []; groups.push(cur); } cur.push(t); }
+  });
+  return groups.map(g => g.join('\n'));
+}
+function setupHtml(text){
+  const gs = setupGroups(text);
+  if (gs.length < 2) return fmtHtml(text);
+  return `<div class="scols">${gs.map(g => `<div class="sgrp">${fmtHtml(g)}</div>`).join('')}</div>`;
+}
+function imgLine(c, at, thumbs){
+  const ms = imagesFor(c, at); if (!ms.length) return '';
+  if (thumbs) return `<div class="imgrow">${ms.map(m => `<a class="imgmini" href="${imgSrc(esc(m.id))}" target="_blank" rel="noopener"><img src="${imgSrc(esc(m.id))}" alt="" loading="lazy"><span>${esc(m.title || 'untitled')}</span></a>`).join('')}</div>`;
+  return `<p class="imgnote"><b>Images before the case:</b> ${esc(ms.map(m => m.title || 'untitled').join(', '))}</p>`;
+}
+const oneLine = t => String(t || '').split('\n').map(l => l.trim()).filter(Boolean).join(' ');
 const blk = (h, inner, cls='') => `<section class="blk ${cls}"><h4>${esc(h)}</h4>${inner}</section>`;
 function renderSheet(){
   const c = S.draft, v = $('#view');
-  const meta = [c.level && 'Learners: '+c.level, c.duration && 'Duration: '+c.duration, (STATUS.find(s=>s[0]===c.status)||STATUS[0])[1]].filter(Boolean).join(' · ');
+  const meta = [c.caseNo, c.level && 'Learners: '+c.level, c.duration && 'Duration: '+c.duration, (STATUS.find(s=>s[0]===c.status)||STATUS[0])[1]].filter(Boolean).join(' · ');
   v.innerHTML = `${banners()}<div class="sheet fsheet">
     <div><h1>${esc(c.title || 'Untitled case')}</h1><div class="meta">${esc(meta)}</div></div>
-    ${(c.scenario||'').trim() ? blk('Case summary', fmtHtml(c.scenario), 'summary') : ''}
-    <div class="blk-grid">
-      ${blk('Objective', fmtHtml(c.objective))}
-      ${blk('Patient', fmtHtml(c.patient))}
-      ${blk('Learner brief', fmtHtml(c.learnerBrief))}
-      ${blk('Roles', fmtHtml(c.roles))}
-      ${blk('Setup', fmtHtml(c.setup))}
-      ${blk('Initial settings', vitalsChips(c) + (c.vent ? fmtHtml(c.vent) : ''))}
-    </div>
+    ${blk('Case summary', fmtHtml(c.summary), 'summary')}
+    ${blk('Objective', fmtHtml(c.objective))}
+    ${blk(c.handoff === 'verbal' ? 'Patient handoff · spoken by the provider in the room' : 'Patient handoff', fmtHtml(c.patient))}
+    ${blk('Learner role & task', fmtHtml(c.learnerBrief) + imgLine(c, 'pre'))}
+    ${blk('Roles', String(c.roles || '').trim().split('\n').filter(l => l.trim()).length > 1 ? `<div class="rcols">${fmtHtml(c.roles)}</div>` : fmtHtml(c.roles), 'roles')}
+    ${blk('Setup', setupHtml(c.setup), 'setup')}
+    ${blk('End point', fmtHtml(c.end))}
+    ${blk('Debrief', fmtHtml(c.debrief))}
     <h3>Scenario progression</h3>
-    <div class="tscroll"><table>
-      <thead><tr><th>Stage and trigger</th><th>Patient or clinical event</th><th>Expected learner actions</th><th>Facilitator cues</th><th>LLEAP and physical actions</th></tr></thead>
-      <tbody>${c.stages.map((s,i) => `<tr>
-        <td><div class="sname">${i+1} · ${esc(s.name)}</div>${fmtHtml(s.trigger)}</td>
-        <td>${fmtHtml(s.event)}</td><td>${fmtHtml(s.actions)}</td><td>${fmtHtml(s.cues)}</td><td>${fmtHtml(s.lleap)}</td></tr>`).join('')}</tbody>
-    </table></div>
-    <div class="blk-grid">
-      ${blk('End point', fmtHtml(c.end))}
-      ${blk('Debrief', fmtHtml(c.debrief))}
-    </div>
+    <div class="initline"><span class="initlab">Initial settings</span>${vitalsChips(c)}${c.vent ? `<span class="initvent">${esc(oneLine(c.vent))}</span>` : ''}</div>
+    <div class="stgs">${c.stages.map((s,i) => `<section class="stg">
+      <div class="stg-h"><span class="stg-n">${i+1} · ${esc(s.name || 'Stage ' + (i+1))}</span><span class="stg-t">— ${show(oneLine(s.trigger))}</span></div>
+      <div class="stg-row3">
+        <div class="stg-c"><h5>Patient / clinical event</h5>${fmtHtml(s.event)}</div>
+        <div class="stg-c"><h5>Expected learner actions</h5>${fmtHtml(s.actions)}</div>
+        <div class="stg-c"><h5>Facilitator cues</h5>${fmtHtml(s.cues)}</div>
+      </div>
+      <div class="stg-c stg-full"><h5>LLEAP & physical actions</h5>${fmtHtml(s.lleap)}</div>
+      ${imagesFor(c, s.id).length ? `<div class="stg-c stg-full"><h5>Images to show</h5>${imgLine(c, s.id, true)}</div>` : ''}
+    </section>`).join('')}</div>
   </div>`;
   renderTop();
 }
@@ -885,6 +1197,7 @@ function renderMain(){
   if (S.view === 'sheet') renderSheet();
   else if (S.view === 'learner') renderLearner();
   else if (S.view === 'handoff') renderHandoff();
+  else if (S.view === 'orders') renderOrders();
   else renderEditor();
 }
 /* ---------- learner handout ---------- */
@@ -896,7 +1209,7 @@ function learnerDoc(c, mode){
       sub:'Pre-brief · read before the scenario',
       blocks:[
         {h:'Your role and task', text:c.learnerBrief},
-        {h:'Patient', text:c.patient},
+        c.handoff === 'verbal' ? {h:'Patient handoff', text:'Given by the provider in the room.', plain:true} : {h:'Patient handoff', text:c.patient},
         {h:'Before you start', text:PREBRIEF_RULES, fixed:true}
       ]
     };
@@ -907,7 +1220,7 @@ function learnerDoc(c, mode){
   }).join('\n');
   const seen = new Set();
   const actions = c.stages.flatMap(s => String(s.actions || '').split('\n'))
-    .map(l => l.replace(/^[\s\-•*]+/, '').trim()).filter(l => l && !/^TBC\b/i.test(l) && !seen.has(l.toLowerCase()) && seen.add(l.toLowerCase()))
+    .map(l => l.replace(/^[\s\-•*]+/, '').replace(/^\d+[.)]\s+/, '').trim()).filter(l => l && !/^TBC\b/i.test(l) && !seen.has(l.toLowerCase()) && seen.add(l.toLowerCase()))
     .map(l => '- ' + l.replace(/\s*\[(critical|key)\]/ig, '')).join('\n');
   return {
     title:c.title || 'Simulation case',
@@ -925,28 +1238,197 @@ function learnerText(c, mode){
   const d = learnerDoc(c, mode);
   return [d.title, d.sub, ''].concat(d.blocks.flatMap(b => [b.h.toUpperCase(), String(b.text || '').trim() || 'TBC', ''])).join('\n').trim();
 }
+/* ---------- imaging (images the learner viewer will show) ---------- */
+const IMG_TYPES = ['image/png','image/jpeg','image/webp','image/gif'];
+const imgSrc = id => (window.__simImgUrls && window.__simImgUrls[id]) || ('/_blob/' + id);
+function imgWhen(c, at){
+  if (at === 'pre') return 'Before the case';
+  const i = c.stages.findIndex(s => s.id === at);
+  return i >= 0 ? `Stage ${i+1} · ${c.stages[i].name || 'unnamed'}` : 'Not assigned';
+}
+function imagesFor(c, at){ return (c.images || []).filter(m => m.at === at); }
+/* Keep image → stage links when stage ids are regenerated (duplicate, replace import): match by position. */
+function remapImages(images, oldStages, newStages){
+  return (images || []).map(m => {
+    if (m.at === 'pre') return {...m};
+    const i = oldStages.findIndex(s => s.id === m.at);
+    return {...m, at: i >= 0 && newStages[i] ? newStages[i].id : ''};
+  });
+}
+function imgRefCount(id, exceptCaseId){
+  let n = 0;
+  S.cases.forEach((c, cid) => { if (cid !== exceptCaseId && (c.images || []).some(m => m.id === id)) n++; });
+  return n;
+}
+function renderImaging(){
+  const c = S.draft, imgs = c.images || [];
+  const canUp = !!S.assets && S.canWrite && !S.noStore;
+  const opts = cur => `<option value="pre" ${cur==='pre'?'selected':''}>Before the case</option>` + c.stages.map((s,i) => `<option value="${esc(s.id)}" ${cur===s.id?'selected':''}>Stage ${i+1} · ${esc(s.name || 'unnamed')}</option>`).join('') + (cur !== 'pre' && !c.stages.some(s => s.id === cur) ? '<option value="" selected>Not assigned</option>' : '');
+  const dis = S.canWrite ? '' : 'disabled';
+  return `<div class="sec">
+      <div class="imgbar">
+        ${canUp ? `<label class="btn primary" for="imgFile">${S.uploading ? 'Uploading…' : 'Upload images'}</label><input type="file" id="imgFile" accept="${IMG_TYPES.join(',')}" multiple hidden ${S.uploading ? 'disabled' : ''}>` : ''}
+        <span class="help">${canUp ? 'JPG, PNG, WebP or GIF, up to 20 MB each.' : S.canWrite ? 'Uploading needs Editor access to this app. Ask the owner.' : 'View only.'} <b>De-identified or public-domain images only.</b></span>
+      </div>
+      ${imgs.length ? `<div class="imgs">${imgs.map((m,i) => `<div class="imgc">
+        <a class="imgt" href="${imgSrc(esc(m.id))}" target="_blank" rel="noopener"><img src="${imgSrc(esc(m.id))}" alt="${esc(m.title || 'Case image')}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'imgx',textContent:'Image not available'}))"></a>
+        <div class="imgf">
+          <div class="field"><label class="lab" for="im-t-${i}">Title</label><input type="text" id="im-t-${i}" data-path="images.${i}.title" value="${esc(m.title)}" placeholder="e.g. Chest X-ray" ${dis}></div>
+          <div class="field"><label class="lab" for="im-c-${i}">Learner caption</label><textarea id="im-c-${i}" data-path="images.${i}.caption" rows="2" placeholder="What the learner is told with it, e.g. Portable CXR taken now. Never give away the answer." ${dis}>${esc(m.caption)}</textarea></div>
+          <div class="field"><label class="lab" for="im-a-${i}">Show at</label><select id="im-a-${i}" data-path="images.${i}.at" ${dis}>${opts(m.at)}</select></div>
+          ${S.canWrite ? `<div class="imgtools">
+            <button type="button" class="btn small ghost" data-act="imgUp" data-i="${i}" ${i===0?'disabled':''}>Up</button>
+            <button type="button" class="btn small ghost" data-act="imgDown" data-i="${i}" ${i===imgs.length-1?'disabled':''}>Down</button>
+            ${S.confirmImg === i ? `<span class="confirm"><span>Remove this image?</span><button type="button" class="btn danger solid small" data-act="imgRmYes" data-i="${i}">Remove</button><button type="button" class="btn small" data-act="imgRmNo">Keep</button></span>`
+              : `<button type="button" class="btn small ghost danger" data-act="imgRm" data-i="${i}">Remove</button>`}
+          </div>` : ''}
+        </div>
+      </div>`).join('')}</div>`
+      : `<div class="empty" style="padding:8px 0"><h1>No images yet</h1><p>Add the images learners need during the case: X-rays, ECGs, ultrasound, lab sheets. Set when each one is shown. The learner viewer will show them at that point.</p></div>`}
+    </div>`;
+}
+async function uploadImages(files){
+  if (!S.assets || !S.draft) return;
+  const list = [...files], id0 = S.currentId; let ok = 0;
+  S.uploading = true; renderLearner();
+  for (const f of list) {
+    if (!IMG_TYPES.includes(f.type)) { toast(f.name + ': use JPG, PNG, WebP or GIF.'); continue; }
+    if (f.size > 20 * 1024 * 1024) { toast(f.name + ' is over 20 MB.'); continue; }
+    try {
+      const r = await S.assets.upload(f, {type:f.type});
+      if (S.currentId !== id0) break;
+      S.draft.images = (S.draft.images || []).concat([{id:r.id, title:f.name.replace(/\.[^.]+$/, ''), caption:'', at:'pre'}]);
+      ok++; changed();
+    } catch(e) {
+      const c = e && e.code;
+      toast(c === 'too_large' ? f.name + ' is too large.' : c === 'unsupported_type' ? f.name + ': file type not accepted.' : c === 'quota_or_state' ? 'Image storage is full. Remove unused images first.' : c === 'rate_limited' ? 'Too many uploads at once. Try again in a moment.' : 'Could not upload ' + f.name + '.');
+      if (c === 'quota_or_state' || c === 'rate_limited' || c === 'not_granted') break;
+    }
+  }
+  S.uploading = false;
+  if (S.view === 'learner') renderLearner();
+  if (ok) toast(ok + ' image' + (ok===1?'':'s') + ' added');
+}
+async function removeImage(i){
+  const imgs = S.draft.images || [], m = imgs[i]; if (!m) return;
+  S.draft.images = imgs.filter((_, k) => k !== i); S.confirmImg = null;
+  changed(); renderLearner();
+  if (S.assets && !imgRefCount(m.id, S.currentId)) { try { await S.assets.delete(m.id); } catch(e){} }
+  toast('Image removed');
+}
 function renderLearner(){
   const c = S.draft, v = $('#view'), mode = S.learnerMode;
+  if (mode === 'img') {
+    v.innerHTML = `${banners()}
+      <div class="lbar">
+        <div class="tabs" role="group" aria-label="Handout version">
+          <button type="button" data-act="lmode" data-mode="pre" aria-pressed="false">Before the case</button>
+          <button type="button" data-act="lmode" data-mode="img" aria-pressed="true">Imaging</button>
+          <button type="button" data-act="lmode" data-mode="post" aria-pressed="false">After the debrief</button>
+        </div>
+        <span class="help">Images the learner sees during the case, and when. They will appear in the learner viewer at that point.</span>
+      </div>
+      ${renderImaging()}`;
+    v.querySelectorAll('textarea').forEach(autosize);
+    renderTop(); return;
+  }
   const d = learnerDoc(c, mode);
   v.innerHTML = `${banners()}
     <div class="lbar">
       <div class="tabs" role="group" aria-label="Handout version">
         <button type="button" data-act="lmode" data-mode="pre" aria-pressed="${mode==='pre'}">Before the case</button>
+        <button type="button" data-act="lmode" data-mode="img" aria-pressed="false">Imaging</button>
         <button type="button" data-act="lmode" data-mode="post" aria-pressed="${mode==='post'}">After the debrief</button>
       </div>
-      <span class="help">${mode === 'pre' ? 'Give this to the learner before they walk in. It shows only the learner brief and the patient vignette, with no hidden cause or vitals.' : 'Give this out after the debrief. It reveals what happened and why, the key actions, and the teaching points.'}</span>
+      <span class="help">${mode === 'pre' ? (c.handoff === 'verbal' ? 'Give this to the learner before they walk in. It shows their role and task only; the patient handoff is given aloud by the provider in the room.' : 'Give this to the learner before they walk in. It shows their role and task and the patient handoff, with no hidden cause or vitals.') : 'Give this out after the debrief. It reveals what happened and why, the key actions, and the teaching points.'}</span>
       <span class="spacer"></span>
       <button type="button" class="btn small" id="copyLearner">Copy text</button>
     </div>
     <div class="sheet lsheet">
       <div><h1>${esc(d.title)}</h1><div class="meta">${esc(d.sub)}</div></div>
-      ${d.blocks.map(b => `<section class="${b.fixed ? 'lrules' : ''}"><h3>${esc(b.h)}</h3>${b.fixed ? `<p>${esc(b.text)}</p>` : fmtHtml(b.text)}</section>`).join('')}
+      ${d.blocks.map(b => `<section class="${b.fixed ? 'lrules' : ''}"><h3>${esc(b.h)}</h3>${b.fixed || b.plain ? `<p>${esc(b.text)}</p>` : fmtHtml(b.text)}</section>`).join('')}
     </div>`;
   renderTop();
 }
 async function copyLearner(){
   const text = learnerText(S.draft, S.learnerMode);
   try { await navigator.clipboard.writeText(text); toast('Handout text copied'); }
+  catch(e) { toast('Copy is blocked here. Use Export to Word instead.'); }
+}
+/* ---------- mannequin orders ---------- */
+/* Plain-text format: "## " section, "### " state card, "|" table rows (first row = header), everything else as in other fields. */
+function ordersBlocks(text){
+  const out = []; let cur = out, buf = [], tbl = null;
+  const flushBuf = () => { if (buf.some(l => l.trim())) cur.push({t:'text', text:buf.join('\n')}); buf = []; };
+  const flushTbl = () => { if (tbl) { const n = Math.max(...tbl.map(r => r.length)); cur.push({t:'table', rows:tbl.map(r => r.concat(Array(n - r.length).fill('')))}); tbl = null; } };
+  for (const raw of String(text || '').split('\n')) {
+    const l = raw.trim(); let m;
+    if (/^[-*_]{3,}$/.test(l)) continue;
+    if (l.startsWith('|')) {
+      flushBuf();
+      const cells = l.replace(/^\|/, '').replace(/\|\s*$/, '').split('|').map(s => s.trim());
+      if (cells.every(x => !x || /^:?-{2,}:?$/.test(x))) continue;
+      (tbl = tbl || []).push(cells); continue;
+    }
+    flushTbl();
+    if ((m = l.match(/^###\s+(.*)$/))) { flushBuf(); const card = {t:'card', title:cleanMd(m[1]), items:[]}; out.push(card); cur = card.items; continue; }
+    if ((m = l.match(/^#{1,2}\s+(.*)$/))) { flushBuf(); out.push({t:'h', text:cleanMd(m[1])}); cur = out; continue; }
+    buf.push(raw);
+  }
+  flushBuf(); flushTbl();
+  return out;
+}
+function oBlockHtml(b){
+  if (b.t === 'h') return `<h3 class="osec">${esc(b.text)}</h3>`;
+  if (b.t === 'text') return `<div class="otext">${fmtHtml(b.text)}</div>`;
+  if (b.t === 'table') {
+    const [h, ...rows] = b.rows;
+    return `<div class="tscroll"><table class="otbl"><thead><tr>${h.map(x => `<th>${inl(x)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(r => `<tr>${r.map(x => `<td>${x ? inl(x) : ''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  }
+  if (b.t === 'card') return `<section class="ocard"><h4>${esc(b.title)}</h4>${b.items.map(oBlockHtml).join('')}</section>`;
+  return '';
+}
+function ordersHtml(text){
+  const bs = ordersBlocks(text); let h = '';
+  for (let i = 0; i < bs.length; i++) {
+    if (bs[i].t !== 'card') { h += oBlockHtml(bs[i]); continue; }
+    let run = ''; while (i < bs.length && bs[i].t === 'card') run += oBlockHtml(bs[i++]);
+    h += `<div class="ocards">${run}</div>`; i--;
+  }
+  return h;
+}
+function renderOrders(){
+  const c = S.draft, v = $('#view'), has = !!(c.orders || '').trim();
+  const edit = S.ordersEdit && S.canWrite;
+  let body;
+  if (edit) body = `<div class="sec">${fieldHtml('orders','Mannequin orders','orders',c.orders,{rows:18, cls:'orders-field'})}</div>`;
+  else if (!has) body = `<div class="sec"><div class="empty" style="padding:8px 0">
+      <h1>No mannequin orders yet</h1>
+      <p>The AI handoff writes them as the last section of the case: learner event buttons, one card per patient state, transitions, responses, timers and a build checklist. They come in with the import file after you approve the case.</p>
+      <div class="foot"><button type="button" class="btn primary" data-act="goHandoff">Go to AI handoff</button>${S.canWrite ? '<button type="button" class="btn" data-act="omode" data-mode="edit">Write them by hand</button>' : ''}</div>
+    </div></div>`;
+  else body = `<div class="sheet osheet">
+      <div><h1>${esc(c.title || 'Untitled case')}</h1><div class="meta">Mannequin orders · for the operator programming Laerdal SimMan / LLEAP</div></div>
+      ${ordersHtml(c.orders)}
+      <p class="onote">Parameter names can differ by SimMan model and software version. Check them against your LLEAP before the first run.</p>
+    </div>`;
+  v.innerHTML = `${banners()}
+    <div class="lbar">
+      <div class="tabs" role="group" aria-label="Orders mode">
+        <button type="button" data-act="omode" data-mode="view" aria-pressed="${!edit}">View</button>
+        <button type="button" data-act="omode" data-mode="edit" aria-pressed="${edit}" ${S.canWrite ? '' : 'disabled'}>Edit</button>
+      </div>
+      <span class="help">For the operator who programs the mannequin. Learners never see this tab.</span>
+      <span class="spacer"></span>
+      <button type="button" class="btn small" id="copyOrders" ${has ? '' : 'disabled'}>Copy all</button>
+    </div>
+    ${body}`;
+  v.querySelectorAll('textarea').forEach(autosize);
+  renderTop();
+}
+async function copyOrders(){
+  try { await navigator.clipboard.writeText(S.draft.orders || ''); toast('Mannequin orders copied'); }
   catch(e) { toast('Copy is blocked here. Use Export to Word instead.'); }
 }
 function renderHandoff(){
@@ -966,17 +1448,20 @@ function renderHandoff(){
   v.innerHTML = `${banners()}
     <div class="sec">
       <div class="sec-h"><h2>AI handoff</h2><span class="help">Send this case to Claude or another AI to fill in the clinical detail in the same standard format every time.</span></div>
+      <div class="target">Prompt for: <b>${esc((c.caseNo ? c.caseNo + ' · ' : '') + (c.title || 'Untitled case'))}</b></div>
       <ol class="steps">
         <li>Your case scenario is included automatically. Add extra instructions below if you want (optional).</li>
         <li>Copy the prompt, or download it as a file.</li>
         <li>Paste it into Claude (or any AI chat) and send.${S.askFirst ? ' The AI asks you a few questions first. Answer them, or reply "go" to use its defaults.' : ''}</li>
-        <li>The AI returns two things: a <b>readable copy</b> for you to review, and an import file, <span class="mono-i">${esc(fileSlug(c.title))}.simcase.json</span>.</li>
-        <li>Read the copy. If it looks right, open <b>Import</b> and upload the .json file. If the AI only wrote text, paste its whole reply instead.</li>
+        <li>The AI sends a <b>readable copy</b> of the case only, ending with the <b>Mannequin orders</b>. Review it and ask for changes as many times as you need. After the first copy it sends only the parts it changed; reply <b>full copy</b> to see everything.</li>
+        <li>The <b>AI notes to check</b> come at the end of each reply. Answer each one with <b>fix</b>, <b>keep</b> or <b>later</b>. Only "later" notes come into the app; fixed and kept ones disappear.</li>
+        <li>When everything is correct, reply <b>APPROVED</b>. Only then does the AI create the import file, <span class="mono-i">${esc(filePrefix(c))}.simcase.json</span>, with all your changes in it.</li>
+        <li>Open <b>Import</b> and upload the .json file. If the AI only wrote text, paste its whole last reply instead.</li>
       </ol>
       ${fieldHtml('llmNotes','Extra instructions for the AI (optional)','llmNotes',c.llmNotes,{rows:3,noTbc:true})}
       <label class="check" for="askFirst">
         <input type="checkbox" id="askFirst" ${S.askFirst ? 'checked' : ''}>
-        <span><b>AI asks questions before building the case</b> (recommended)<br><span class="help">It asks 4–8 quick questions (weight, severity, cart, learners, how it ends), each with a default you can accept. Turn off to get the import file in one step.</span></span>
+        <span><b>AI asks questions before building the case</b> (recommended)<br><span class="help">It asks 4–8 quick questions (weight, severity, cart, learners, how it ends), each with a default you can accept. Turn off to skip straight to the readable copy.</span></span>
       </label>
       <div class="foot">
         <button type="button" class="btn primary" id="copyPrompt">Copy prompt</button>
@@ -988,23 +1473,98 @@ function renderHandoff(){
         <p class="help">This is exactly what gets copied: the task, the house style every case follows, your instructions, and the case as JSON.</p>
         <textarea id="promptOut" class="mono" rows="14" readonly>${esc(buildPrompt(c))}</textarea>
       </div>
+    </div>
+    <div class="sec">
+      <div class="sec-h"><h2>Update this case in a new chat</h2><span class="help">For changes after the case is built, so the AI does not rebuild everything.</span></div>
+      <ol class="steps">
+        <li>Still in the chat that built the case? Just ask for the change there. After you reply <b>APPROVED</b>, it sends an update file, not the whole case.</li>
+        <li>In a new chat: write what to change below, copy the update prompt, and paste it in. The AI shows the changes, waits for <b>APPROVED</b>, then sends <span class="mono-i">${esc(fileSlug(c.title))}.simcase-update.json</span>.</li>
+        <li>Open <b>Import</b>, choose <b>Update this case</b>, upload the file, check the preview, and apply.</li>
+      </ol>
+      <div class="field">
+        <label class="lab" for="updateAsk">What to change</label>
+        <p class="help">Plain words are fine. Example: "Make stage 3 a slower desaturation over 3 min and add a stage 5 for bronchospasm after the epinephrine." Not saved with the case.</p>
+        <textarea id="updateAsk" rows="3" placeholder="e.g. Change the hidden cause in stage 2 to …">${esc(S.updateAsk)}</textarea>
+      </div>
+      <div class="foot">
+        <button type="button" class="btn primary" id="copyUpdatePrompt">Copy update prompt</button>
+        <span class="help">Includes the whole current case so the AI has full context. Only the changes come back.</span>
+      </div>
     </div>`;
   v.querySelectorAll('textarea:not(#promptOut)').forEach(autosize);
   renderTop();
 }
+const clip = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n).trimEnd() + ' …' : s; };
+function updateResultHtml(){
+  const r = parseUpdate(S.updateText, S.draft);
+  if (r.empty) return '';
+  if (r.error) return `<div class="banner warn">${esc(r.error)}</div>`;
+  const canApply = S.canWrite && !S.noStore, tc = targetCheck(r.caseId);
+  return `<div class="found">
+      ${targetHtml(tc, 'update')}
+      <div class="lab">${r.changes.length} change${r.changes.length===1?'':'s'} to "${esc(S.draft.title)}"</div>
+      ${r.full ? '<p class="help">This is a full case file. Only the fields that differ from the current case are listed and will be applied.</p>' : ''}
+      ${r.warn.length ? `<div class="banner warn">${esc(r.warn.join(' '))}</div>` : ''}
+      <div class="chgs">${r.changes.map(ch => `<div class="chg">
+        <div class="chg-l">${esc(ch.label)}</div>
+        <div class="chg-b">
+          <div class="chg-old"><span>Now</span><p class="pre">${ch.old.trim() ? esc(clip(ch.old, 700)) : '<i>empty</i>'}</p></div>
+          <div class="chg-new"><span>After update</span><p class="pre">${ch.nw.trim() ? esc(clip(ch.nw, 1200)) : '<i>removed</i>'}</p></div>
+        </div></div>`).join('')}</div>
+      ${r.note ? `<div class="field"><span class="lab">AI notes (added to the case)</span><p class="pre">${esc(r.note)}</p></div>` : ''}
+      ${!canApply ? '<div class="foot"><span class="help">You need edit access to update.</span></div>'
+        : tc.level === 'mismatch' ? '<div class="foot"><span class="help">Apply is blocked because this update is for another case.</span></div>'
+        : S.confirmApply ? `<div class="confirm"><span>Apply ${r.changes.length} change${r.changes.length===1?'':'s'} to "<b>${esc(S.draft.title)}</b>"?</span><button type="button" class="btn primary small" data-act="applyYes">Apply</button><button type="button" class="btn small" data-act="applyNo">Cancel</button></div>`
+        : '<div class="foot"><button type="button" class="btn primary" data-act="applyUpdate">Apply update</button><span class="help">Everything not listed stays as it is. You can undo right after.</span></div>'}
+    </div>`;
+}
+/* Which case a file belongs to: compares the caseId the AI copied with the open case. */
+function targetCheck(fileId){
+  if (!fileId) return {level:'unknown'};
+  if (fileId === S.currentId || (S.draft && S.draft.caseNo && fileId === S.draft.caseNo)) return {level:'ok'};
+  let oid = S.cases.has(fileId) ? fileId : null;
+  if (!oid) S.cases.forEach((c, id) => { if (!oid && c.caseNo === fileId) oid = id; });
+  const other = oid ? S.cases.get(oid) : null;
+  return {level:'mismatch', id:oid || fileId, title: other ? ((other.caseNo ? other.caseNo + ' ' : '') + (other.title || 'Untitled case')) : '', exists: !!other};
+}
+function targetHtml(tc, what){
+  if (tc.level === 'ok') return `<div class="banner ok-b"><span>This ${what} was made for "<b>${esc(S.draft.title)}</b>", the open case.</span></div>`;
+  if (tc.level === 'unknown') return `<div class="banner warn"><span>This ${what} has no case ID (made before the check existed), so the app can't confirm which case it is for. Make sure it belongs to "<b>${esc(S.draft.title)}</b>".</span></div>`;
+  return `<div class="banner danger-b"><span>This ${what} was made for ${tc.exists ? `"<b>${esc(tc.title)}</b>"` : 'a case that is no longer in the library'}, but "<b>${esc(S.draft.title)}</b>" is open.</span>${tc.exists ? `<button type="button" class="btn small" data-act="openTarget" data-id="${esc(tc.id)}">Switch to "${esc(tc.title)}"</button>` : ''}</div>`;
+}
+function applyUpdate(){
+  const r = parseUpdate(S.updateText, S.draft); if (!r.next) return;
+  if (targetCheck(r.caseId).level === 'mismatch') return;
+  S.confirmApply = false;
+  S.undo = {id:S.currentId, draft:clone(S.draft), n:r.changes.length};
+  const keep = {rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy, status:S.draft.status};
+  S.draft = normalize(Object.assign(r.next, keep));
+  S.updateText = '';
+  changed(); renderList(); renderMain(); window.scrollTo(0,0);
+  toast('Update applied: ' + r.changes.length + ' change' + (r.changes.length===1?'':'s'));
+}
+function undoUpdate(){
+  if (!S.undo || S.undo.id !== S.currentId) return;
+  const keep = {rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy};
+  S.draft = normalize(Object.assign(S.undo.draft, keep)); S.undo = null;
+  changed(); renderList(); renderMain(); toast('Update undone');
+}
 function importResultHtml(){
+  if (S.importMode === 'update') return updateResultHtml();
   const r = parseImport(S.importText);
   if (r.empty) return '';
   if (r.error) return `<div class="banner warn">${esc(r.error)}</div>`;
   const c = r.case, n = tbcList(c).length;
   const notes = (c.aiNotes || '').trim();
-  const canReplace = S.draft && S.canWrite && !S.noStore;
+  const tc = S.draft ? targetCheck(r.caseId) : {level:'none'};
+  const canReplace = S.draft && S.canWrite && !S.noStore && tc.level !== 'mismatch';
   const replaceUi = !canReplace ? '' : S.confirmReplace
     ? `<div class="confirm"><span>Replace "${esc(S.draft.title)}" for everyone? Its current content will be overwritten.</span>
         <button type="button" class="btn primary small" data-act="replaceYes">Replace case</button>
         <button type="button" class="btn small" data-act="replaceNo">Cancel</button></div>`
     : `<button type="button" class="btn primary" data-act="replace">Replace "${esc(S.draft.title)}"</button>`;
   return `<div class="found">
+      ${S.draft && tc.level === 'mismatch' ? targetHtml(tc, 'file') + '<p class="help">Replace is blocked. You can still import it as a new case.</p>' : ''}
       <div class="lab">Found: ${esc(c.title)}</div>
       <div class="m">${c.stages.length} stage${c.stages.length===1?'':'s'} · ${n ? `<span class="chip tbc">${n} TBC left</span>` : '<span class="chip ok">All fields filled</span>'}</div>
       ${notes ? `<div class="field"><span class="lab">AI notes to check</span><p class="pre">${esc(notes)}</p></div>` : ''}
@@ -1014,16 +1574,25 @@ function importResultHtml(){
 }
 function renderImport(){
   const v = $('#view');
+  if (S.importMode === 'update' && !S.draft) S.importMode = 'new';
+  const up = S.importMode === 'update';
   v.innerHTML = `${S.draft ? banners() : ''}
     <div class="sec">
-      <div class="sec-h"><h2>Import from AI</h2><span class="help">Bring back a case the AI filled in from the handoff prompt.</span></div>
+      <div class="sec-h"><h2>Import from AI</h2><span class="help">Bring back what the AI made from the handoff prompt.</span></div>
+      ${up && S.draft ? `<div class="target">Updating: <b>${esc((S.draft.caseNo ? S.draft.caseNo + ' · ' : '') + (S.draft.title || 'Untitled case'))}</b></div>` : ''}
+      <div class="tabs" role="group" aria-label="Import mode" style="align-self:flex-start">
+        <button type="button" data-act="imode" data-mode="new" aria-pressed="${!up}">New or replace case</button>
+        <button type="button" data-act="imode" data-mode="update" aria-pressed="${up}" ${S.draft ? '' : 'disabled'}>Update this case</button>
+      </div>
       <div class="field">
-        <label class="lab" for="importIn">AI reply</label>
-        <p class="help">Upload the <b>.simcase.json</b> file the AI created, or paste its whole reply. The page finds the case in it and checks it before anything changes. Imported cases start as Draft.</p>
-        <textarea id="importIn" class="mono" rows="10" placeholder='Paste here, starting with \`\`\`json { "format": "sim-case/v1", ...'>${esc(S.importText)}</textarea>
+        <label class="lab" for="importIn">${up ? 'Update file or AI reply' : 'AI reply'}</label>
+        <p class="help">${up
+          ? `Upload the <b>.simcase-update.json</b> file, or paste the AI's whole reply. You'll see exactly what changes in "${esc(S.draft.title)}" before anything is saved. A full case file works too: only the fields that differ are applied.`
+          : 'Upload the <b>.simcase.json</b> file the AI created, or paste its whole reply. The page finds the case in it and checks it before anything changes. Imported cases start as Draft.'}</p>
+        <textarea id="importIn" class="mono" rows="10" placeholder='${up ? 'Paste here, starting with \`\`\`json { "format": "sim-case/update", ...' : 'Paste here, starting with \`\`\`json { "format": "sim-case/v1", ...'}'>${esc(up ? S.updateText : S.importText)}</textarea>
       </div>
       <div class="foot">
-        <label class="btn primary" for="importFile">Upload .simcase.json</label><input type="file" id="importFile" accept=".json,.txt,.md" hidden>
+        <label class="btn primary" for="importFile">${up ? 'Upload update file' : 'Upload .simcase.json'}</label><input type="file" id="importFile" accept=".json,.txt,.md" hidden>
         <button type="button" class="btn ghost" data-act="importClear">Clear</button>
       </div>
       <div id="importResult">${importResultHtml()}</div>
@@ -1035,7 +1604,7 @@ async function applyImport(asNew){
   const r = parseImport(S.importText); if (!r.case) return;
   if (asNew) { await createCase(null, r.case); S.importText = ''; S.view = 'edit'; renderMain(); return; }
   if (!S.draft) return;
-  const keep = {createdAt:S.draft.createdAt, llmNotes:S.draft.llmNotes, scenario:(S.draft.scenario||'').trim() ? S.draft.scenario : r.case.scenario, rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy};
+  const keep = {caseNo:S.draft.caseNo || '', createdAt:S.draft.createdAt, llmNotes:S.draft.llmNotes, scenario:(S.draft.scenario||'').trim() ? S.draft.scenario : r.case.scenario, rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy, images:remapImages(S.draft.images, S.draft.stages, r.case.stages)};
   S.draft = Object.assign(r.case, keep);
   S.importText = ''; S.confirmReplace = false; S.view = 'edit';
   changed(); renderMain(); renderList(); window.scrollTo(0,0);
@@ -1092,11 +1661,36 @@ async function save(){
 async function safeCan(){ try { return await S.user.can('data.write'); } catch(e){ return null; } }
 async function flush(){ if (S.editSeq > S.savedSeq) await save(); }
 
+/* Ask before leaving a case while working on it (Edit, AI handoff, Import, Imaging, editing orders). */
+function guardedView(){
+  return ['edit','handoff','import'].includes(S.view) || (S.view === 'learner' && S.learnerMode === 'img') || (S.view === 'orders' && S.ordersEdit);
+}
+function requestSwitch(id){
+  if (!id || id === S.currentId) return;
+  if (!S.draft || !guardedView()) { openCase(id); return; }
+  S.pendingSwitch = id; showSwitchBar();
+}
+function hideSwitchBar(){ const el = $('#switchBar'); if (el) el.remove(); }
+function showSwitchBar(){
+  hideSwitchBar();
+  const to = S.cases.get(S.pendingSwitch); if (!to) return;
+  const notes = [];
+  if (S.editSeq > S.savedSeq) notes.push('Your latest edits will be saved first.');
+  if ((S.updateText || '').trim()) notes.push('The pasted update (not applied yet) will be cleared.');
+  if ((S.updateAsk || '').trim()) notes.push('Your "What to change" text will be cleared.');
+  if (S.uploading) notes.push('An image upload is still running; wait for it to finish.');
+  const el = document.createElement('div');
+  el.id = 'switchBar'; el.className = 'banner warn switchbar'; el.setAttribute('role', 'alertdialog');
+  el.innerHTML = `<span>You're working on "<b>${esc(S.draft.title || 'Untitled case')}</b>". Switch to "<b>${esc(to.title || 'Untitled case')}</b>"?${notes.length ? ' ' + esc(notes.join(' ')) : ''}</span>
+    <button type="button" class="btn primary small" data-act="switchYes" ${S.uploading ? 'disabled' : ''}>Save & switch</button><button type="button" class="btn small" data-act="switchNo">Stay</button>`;
+  $('#view').prepend(el); window.scrollTo(0, 0);
+  const pick = $('#mobilePick'); if (pick) pick.value = S.currentId;
+}
 async function openCase(id){
   if (id === S.currentId) return;
   await flush();
   const c = S.cases.get(id); if (!c) return;
-  S.currentId = id; S.draft = normalize(c); S.editSeq = S.savedSeq = 0; S.remoteChanged = false; S.confirmDel = false; S.err = '';
+  S.currentId = id; S.draft = normalize(c); S.editSeq = S.savedSeq = 0; S.remoteChanged = false; S.confirmDel = false; S.err = ''; S.undo = null; S.updateText = ''; S.updateAsk = ''; S.confirmApply = false; S.confirmReplace = false;
   ls.set('simcase:last', id);
   renderList(); renderMain(); window.scrollTo(0,0);
 }
@@ -1105,8 +1699,9 @@ async function createCase(fromDraft, imported){
   await flush();
   const id = S.db.collection('cases').doc().id;
   const body = fromDraft ? normalize(fromDraft) : imported ? normalize(imported) : blankCase();
-  if (fromDraft) { body.title = (body.title || 'Untitled case') + ' (copy)'; body.status = 'draft'; body.stages.forEach(s => s.id = rid()); }
+  if (fromDraft) { const old = body.stages.map(s => ({id:s.id})); body.title = (body.title || 'Untitled case') + ' (copy)'; body.status = 'draft'; body.stages.forEach(s => s.id = rid()); body.images = remapImages(body.images, old, body.stages); }
   body.createdAt = body.updatedAt = Date.now(); body.updatedBy = S.myId || null;
+  body.caseNo = nextCaseNo();
   body.rev = rid(); S.ownRevs.add(body.rev);
   try {
     await S.db.doc('cases/' + id).set(body);
@@ -1119,9 +1714,11 @@ async function createCase(fromDraft, imported){
 async function deleteCase(){
   const id = S.currentId; if (!id) return;
   clearTimeout(S.saveTimer); S.editSeq = S.savedSeq;
+  const imgs = ((S.draft && S.draft.images) || []).map(m => m.id);
   try {
     await S.db.doc('cases/' + id).delete();
-    S.cases.delete(id); S.currentId = null; S.draft = null; S.confirmDel = false;
+    S.cases.delete(id);
+    if (S.assets) for (const a of imgs) { if (!imgRefCount(a, id)) { try { await S.assets.delete(a); } catch(e){} } } S.currentId = null; S.draft = null; S.confirmDel = false;
     const next = sortedCases()[0]; if (next) await openCase(next.id); else { renderList(); renderMain(); }
     toast('Case deleted');
   } catch(e){ toast('Could not delete the case. Try again.'); }
@@ -1182,35 +1779,53 @@ function cell(inner, w, fill){
   return `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/><w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:tcMar><w:top w:w="80" w:type="dxa"/><w:left w:w="100" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tcMar></w:tcPr>${inner}</w:tc>`;
 }
 function buildDocument(c){
-  const W = [2300, 2700, 3150, 3250, 3144];
-  const meta = [c.level && 'Learners: '+c.level, c.duration && 'Duration: '+c.duration, (STATUS.find(s=>s[0]===c.status)||STATUS[0])[1]].filter(Boolean).join('  ·  ');
+  const meta = [c.caseNo, c.level && 'Learners: '+c.level, c.duration && 'Duration: '+c.duration, (STATUS.find(s=>s[0]===c.status)||STATUS[0])[1]].filter(Boolean).join('  ·  ');
   const vl = vitalsLine(c);
-  const head = ['Stage and trigger','Patient or clinical event','Expected learner actions','Facilitator cues','LLEAP and physical actions'];
-  const hdrRow = `<w:tr><w:trPr><w:tblHeader/></w:trPr>${head.map((h,i) => cell(para(runs(h,{b:true,sz:20}),{after:0}), W[i], 'E7EDF2')).join('')}</w:tr>`;
-  const rows = c.stages.map((s,i) => {
-    const fill = i % 2 ? 'FFFFFF' : 'F5F6F7';
-    const first = para(runs((i+1)+' · '+(s.name||''),{b:true,sz:20,color:'1D5E8C'}),{after:60}) + docParas(s.trigger,{sz:19,after:50,ind:220});
-    return `<w:tr><w:trPr><w:cantSplit/></w:trPr>${cell(first,W[0],fill)}${[s.event,s.actions,s.cues,s.lleap].map((t,k) => cell(docParas(t,{sz:19,after:50,ind:220}),W[k+1],fill)).join('')}</w:tr>`;
-  }).join('');
   const border = 'w:val="single" w:sz="4" w:space="0" w:color="C9D2DB"';
-  const table = `<w:tbl><w:tblPr><w:tblW w:w="${W.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:tblLayout w:type="fixed"/>
-    <w:tblBorders><w:top ${border}/><w:left ${border}/><w:bottom ${border}/><w:right ${border}/><w:insideH ${border}/><w:insideV ${border}/></w:tblBorders></w:tblPr>
-    <w:tblGrid>${W.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${hdrRow}${rows}</w:tbl>`;
+  const w3 = 4848, tot = w3 * 3;
+  const lab = t => `<w:p><w:pPr><w:keepNext/><w:spacing w:before="0" w:after="50"/></w:pPr>${runs(t.toUpperCase(), {b:true, sz:16, color:'566472'})}</w:p>`;
+  const box = (t, label, w, fill, span) => `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${span ? `<w:gridSpan w:val="${span}"/>` : ''}<w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:tcMar><w:top w:w="90" w:type="dxa"/><w:left w:w="110" w:type="dxa"/><w:bottom w:w="90" w:type="dxa"/><w:right w:w="110" w:type="dxa"/></w:tcMar></w:tcPr>${lab(label)}${docParas(t,{sz:19,after:50,ind:220})}</w:tc>`;
+  const stageDoc = (s, i) => {
+    const title = `<w:p><w:pPr><w:keepNext/><w:spacing w:before="200" w:after="80"/></w:pPr>${runs((i+1)+' · '+(s.name || 'Stage '+(i+1)), {b:true, sz:22, color:'1D5E8C'})}${runs('  —  ' + (oneLine(s.trigger) || 'TBC'), {sz:20, color:'566472'})}</w:p>`;
+    return title + `<w:tbl><w:tblPr><w:tblW w:w="${tot}" w:type="dxa"/><w:tblLayout w:type="fixed"/>
+      <w:tblBorders><w:top ${border}/><w:left ${border}/><w:bottom ${border}/><w:right ${border}/><w:insideH ${border}/><w:insideV ${border}/></w:tblBorders></w:tblPr>
+      <w:tblGrid>${Array(3).fill(`<w:gridCol w:w="${w3}"/>`).join('')}</w:tblGrid>
+      <w:tr><w:trPr><w:cantSplit/></w:trPr>${box(s.event,'Patient / clinical event',w3,'FFFFFF')}${box(s.actions,'Expected learner actions',w3,'FFFFFF')}${box(s.cues,'Facilitator cues',w3,'FFFFFF')}</w:tr>
+      <w:tr><w:trPr><w:cantSplit/></w:trPr>${box(s.lleap,'LLEAP & physical actions',tot,'F5F6F7',3)}</w:tr>${imagesFor(c, s.id).length ? `<w:tr><w:trPr><w:cantSplit/></w:trPr>${box(imagesFor(c, s.id).map(m => '- ' + (m.title || 'untitled') + (m.caption ? ': ' + oneLine(m.caption) : '')).join('\n'),'Images to show',tot,'FFFFFF',3)}</w:tr>` : ''}</w:tbl>`;
+  };
+  const initLine = para(runs('Initial settings:  ', {b:true, sz:20, color:'1D5E8C'}) + runs(vl || 'TBC', {sz:20}) + (c.vent ? runs('   ·   ' + oneLine(c.vent), {sz:20, color:'566472'}) : ''), {after:60});
+  const table = c.stages.map(stageDoc).join('');
+  /* Overview in two borderless columns so it stays short; stages start on a new page. */
+  const half = tot / 2;
+  const plainCell = inner => `<w:tc><w:tcPr><w:tcW w:w="${half}" w:type="dxa"/><w:tcMar><w:top w:w="0" w:type="dxa"/><w:left w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="360" w:type="dxa"/></w:tcMar></w:tcPr>${inner || para('', {after:0})}</w:tc>`;
+  const twoCol = (l, r) => `<w:tbl><w:tblPr><w:tblW w:w="${tot}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders></w:tblPr><w:tblGrid><w:gridCol w:w="${half}"/><w:gridCol w:w="${half}"/></w:tblGrid><w:tr>${plainCell(l)}${plainCell(r)}</w:tr></w:tbl>`;
+  const lab2 = (label, text) => secHeadDoc(label, 120) + docParas(text);
+  const gs = setupGroups(c.setup);
+  let setupDoc;
+  if (gs.length < 2) setupDoc = labeled('Setup', c.setup);
+  else {
+    const lines = gs.map(g => g.split('\n').length), total = lines.reduce((a,b) => a+b, 0);
+    let acc = 0, cut = 1, best = Infinity;
+    for (let i = 0; i < gs.length - 1; i++) { acc += lines[i]; const d = Math.abs(acc - total / 2); if (d < best) { best = d; cut = i + 1; } }
+    setupDoc = secHeadDoc('Setup', 180) + twoCol(docParas(gs.slice(0, cut).join('\n')), docParas(gs.slice(cut).join('\n')));
+  }
+  const rl = String(c.roles || '').split('\n').map(l => l.trim()).filter(Boolean), rh = Math.ceil(rl.length / 2);
+  const rolesDoc = rl.length > 1 ? secHeadDoc('Roles') + twoCol(docParas(rl.slice(0, rh).join('\n')), docParas(rl.slice(rh).join('\n'))) : labeled('Roles', c.roles);
   const body = [
     para(runs(c.title || 'Untitled case', {b:true, sz:32}), {after:40}),
-    meta ? para(runs(meta, {color:'566472', sz:20}), {after:160}) : '',
-    (c.scenario||'').trim() ? labeled('Case summary', c.scenario) : '',
+    meta ? para(runs(meta, {color:'566472', sz:20}), {after:120}) : '',
+    labeled('Case summary', c.summary),
     labeled('Objective', c.objective),
-    labeled('Patient', c.patient),
-    labeled('Learner brief', c.learnerBrief),
-    labeled('Roles', c.roles),
-    labeled('Setup', c.setup),
-    secHeadDoc('Initial settings') + docParas(vl || 'TBC') + (c.vent ? docParas(c.vent) : ''),
-    para(runs('Scenario progression', {b:true, sz:26}), {before:240, after:120}),
-    table,
-    para('', {after:60}),
+    labeled(c.handoff === 'verbal' ? 'Patient handoff · spoken by the provider in the room' : 'Patient handoff', c.patient),
+    labeled('Learner role & task', c.learnerBrief + (imagesFor(c, 'pre').length ? '\nImages before the case: ' + imagesFor(c, 'pre').map(m => m.title || 'untitled').join(', ') : '')),
+    rolesDoc,
+    setupDoc,
     labeled('End point', c.end),
-    labeled('Debrief', c.debrief)
+    labeled('Debrief', c.debrief),
+    '<w:p><w:r><w:br w:type="page"/></w:r></w:p>',
+    para(runs('Scenario progression', {b:true, sz:26}), {before:0, after:100}),
+    initLine,
+    table
   ].join('');
   return wrapDoc(body, true);
 }
@@ -1226,10 +1841,35 @@ function learnerDocument(c, mode){
   const d = learnerDoc(c, mode);
   const body = [
     para(runs(d.title, {b:true, sz:32}), {after:40}),
-    para(runs(d.sub, {color:'566472', sz:20}), {after:240}),
+    para(runs((c.caseNo ? c.caseNo + '  ·  ' : '') + d.sub, {color:'566472', sz:20}), {after:240}),
     ...d.blocks.map(b => para(runs(b.h, {b:true, sz:24, color:'1D5E8C'}), {before:220, after:80}) + docParas(b.text, b.fixed ? {color:'566472', after:80} : {after:80, ind:340}))
   ].join('');
   return wrapDoc(body, false);
+}
+function docTable(rows){
+  const total = 14544, n = rows[0].length, w = Math.floor(total / n);
+  const border = 'w:val="single" w:sz="4" w:space="0" w:color="C9D2DB"';
+  const cp = (t, o) => String(t || '').trim() ? docParas(t, {sz:19, after:30, ind:220, ...o}) : para('', {after:0});
+  const tr = rows.map((r,i) => `<w:tr>${i === 0 ? '<w:trPr><w:tblHeader/></w:trPr>' : '<w:trPr><w:cantSplit/></w:trPr>'}${r.map(x => cell(i === 0 ? para(runs(cleanMd(x), {b:true, sz:19}), {after:0}) : cp(x), w, i === 0 ? 'E7EDF2' : (i % 2 ? 'FFFFFF' : 'F5F6F7'))).join('')}</w:tr>`).join('');
+  return `<w:tbl><w:tblPr><w:tblW w:w="${w*n}" w:type="dxa"/><w:tblLayout w:type="fixed"/>
+    <w:tblBorders><w:top ${border}/><w:left ${border}/><w:bottom ${border}/><w:right ${border}/><w:insideH ${border}/><w:insideV ${border}/></w:tblBorders></w:tblPr>
+    <w:tblGrid>${Array(n).fill(`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${tr}</w:tbl>` + para('', {after:60});
+}
+function oBlockDoc(b){
+  if (b.t === 'h') return para(runs(b.text, {b:true, sz:26}), {before:240, after:100});
+  if (b.t === 'text') return docParas(b.text);
+  if (b.t === 'table') return docTable(b.rows);
+  if (b.t === 'card') return secHeadDoc(b.title, 200) + b.items.map(oBlockDoc).join('');
+  return '';
+}
+function ordersDocument(c){
+  const body = [
+    para(runs(c.title || 'Untitled case', {b:true, sz:32}), {after:40}),
+    para(runs((c.caseNo ? c.caseNo + '  ·  ' : '') + 'Mannequin orders · for the operator programming Laerdal SimMan / LLEAP', {color:'566472', sz:20}), {after:160}),
+    ...ordersBlocks(c.orders).map(oBlockDoc),
+    para(runs('Parameter names can differ by SimMan model and software version. Check them against your LLEAP before the first run.', {color:'566472', sz:18}), {before:200})
+  ].join('');
+  return wrapDoc(body, true);
 }
 const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="21"/><w:szCs w:val="21"/><w:lang w:val="en-US"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="100" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
@@ -1248,12 +1888,14 @@ async function exportWord(){
   const btn = $('#exportBtn');
   const dl = window.claude ? await window.claude.use('downloads') : null;
   if (!dl) { toast('Word export isn\'t available in this view. Open the page in Claude to download.'); return; }
+  const orders = S.view === 'orders';
+  if (orders && !(S.draft.orders || '').trim()) { toast('No mannequin orders to export yet.'); return; }
   btn.disabled = true;
   try {
     const learner = S.view === 'learner';
-    const blob = await buildDocx(learner ? learnerDocument(S.draft, S.learnerMode) : buildDocument(S.draft));
-    const name = (S.draft.title || 'Simulation case').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim().slice(0,80) || 'Simulation case';
-    const suffix = learner ? (S.learnerMode === 'pre' ? ' - learner pre-brief' : ' - debrief handout') : ' - facilitator';
+    const blob = await buildDocx(orders ? ordersDocument(S.draft) : learner ? learnerDocument(S.draft, S.learnerMode) : buildDocument(S.draft));
+    const name = (S.draft.caseNo ? S.draft.caseNo + ' - ' : '') + (S.draft.title || 'Simulation case').replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').trim().slice(0,80) || 'Simulation case';
+    const suffix = orders ? ' - mannequin orders' : learner ? (S.learnerMode === 'pre' ? ' - learner pre-brief' : ' - debrief handout') : ' - facilitator';
     await dl.save({filename: name + suffix + '.docx', data: blob});
     toast('Word file saved');
   } catch(e) {
@@ -1276,11 +1918,13 @@ function toast(msg){
 document.addEventListener('input', e => {
   const el = e.target;
   if (el.id === 'search') { S.filter = el.value; renderList(); return; }
-  if (el.id === 'importIn') { S.importText = el.value; S.confirmReplace = false; refreshImport(); return; }
+  if (el.id === 'importIn') { if (S.importMode === 'update') S.updateText = el.value; else S.importText = el.value; S.confirmReplace = false; refreshImport(); return; }
+  if (el.id === 'updateAsk') { S.updateAsk = el.value; autosize(el); return; }
   const p = el.dataset && el.dataset.path; if (!p || !S.draft || !S.canWrite) return;
   setPath(S.draft, p, el.value);
   if (el.tagName === 'TEXTAREA') autosize(el);
   changed(); refreshFieldTbc(p);
+  if (p === 'handoff' && S.view === 'edit') { renderEditor(); const h = $('#f-handoff'); if (h) h.focus({preventScroll:true}); }
   if (p === 'llmNotes') { const out = $('#promptOut'); if (out) out.value = buildPrompt(S.draft); }
   if (p === 'scenario') {
     const has = !!el.value.trim(), ns = document.querySelector('.next-step');
@@ -1291,13 +1935,14 @@ document.addEventListener('input', e => {
   }
 });
 document.addEventListener('change', e => {
-  if (e.target.id === 'mobilePick' && e.target.value) openCase(e.target.value);
+  if (e.target.id === 'mobilePick' && e.target.value) requestSwitch(e.target.value);
   if (e.target.id === 'askFirst') { S.askFirst = e.target.checked; ls.set('simcase:askFirst', S.askFirst ? 'on' : 'off'); renderHandoff(); return; }
+  if (e.target.id === 'imgFile') { const fs = e.target.files; if (fs && fs.length) uploadImages(fs); e.target.value = ''; return; }
   if (e.target.id === 'importFile') {
     const f = e.target.files && e.target.files[0]; if (!f) return;
     if (f.size > 2e6) { toast('That file is too large to be a case file.'); return; }
     const rd = new FileReader();
-    rd.onload = () => { S.importText = String(rd.result || ''); S.confirmReplace = false; renderImport(); toast('File loaded: ' + f.name); };
+    rd.onload = () => { if (S.importMode === 'update') S.updateText = String(rd.result || ''); else S.importText = String(rd.result || ''); S.confirmReplace = false; renderImport(); toast('File loaded: ' + f.name); };
     rd.onerror = () => toast('Could not read that file.');
     rd.readAsText(f);
     e.target.value = '';
@@ -1308,15 +1953,19 @@ async function copyPrompt(){
   try { await navigator.clipboard.writeText(text); toast('Prompt copied. Paste it into Claude or another AI.'); }
   catch(e) { const out = $('#promptOut'); if (out) { out.focus(); out.select(); } toast('Press Ctrl+C (Cmd+C on Mac) to copy the selected prompt.'); }
 }
+async function copyText(text, ok){
+  try { await navigator.clipboard.writeText(text); toast(ok); }
+  catch(e) { toast('Copy is blocked here. Try again from the Claude app.'); }
+}
 async function downloadPrompt(){
   const dl = window.claude ? await window.claude.use('downloads') : null;
   if (!dl) { toast('Downloads aren\'t available in this view. Use Copy prompt instead.'); return; }
-  try { await dl.save({filename: fileSlug(S.draft.title) + '-ai-handoff.md', data: buildPrompt(S.draft)}); toast('Prompt file saved'); }
+  try { await dl.save({filename: filePrefix(S.draft) + '-ai-handoff.md', data: buildPrompt(S.draft)}); toast('Prompt file saved'); }
   catch(e) { toast(e && e.code === 'declined' ? 'Download cancelled' : 'Could not save the file. Use Copy prompt instead.'); }
 }
 document.addEventListener('focusout', () => { if (S.editSeq > S.savedSeq) { clearTimeout(S.saveTimer); S.saveTimer = setTimeout(save, 250); } });
 document.addEventListener('click', e => {
-  const item = e.target.closest('.item[data-id]'); if (item) { openCase(item.dataset.id); return; }
+  const item = e.target.closest('.item[data-id]'); if (item) { requestSwitch(item.dataset.id); return; }
   const tg = e.target.closest('[data-toggle]'); if (tg) { toggleSec(tg.dataset.toggle); return; }
   const ca = e.target.closest('[data-act="collapseAll"],[data-act="expandAll"]');
   if (ca) {
@@ -1332,18 +1981,36 @@ document.addEventListener('click', e => {
   if (b.id === 'tabSheet') { S.view = 'sheet'; renderMain(); return; }
   if (b.id === 'tabHandoff') { S.view = 'handoff'; renderMain(); return; }
   if (b.id === 'tabLearner') { S.view = 'learner'; renderMain(); return; }
+  if (b.id === 'tabOrders') { S.view = 'orders'; renderMain(); return; }
+  if (act === 'omode') { S.ordersEdit = b.dataset.mode === 'edit'; renderOrders(); if (S.ordersEdit) { const t = $('#f-orders'); if (t) t.focus({preventScroll:true}); } return; }
+  if (b.id === 'copyOrders') return copyOrders();
   if (act === 'goHandoff') { flush(); S.view = 'handoff'; renderMain(); window.scrollTo(0,0); return; }
   if (act === 'goScenario') {
     S.view = 'edit'; S.collapsed.delete('scenario'); saveCollapsed(); renderMain();
     const t = $('#f-scenario'); if (t) { t.scrollIntoView({block:'center'}); t.focus({preventScroll:true}); }
     return;
   }
-  if (act === 'lmode') { S.learnerMode = b.dataset.mode === 'post' ? 'post' : 'pre'; renderLearner(); return; }
+  if (act === 'lmode') { S.learnerMode = ['post','img'].includes(b.dataset.mode) ? b.dataset.mode : 'pre'; S.confirmImg = null; renderLearner(); return; }
+  if (act === 'imgUp' || act === 'imgDown') { const i = +b.dataset.i, j = act === 'imgUp' ? i - 1 : i + 1, im = S.draft.images; if (j < 0 || j >= im.length) return; [im[i], im[j]] = [im[j], im[i]]; changed(); renderLearner(); return; }
+  if (act === 'imgRm') { S.confirmImg = +b.dataset.i; renderLearner(); return; }
+  if (act === 'imgRmNo') { S.confirmImg = null; renderLearner(); return; }
+  if (act === 'imgRmYes') return removeImage(+b.dataset.i);
   if (b.id === 'copyLearner') return copyLearner();
   if (b.id === 'tabImport' || b.id === 'importBtn' || act === 'goImport') { S.view = 'import'; S.confirmReplace = false; renderMain(); window.scrollTo(0,0); return; }
   if (b.id === 'copyPrompt') return copyPrompt();
   if (b.id === 'dlPrompt') return downloadPrompt();
-  if (act === 'importClear') { S.importText = ''; S.confirmReplace = false; renderImport(); return; }
+  if (act === 'importClear') { if (S.importMode === 'update') S.updateText = ''; else S.importText = ''; S.confirmReplace = false; renderImport(); return; }
+  if (act === 'imode') { S.importMode = b.dataset.mode === 'update' ? 'update' : 'new'; S.confirmReplace = false; renderImport(); return; }
+  if (act === 'applyUpdate') { S.confirmApply = true; refreshImport(); return; }
+  if (act === 'sort') { S.sortBy = b.dataset.sort === 'number' ? 'number' : 'edited'; ls.set('simcase:sort', S.sortBy); renderList(); return; }
+  if (act === 'applyNo') { S.confirmApply = false; refreshImport(); return; }
+  if (act === 'applyYes') return applyUpdate();
+  if (act === 'openTarget') { const keepText = S.updateText, keepMode = S.importMode, impText = S.importText; S.pendingSwitch = null; flush().then(() => openCase(b.dataset.id)).then(() => { S.updateText = keepText; S.importMode = keepMode; S.importText = impText; S.view = 'import'; S.confirmApply = false; renderMain(); toast('Switched case. Check the preview again.'); }); return; }
+  if (act === 'switchYes') { const id = S.pendingSwitch; S.pendingSwitch = null; hideSwitchBar(); flush().then(() => openCase(id)); return; }
+  if (act === 'switchNo') { S.pendingSwitch = null; hideSwitchBar(); renderList(); return; }
+  if (act === 'undoUpdate') return undoUpdate();
+  if (act === 'dismissUndo') { S.undo = null; renderMain(); return; }
+  if (b.id === 'copyUpdatePrompt') return copyText(buildUpdatePrompt(S.draft, S.updateAsk), 'Update prompt copied. Paste it into a new AI chat.');
   if (act === 'importNew') return applyImport(true);
   if (act === 'replace') { S.confirmReplace = true; refreshImport(); return; }
   if (act === 'replaceNo') { S.confirmReplace = false; refreshImport(); return; }
@@ -1352,6 +2019,8 @@ document.addEventListener('click', e => {
   if (b.id === 'exportBtn') return exportWord();
   if (b.id === 'tipsBtn') { const off = !document.body.classList.contains('tips-off'); document.body.classList.toggle('tips-off', off); b.textContent = off ? 'Show tips' : 'Hide tips'; ls.set('simcase:tips', off ? 'off' : 'on'); return; }
   if (b.id === 'nextTbc') {
+    const onlyOrders = tbcList(S.draft).every(k => k === 'orders');
+    if (onlyOrders) { S.view = 'orders'; S.ordersEdit = !!(S.draft.orders || '').trim(); renderMain(); window.scrollTo(0,0); return; }
     if (S.view !== 'edit') { S.view = 'edit'; renderMain(); }
     const first = document.querySelector('.field.is-tbc');
     if (first) {
@@ -1385,13 +2054,14 @@ setInterval(() => { renderSaveState(); }, 30000);
 
 /* ---------- boot ---------- */
 if (ls.get('simcase:askFirst') === 'off') S.askFirst = false;
+if (ls.get('simcase:sort') === 'number') S.sortBy = 'number';
 try { const cs = JSON.parse(ls.get('simcase:collapsed') || '[]'); if (Array.isArray(cs)) S.collapsed = new Set(cs.map(String)); } catch(e){}
 if (ls.get('simcase:tips') === 'off') { document.body.classList.add('tips-off'); $('#tipsBtn').textContent = 'Show tips'; }
 renderList();
 (async () => {
   const C = window.claude;
-  const [db, user] = C ? await Promise.all([C.use('db'), C.use('user')]) : [null, null];
-  S.db = db; S.user = user;
+  const [db, user, assets] = C ? await Promise.all([C.use('db'), C.use('user'), C.use('assets')]) : [null, null, null];
+  S.db = db; S.user = user; S.assets = assets;
   if (!db) { S.noStore = true; S.loaded = true; renderList(); renderMain(); return; }
   if (user) {
     try { S.myId = await user.id(); } catch(e){}
@@ -1404,5 +2074,5 @@ renderList();
 })();
 })();
 </script>
-</body>
-</html>
+
+</body></html>

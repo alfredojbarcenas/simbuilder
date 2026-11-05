@@ -33,6 +33,9 @@ h1{font-size:19px;margin:0;letter-spacing:.2px}
 input[type=range]{width:100%;accent-color:var(--accent)}
 .btns{display:flex;gap:8px;margin-top:6px}
 .btn.on{border-color:var(--warn);color:var(--warn)}
+.seg{display:flex;gap:6px;margin:6px 0}
+.seg button{flex:1;background:#11141a;color:var(--muted);border:1px solid var(--line);border-radius:9px;padding:8px 6px;font:inherit;font-size:13px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:#24303f;color:var(--text);border-color:var(--accent)}
 ol{margin:0;padding-left:20px;font-size:14px}
 ol li{margin:4px 0}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
@@ -43,7 +46,7 @@ footer{color:var(--muted);font-size:12px;padding:4px 16px 24px}
 <body>
 <header>
   <h1>IV Gel AR Trainer</h1>
-  <div class="sub">Phone-only overlay: vein, puncture point, needle path. Phase 1, no scoring.</div>
+  <div class="sub">Phone-only overlay: arm, vein, puncture point, needle path. Phase 1, no scoring.</div>
 </header>
 
 <div class="modes" role="group" aria-label="Source">
@@ -58,6 +61,14 @@ footer{color:var(--muted);font-size:12px;padding:4px 16px 24px}
   <div class="pill" id="pill"><span class="dot"></span><span id="pillTxt">Looking for 2 dots</span></div>
 </div>
 <div class="notice" id="notice"></div>
+
+<div class="card">
+  <h2>Arm</h2>
+  <div class="seg" data-key="arm"><button data-v="1">Arm on</button><button data-v="0">Arm off</button></div>
+  <div class="seg" data-key="tone"><button data-v="light">Light skin</button><button data-v="medium">Medium</button><button data-v="dark">Dark</button></div>
+  <div class="seg" data-key="tq"><button data-v="1">Tourniquet on</button><button data-v="0">Tourniquet off</button></div>
+  <div class="row"><label><span>Arm opacity (lower = see your real needle)</span><span id="vAlpha"></span></label><input id="alpha" type="range" min="40" max="100" step="5" value="80"></div>
+</div>
 
 <div class="card">
   <h2>Side view</h2>
@@ -90,10 +101,11 @@ footer{color:var(--muted);font-size:12px;padding:4px 16px 24px}
     <li>Measure the distance between them and set <i>Distance between dots</i>.</li>
     <li>Hold the phone straight down, about 25–30 cm above the gel, in good light.</li>
     <li>If the dots aren't picked up, tap <i>Set dot color</i>, then tap a dot on screen.</li>
+    <li>The hand is drawn at the needle end. If it's on the wrong side, tap <i>Flip needle direction</i>.</li>
     <li>Enter at the red X, aim along the dashed line, and reach the vein at the green ring.</li>
   </ol>
 </div>
-<footer>Top-down camera only: it shows where to puncture and the direction to go, not real needle depth. The side view does the angle math.</footer>
+<footer>Top-down camera only: it shows where to puncture and the direction to go, not real needle depth. The side view does the angle math. The arm is a drawing anchored to your stickers.</footer>
 
 <script>
 (function(){
@@ -102,7 +114,13 @@ const view=$('view'), ctx=view.getContext('2d');
 const side=$('side'), sctx=side.getContext('2d');
 const work=document.createElement('canvas'), wctx=work.getContext('2d',{willReadFrequently:true});
 const demo=document.createElement('canvas'); demo.width=720; demo.height=960; const dctx=demo.getContext('2d');
-const S={angle:20,depth:4,diam:4,spacing:80,target:.5,flip:false,hue:140,hueTol:24,minSat:.35,minVal:.25};
+const S={angle:20,depth:4,diam:4,spacing:80,target:.5,flip:false,hue:140,hueTol:24,minSat:.35,minVal:.25,
+  arm:'1',tone:'medium',tq:'1',armAlpha:.8};
+// skin colors per tone, and how strongly a vein shows through that skin
+const TONES={
+  light:{edge:'#c98e70',base:'#efc4a6',hi:'#fbdcc6',line:'rgba(150,90,70,.35)',nail:'#f7d6cc',vein:'74,104,160',veinA:.55},
+  medium:{edge:'#94603d',base:'#c68b61',hi:'#dca880',line:'rgba(90,50,30,.38)',nail:'#e2b49a',vein:'60,80,120',veinA:.42},
+  dark:{edge:'#472918',base:'#774a30',hi:'#8f5e3e',line:'rgba(25,12,6,.45)',nail:'#a7765a',vein:'40,45,70',veinA:.3}};
 let mode='demo', video=null, stream=null, photo=null, calibrating=false;
 let track={a:null,b:null,lastSeen:0,ok:false};
 const t0=performance.now();
@@ -114,6 +132,13 @@ const fmt={angle:v=>v+'°',depth:v=>v+' mm',diam:v=>v+' mm',spacing:v=>v+' mm',t
   const upd=()=>{const v=parseFloat(el.value); S[k]=k==='target'?v/100:v; out.textContent=fmt[k](v); drawSide();};
   el.addEventListener('input',upd); upd();
 });
+document.querySelectorAll('.seg').forEach(g=>{
+  const key=g.dataset.key, btns=[...g.querySelectorAll('button')];
+  const sync=()=>btns.forEach(b=>b.setAttribute('aria-pressed',String(S[key]===b.dataset.v)));
+  btns.forEach(b=>b.onclick=()=>{S[key]=b.dataset.v; sync();}); sync();
+});
+const updAlpha=()=>{S.armAlpha=$('alpha').value/100; $('vAlpha').textContent=$('alpha').value+'%';};
+$('alpha').addEventListener('input',updAlpha); updAlpha();
 $('flip').onclick=()=>{S.flip=!S.flip};
 $('calib').onclick=()=>{calibrating=!calibrating; $('calib').classList.toggle('on',calibrating); $('calib').textContent=calibrating?'Now tap a dot…':'Set dot color'};
 
@@ -142,7 +167,7 @@ async function startLive(){
     video.srcObject=stream; await video.play(); setMode('live');
   }catch(err){liveBlocked();}
 }
-function liveBlocked(){notice('Live camera is blocked here (the Claude app doesn\'t allow camera access inside pages). Use Photo for now, or open the GitHub Pages copy of this file for live AR.');}
+function liveBlocked(){notice('Live camera is blocked here (the Claude app doesn\'t allow camera access inside pages). Use Photo for now, or open the GitHub Pages copy of this page in Safari for live AR.');}
 function stopLive(){ if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null;} video=null; }
 
 /* ---------- demo scene ---------- */
@@ -206,8 +231,12 @@ const lerp=(p,q,a)=>p?{x:p.x+(q.x-p.x)*a,y:p.y+(q.y-p.y)*a}:{x:q.x,y:q.y};
 
 view.addEventListener('click',e=>{
   if(!calibrating) return;
+  const src=srcOf(); if(!src) return;
+  // sample the raw image (not the drawn arm) under the tap
   const r=view.getBoundingClientRect(), x=(e.clientX-r.left)*view.width/r.width, y=(e.clientY-r.top)*view.height/r.height;
-  const s=ctx.getImageData(Math.max(0,x-4)|0,Math.max(0,y-4)|0,9,9).data;
+  const c=document.createElement('canvas'); c.width=view.width; c.height=view.height; const cc=c.getContext('2d');
+  cc.drawImage(src,0,0,c.width,c.height);
+  const s=cc.getImageData(Math.max(0,x-4)|0,Math.max(0,y-4)|0,9,9).data;
   let cx=0,cy=0,ss=0,vv=0,m=0;
   for(let p=0;p<s.length;p+=4){const [h,sa,v]=hsv(s[p]/255,s[p+1]/255,s[p+2]/255); cx+=Math.cos(h*Math.PI/180); cy+=Math.sin(h*Math.PI/180); ss+=sa; vv+=v; m++;}
   let h=Math.atan2(cy,cx)*180/Math.PI; if(h<0)h+=360;
@@ -216,6 +245,84 @@ view.addEventListener('click',e=>{
   setTimeout(()=>{$('calib').textContent='Set dot color'},1500);
   track={a:null,b:null,lastSeen:0,ok:false};
 });
+
+/* ---------- the arm (drawn in mm, along the vein axis) ----------
+   x = mm along the vein from the needle-end dot (A) toward the elbow, y = mm across.
+   Hand sits at the needle end, elbow and upper arm beyond the far dot. */
+function drawArm(A,ang,pxmm){
+  const L=S.spacing, T=TONES[S.tone], off=9;           // vein runs 9 mm off the arm's midline (radial side)
+  const xw=-50, xe=L+115, xu=L+420;                     // wrist, elbow crease, upper arm
+  ctx.save();
+  ctx.translate(A.x,A.y); ctx.rotate(ang); ctx.scale(pxmm,pxmm);
+  ctx.globalAlpha=S.armAlpha;
+  const skin=(h)=>{const g=ctx.createLinearGradient(0,off-h,0,off+h);
+    g.addColorStop(0,T.edge); g.addColorStop(.22,T.base); g.addColorStop(.42,T.hi); g.addColorStop(.62,T.base); g.addColorStop(1,T.edge); return g;};
+
+  // forearm + upper arm
+  ctx.beginPath();
+  ctx.moveTo(xw,off-25);
+  ctx.bezierCurveTo(xw+45,off-27,xw+(xe-xw)*.45,off-39,xe-25,off-38);
+  ctx.quadraticCurveTo(xe,off-35,xe+35,off-40);
+  ctx.bezierCurveTo(xe+120,off-46,xu-80,off-44,xu,off-44);
+  ctx.lineTo(xu,off+44);
+  ctx.bezierCurveTo(xu-80,off+44,xe+120,off+46,xe+35,off+41);
+  ctx.quadraticCurveTo(xe,off+35,xe-25,off+38);
+  ctx.bezierCurveTo(xw+(xe-xw)*.45,off+39,xw+45,off+27,xw,off+25);
+  ctx.closePath();
+  ctx.fillStyle=skin(46); ctx.fill();
+
+  // hand: palm, fingers, thumb (thumb on the vein's side, like the cephalic vein)
+  ctx.beginPath();
+  ctx.moveTo(xw+4,off-25);
+  ctx.bezierCurveTo(xw-20,off-27,xw-55,off-38,xw-92,off-38);
+  ctx.quadraticCurveTo(xw-100,off,xw-94,off+36);
+  ctx.bezierCurveTo(xw-60,off+38,xw-22,off+29,xw+4,off+25);
+  ctx.closePath(); ctx.fillStyle=skin(42); ctx.fill();
+  const fingers=[[-28,62,17],[-9,74,18],[10,70,17],[28,56,15]];   // [y, length, width]
+  for(const [fy,len,fw] of fingers){
+    rr(ctx,xw-92-len,off+fy-fw/2,len+8,fw,fw/2); ctx.fillStyle=skin(42); ctx.fill();
+    ctx.fillStyle=T.nail; ctx.globalAlpha=S.armAlpha*.7; rr(ctx,xw-92-len+2,off+fy-fw*.3,11,fw*.6,4); ctx.fill(); ctx.globalAlpha=S.armAlpha;
+    ctx.strokeStyle=T.line; ctx.lineWidth=.7;
+    for(const k of [.35,.68]){ctx.beginPath(); const kx=xw-92-len*k; ctx.moveTo(kx,off+fy-fw*.3); ctx.lineTo(kx,off+fy+fw*.3); ctx.stroke();}
+  }
+  ctx.save(); ctx.translate(xw-22,off-24); ctx.rotate(-2.55);
+  rr(ctx,-4,-10,68,21,10.5); ctx.fillStyle=skin(42); ctx.fill();
+  ctx.fillStyle=T.nail; ctx.globalAlpha=S.armAlpha*.7; rr(ctx,50,-6,11,12,4); ctx.fill();
+  ctx.restore(); ctx.globalAlpha=S.armAlpha;
+
+  // creases: wrist and antecubital fossa
+  ctx.strokeStyle=T.line; ctx.lineWidth=.9; ctx.lineCap='round';
+  for(const dx of [2,7]){ctx.beginPath(); ctx.moveTo(xw+dx,off-18); ctx.quadraticCurveTo(xw+dx+3,off,xw+dx,off+18); ctx.stroke();}
+  ctx.beginPath(); ctx.moveTo(xe-2,off-24); ctx.quadraticCurveTo(xe+6,off,xe-2,off+24); ctx.stroke();
+
+  // the vein under the skin (fuller below a tourniquet), running up past the dots
+  const tq=S.tq==='1', vd=S.diam*(tq?1.3:1), va=T.veinA*(tq?1.15:1);
+  const vg=ctx.createLinearGradient(xw+10,0,xe+60,0);
+  vg.addColorStop(0,`rgba(${T.vein},0)`); vg.addColorStop(.12,`rgba(${T.vein},${va})`);
+  vg.addColorStop(.85,`rgba(${T.vein},${va})`); vg.addColorStop(1,`rgba(${T.vein},0)`);
+  ctx.strokeStyle=vg; ctx.lineWidth=vd*2.2; ctx.globalAlpha=S.armAlpha*.22;
+  ctx.beginPath(); ctx.moveTo(xw+10,0); ctx.lineTo(xe+60,0); ctx.stroke();
+  ctx.lineWidth=vd; ctx.globalAlpha=S.armAlpha*.8;
+  ctx.beginPath(); ctx.moveTo(xw+10,0); ctx.lineTo(xe+60,0); ctx.stroke();
+  // a couple of small side branches so it reads as a vein, not a stripe
+  ctx.lineWidth=vd*.55; ctx.globalAlpha=S.armAlpha*.5; ctx.strokeStyle=`rgba(${T.vein},${va})`;
+  ctx.beginPath(); ctx.moveTo(L*.9,0); ctx.quadraticCurveTo(L*1.05,-6,L+40,-16); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-8,0); ctx.quadraticCurveTo(-22,8,-40,14); ctx.stroke();
+
+  // tourniquet ~7 cm above the target, toward the heart
+  if(tq){
+    const xt=L*S.target+70;
+    ctx.globalAlpha=Math.min(1,S.armAlpha+.15);
+    ctx.fillStyle='rgba(0,0,0,.2)'; rr(ctx,xt-13,off-50,28,100,5); ctx.fill();
+    const tg=ctx.createLinearGradient(xt-12,0,xt+12,0); tg.addColorStop(0,'#3d5fc4'); tg.addColorStop(.5,'#6f8ef0'); tg.addColorStop(1,'#3d5fc4');
+    ctx.fillStyle=tg; rr(ctx,xt-12,off-48,24,96,4); ctx.fill();
+    // tucked tails sticking out the side
+    ctx.fillStyle='#5577dd';
+    ctx.save(); ctx.translate(xt,off-46); ctx.rotate(-.5); rr(ctx,-7,-32,14,34,5); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(xt,off-46); ctx.rotate(.45); rr(ctx,-6,-26,12,28,5); ctx.fill(); ctx.restore();
+  }
+  ctx.restore();
+}
 
 /* ---------- overlay ---------- */
 function geom(){
@@ -240,10 +347,13 @@ function drawOverlay(W,H){
   const ux=dx/L,uy=dy/L,nx=-uy,ny=ux, pxmm=L/S.spacing;
   const vw=Math.max(4,S.diam*pxmm);
   ctx.save(); ctx.lineCap='round';
-  // vein
-  ln(A,B,'rgba(61,123,255,.22)',vw*2.4); ln(A,B,'rgba(61,123,255,.85)',vw);
-  ln({x:A.x+nx*vw*.22,y:A.y+ny*vw*.22},{x:B.x+nx*vw*.22,y:B.y+ny*vw*.22},'rgba(190,215,255,.55)',Math.max(1.5,vw*.18));
-  // flow arrow (toward heart = away from needle end)
+  if(S.arm==='1'){
+    drawArm(A,Math.atan2(dy,dx),pxmm);
+    ctx.setLineDash([fs*.35,fs*.35]); ln(A,B,'rgba(160,200,255,.7)',Math.max(1.5,fs*.07)); ctx.setLineDash([]);
+  }else{
+    ln(A,B,'rgba(61,123,255,.22)',vw*2.4); ln(A,B,'rgba(61,123,255,.85)',vw);
+    ln({x:A.x+nx*vw*.22,y:A.y+ny*vw*.22},{x:B.x+nx*vw*.22,y:B.y+ny*vw*.22},'rgba(190,215,255,.55)',Math.max(1.5,vw*.18));
+  }
   const {offmm}=geom();
   const T={x:A.x+dx*S.target,y:A.y+dy*S.target};
   const P={x:T.x-ux*offmm*pxmm,y:T.y-uy*offmm*pxmm};
@@ -256,14 +366,12 @@ function drawOverlay(W,H){
   // puncture X
   const xs=fs*.7; ctx.strokeStyle='#ff5d73'; ctx.lineWidth=Math.max(4,fs*.24);
   ctx.beginPath(); ctx.moveTo(P.x-xs,P.y-xs); ctx.lineTo(P.x+xs,P.y+xs); ctx.moveTo(P.x+xs,P.y-xs); ctx.lineTo(P.x-xs,P.y+xs); ctx.stroke();
-  // markers
+  // sticker markers
   for(const q of [A,B]){ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(q.x,q.y,fs*.75,0,7);ctx.stroke();}
-  // labels, offset sideways from the vein
   // puncture label on one side of the vein, target on the other, angle out past the puncture
   label('Skin puncture',P.x,P.y,'#ff8a9a',fs,nx,ny);
   label('Vein entry',T.x,T.y,'#7cf0ad',fs,-nx,-ny);
-  label(`${S.angle}°, bevel up`,P.x-ux*fs*5.5,P.y-uy*fs*5.5,'#ffffff',fs,-nx*.0001,-ny*.0001);
-  // warning if puncture falls outside the dots
+  label(`${S.angle}°, bevel up`,P.x-ux*fs*5.5,P.y-uy*fs*5.5,'#ffffff',fs);
   const behind=(P.x-A.x)*ux+(P.y-A.y)*uy;
   if(behind<0) label('Puncture is past the dot: move target up',W/2,H-fs*1.2,'#ffb020',fs);
   ctx.restore();
@@ -277,26 +385,20 @@ function drawSide(){
   const skinY=60, margin=60;
   const scale=Math.min((W-margin*2-40)/(offmm+S.diam*2+6),(H-skinY-30)/(S.depth+S.diam+2));
   const Tx=W-margin-S.diam*scale-20, Px=Tx-offmm*scale;
-  // tissue
   sctx.fillStyle='#e9d2bb'; sctx.fillRect(0,skinY,W,H-skinY);
   sctx.fillStyle='#d9b99c'; sctx.fillRect(0,skinY,W,4);
-  // vein (cross-section along its length = band)
   const vTop=skinY+S.depth*scale, vH=S.diam*scale;
   sctx.fillStyle='#3d7bff'; sctx.fillRect(0,vTop,W,vH);
   sctx.fillStyle='rgba(255,255,255,.25)'; sctx.fillRect(0,vTop+2,W,Math.max(2,vH*.18));
-  // needle
   const ang=S.angle*Math.PI/180, len=Math.min(260,Px+40);
   sctx.strokeStyle='#c9ced8'; sctx.lineWidth=6; sctx.lineCap='round';
   sctx.beginPath(); sctx.moveTo(Px-Math.cos(ang)*len,skinY-Math.sin(ang)*len); sctx.lineTo(Tx,vTop); sctx.stroke();
   sctx.strokeStyle='#ffffff'; sctx.setLineDash([8,6]); sctx.lineWidth=2; sctx.beginPath(); sctx.moveTo(Px,skinY); sctx.lineTo(Tx,vTop); sctx.stroke(); sctx.setLineDash([]);
-  // angle arc
   sctx.strokeStyle='#ffb020'; sctx.lineWidth=2.5; sctx.beginPath(); sctx.arc(Px,skinY,46,Math.PI,Math.PI+ang); sctx.stroke();
   sctx.fillStyle='#ffb020'; sctx.font='700 22px system-ui'; sctx.fillText(S.angle+'°',Px-46-Math.cos(ang/2)*16-44,skinY-Math.sin(ang/2)*46-4);
-  // points
   sctx.fillStyle='#ff5d73'; sctx.beginPath(); sctx.arc(Px,skinY,8,0,7); sctx.fill();
   sctx.strokeStyle='#3ddc84'; sctx.lineWidth=4; sctx.beginPath(); sctx.arc(Tx,vTop,10,0,7); sctx.stroke();
-  // dims
-  sctx.strokeStyle='#0f1115'; sctx.fillStyle='#0f1115'; sctx.lineWidth=1.5; sctx.font='600 19px system-ui';
+  sctx.lineWidth=1.5; sctx.font='600 19px system-ui';
   sctx.beginPath(); sctx.moveTo(Px,skinY-22); sctx.lineTo(Tx,skinY-22); sctx.moveTo(Px,skinY-28); sctx.lineTo(Px,skinY-16); sctx.moveTo(Tx,skinY-28); sctx.lineTo(Tx,skinY-16); sctx.strokeStyle='#e8eaf0'; sctx.stroke();
   sctx.fillStyle='#e8eaf0'; sctx.fillText(offmm.toFixed(1)+' mm',(Px+Tx)/2-30,skinY-30);
   sctx.beginPath(); sctx.moveTo(Tx+22,skinY); sctx.lineTo(Tx+22,vTop); sctx.strokeStyle='#0f1115'; sctx.stroke();

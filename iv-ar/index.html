@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IV Gel AR Trainer</title>
+<style>
+:root{--bg:#0f1115;--panel:#181b22;--line:#2a2f3a;--text:#e8eaf0;--muted:#9aa3b2;--accent:#4fb3ff;--ok:#3ddc84;--warn:#ffb020;--bad:#ff5d73}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);max-width:560px;margin:0 auto}
+header{padding:14px 14px 4px}
+h1{font-size:19px;margin:0;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.modes{display:flex;gap:6px;padding:10px 14px}
+.modes button,.btn{flex:1;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 8px;font:inherit;font-size:14px;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--accent);color:#06121e;border-color:var(--accent);font-weight:600}
+.stage{position:relative;margin:0 14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)}
+#view{width:100%;height:auto;display:block;touch-action:manipulation}
+.pill{position:absolute;top:10px;left:10px;background:rgba(10,12,16,.78);border-radius:999px;padding:5px 11px 5px 9px;font-size:13px;display:flex;align-items:center;gap:7px;backdrop-filter:blur(4px)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
+.pill.ok .dot{background:var(--ok)}
+.notice{margin:10px 14px 0;padding:10px 12px;border-radius:10px;background:#2b2210;border:1px solid #5a4416;color:#ffd98a;font-size:13px;display:none}
+.notice.show{display:block}
+.card{margin:12px 14px;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.card h2{font-size:14px;margin:0 0 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+#side{width:100%;height:auto;display:block}
+.readout{font-size:14px;margin-top:6px}
+.readout b{color:var(--bad)}
+.row{margin:10px 0}
+.row label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:2px}
+.row label span:last-child{color:var(--text);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.btns{display:flex;gap:8px;margin-top:6px}
+.btn.on{border-color:var(--warn);color:var(--warn)}
+ol{margin:0;padding-left:20px;font-size:14px}
+ol li{margin:4px 0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+footer{color:var(--muted);font-size:12px;padding:4px 16px 24px}
+</style>
+</head>
+<body>
+<header>
+  <h1>IV Gel AR Trainer</h1>
+  <div class="sub">Phone-only overlay: vein, puncture point, needle path. Phase 1, no scoring.</div>
+</header>
+
+<div class="modes" role="group" aria-label="Source">
+  <button id="mDemo" aria-pressed="true">Demo</button>
+  <button id="mPhoto" aria-pressed="false">Photo</button>
+  <button id="mLive" aria-pressed="false">Live camera</button>
+</div>
+<input id="file" type="file" accept="image/*" capture="environment" hidden>
+
+<div class="stage">
+  <canvas id="view" width="720" height="960"></canvas>
+  <div class="pill" id="pill"><span class="dot"></span><span id="pillTxt">Looking for 2 dots</span></div>
+</div>
+<div class="notice" id="notice"></div>
+
+<div class="card">
+  <h2>Side view</h2>
+  <canvas id="side" width="680" height="230"></canvas>
+  <div class="readout" id="readout"></div>
+  <div class="legend">
+    <span><i class="sw" style="background:#ff5d73"></i>Skin puncture</span>
+    <span><i class="sw" style="background:#3ddc84"></i>Vein entry (target)</span>
+    <span><i class="sw" style="background:#3d7bff"></i>Vein</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Settings</h2>
+  <div class="row"><label><span>Insertion angle</span><span id="vAngle"></span></label><input id="angle" type="range" min="10" max="45" step="1" value="20"></div>
+  <div class="row"><label><span>Vein depth (to top of vein)</span><span id="vDepth"></span></label><input id="depth" type="range" min="1" max="15" step="0.5" value="4"></div>
+  <div class="row"><label><span>Vein diameter</span><span id="vDiam"></span></label><input id="diam" type="range" min="2" max="8" step="0.5" value="4"></div>
+  <div class="row"><label><span>Distance between dots</span><span id="vSpacing"></span></label><input id="spacing" type="range" min="30" max="160" step="1" value="80"></div>
+  <div class="row"><label><span>Target spot along vein</span><span id="vTarget"></span></label><input id="target" type="range" min="15" max="85" step="1" value="50"></div>
+  <div class="btns">
+    <button class="btn" id="flip">Flip needle direction</button>
+    <button class="btn" id="calib">Set dot color</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Setup on a real gel</h2>
+  <ol>
+    <li>Stick 2 bright green dots on the gel surface, right above each end of the vein.</li>
+    <li>Measure the distance between them and set <i>Distance between dots</i>.</li>
+    <li>Hold the phone straight down, about 25–30 cm above the gel, in good light.</li>
+    <li>If the dots aren't picked up, tap <i>Set dot color</i>, then tap a dot on screen.</li>
+    <li>Enter at the red X, aim along the dashed line, and reach the vein at the green ring.</li>
+  </ol>
+</div>
+<footer>Top-down camera only: it shows where to puncture and the direction to go, not real needle depth. The side view does the angle math.</footer>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const view=$('view'), ctx=view.getContext('2d');
+const side=$('side'), sctx=side.getContext('2d');
+const work=document.createElement('canvas'), wctx=work.getContext('2d',{willReadFrequently:true});
+const demo=document.createElement('canvas'); demo.width=720; demo.height=960; const dctx=demo.getContext('2d');
+const S={angle:20,depth:4,diam:4,spacing:80,target:.5,flip:false,hue:140,hueTol:24,minSat:.35,minVal:.25};
+let mode='demo', video=null, stream=null, photo=null, calibrating=false;
+let track={a:null,b:null,lastSeen:0,ok:false};
+const t0=performance.now();
+
+/* ---------- settings ---------- */
+const fmt={angle:v=>v+'°',depth:v=>v+' mm',diam:v=>v+' mm',spacing:v=>v+' mm',target:v=>v+'% from needle end'};
+['angle','depth','diam','spacing','target'].forEach(k=>{
+  const el=$(k), out=$('v'+k[0].toUpperCase()+k.slice(1));
+  const upd=()=>{const v=parseFloat(el.value); S[k]=k==='target'?v/100:v; out.textContent=fmt[k](v); drawSide();};
+  el.addEventListener('input',upd); upd();
+});
+$('flip').onclick=()=>{S.flip=!S.flip};
+$('calib').onclick=()=>{calibrating=!calibrating; $('calib').classList.toggle('on',calibrating); $('calib').textContent=calibrating?'Now tap a dot…':'Set dot color'};
+
+/* ---------- modes ---------- */
+function setMode(m){
+  mode=m; track={a:null,b:null,lastSeen:0,ok:false};
+  ['Demo','Photo','Live'].forEach(n=>$('m'+n).setAttribute('aria-pressed',String(m===n.toLowerCase())));
+  if(m!=='live') stopLive();
+}
+function notice(msg){const n=$('notice'); n.textContent=msg||''; n.classList.toggle('show',!!msg);}
+$('mDemo').onclick=()=>{notice('');setMode('demo')};
+$('mPhoto').onclick=()=>{notice('');$('file').click()};
+$('file').onchange=e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  const img=new Image(); img.onload=()=>{photo=img; setMode('photo');}; img.src=URL.createObjectURL(f);
+  e.target.value='';
+};
+$('mLive').onclick=startLive;
+async function startLive(){
+  notice('');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){return liveBlocked();}
+  try{
+    stopLive();
+    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}}});
+    video=document.createElement('video'); video.muted=true; video.playsInline=true; video.setAttribute('playsinline','');
+    video.srcObject=stream; await video.play(); setMode('live');
+  }catch(err){liveBlocked();}
+}
+function liveBlocked(){notice('Live camera is blocked here (the Claude app doesn\'t allow camera access inside pages). Use Photo for now, or open the GitHub Pages copy of this file for live AR.');}
+function stopLive(){ if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null;} video=null; }
+
+/* ---------- demo scene ---------- */
+function drawDemo(){
+  const W=720,H=960,t=(performance.now()-t0)/1000;
+  dctx.fillStyle='#2f2b27'; dctx.fillRect(0,0,W,H);
+  dctx.save();
+  dctx.translate(W/2+Math.sin(t*.5)*45, H/2+Math.cos(t*.37)*35);
+  dctx.rotate(Math.sin(t*.28)*.4);
+  const g=dctx.createLinearGradient(-220,-330,220,330); g.addColorStop(0,'#f3e1cf'); g.addColorStop(1,'#e2c4a8');
+  dctx.fillStyle=g; rr(dctx,-215,-330,430,660,42); dctx.fill();
+  dctx.strokeStyle='rgba(120,90,70,.25)'; dctx.lineWidth=3; dctx.stroke();
+  dctx.strokeStyle='rgba(90,110,170,.18)'; dctx.lineWidth=26; dctx.lineCap='round';
+  dctx.beginPath(); dctx.moveTo(0,-270); dctx.lineTo(0,270); dctx.stroke();
+  for(const y of [-270,270]){ dctx.fillStyle='#fff'; dctx.beginPath(); dctx.arc(0,y,19,0,7); dctx.fill(); dctx.fillStyle='#19c25a'; dctx.beginPath(); dctx.arc(0,y,15,0,7); dctx.fill(); }
+  dctx.restore();
+  dctx.fillStyle='rgba(255,255,255,.35)'; dctx.font='600 22px system-ui'; dctx.fillText('DEMO GEL (moving)',22,H-24);
+}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+/* ---------- tracking: 2 colored dots ---------- */
+function hsv(r,g,b){const mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn;let h=0;
+  if(c){ if(mx===r)h=((g-b)/c)%6; else if(mx===g)h=(b-r)/c+2; else h=(r-g)/c+4; h*=60; if(h<0)h+=360; }
+  return [h,mx?c/mx:0,mx];}
+function detect(src,W,H){
+  const ww=200, wh=Math.max(1,Math.round(H*ww/W));
+  if(work.width!==ww||work.height!==wh){work.width=ww;work.height=wh;}
+  wctx.drawImage(src,0,0,ww,wh);
+  const d=wctx.getImageData(0,0,ww,wh).data, n=ww*wh, mask=new Uint8Array(n);
+  for(let i=0,p=0;i<n;i++,p+=4){
+    const [h,s,v]=hsv(d[p]/255,d[p+1]/255,d[p+2]/255);
+    if(v<S.minVal||s<S.minSat) continue;
+    let dh=Math.abs(h-S.hue); if(dh>180) dh=360-dh;
+    if(dh<=S.hueTol) mask[i]=1;
+  }
+  const lab=new Uint8Array(n), stack=new Int32Array(n), blobs=[];
+  for(let i=0;i<n;i++){
+    if(!mask[i]||lab[i]) continue;
+    let sp=0,cnt=0,sx=0,sy=0; stack[sp++]=i; lab[i]=1;
+    while(sp){const j=stack[--sp],x=j%ww,y=(j/ww)|0; cnt++;sx+=x;sy+=y;
+      if(x>0&&mask[j-1]&&!lab[j-1]){lab[j-1]=1;stack[sp++]=j-1}
+      if(x<ww-1&&mask[j+1]&&!lab[j+1]){lab[j+1]=1;stack[sp++]=j+1}
+      if(y>0&&mask[j-ww]&&!lab[j-ww]){lab[j-ww]=1;stack[sp++]=j-ww}
+      if(y<wh-1&&mask[j+ww]&&!lab[j+ww]){lab[j+ww]=1;stack[sp++]=j+ww}}
+    blobs.push({cnt,x:sx/cnt,y:sy/cnt});
+  }
+  const minArea=Math.max(4,n*.0003);
+  const big=blobs.filter(b=>b.cnt>=minArea).sort((a,b)=>b.cnt-a.cnt).slice(0,2);
+  const k=W/ww, now=performance.now();
+  if(big.length===2){
+    let p=big.map(b=>({x:(b.x+.5)*k,y:(b.y+.5)*k}));
+    if(track.a){ if(dist(p[1],track.a)+dist(p[0],track.b) < dist(p[0],track.a)+dist(p[1],track.b)) p=[p[1],p[0]]; }
+    else if(p[0].y<p[1].y) p=[p[1],p[0]]; // start: needle comes from the bottom of the screen
+    const al=track.a?.5:1;
+    track.a=lerp(track.a,p[0],al); track.b=lerp(track.b,p[1],al); track.lastSeen=now; track.ok=true;
+  }else{ track.ok=false; if(now-track.lastSeen>700){track.a=null;track.b=null;} }
+  track.blobs=big.length;
+}
+const dist=(p,q)=>Math.hypot(p.x-q.x,p.y-q.y);
+const lerp=(p,q,a)=>p?{x:p.x+(q.x-p.x)*a,y:p.y+(q.y-p.y)*a}:{x:q.x,y:q.y};
+
+view.addEventListener('click',e=>{
+  if(!calibrating) return;
+  const r=view.getBoundingClientRect(), x=(e.clientX-r.left)*view.width/r.width, y=(e.clientY-r.top)*view.height/r.height;
+  const s=ctx.getImageData(Math.max(0,x-4)|0,Math.max(0,y-4)|0,9,9).data;
+  let cx=0,cy=0,ss=0,vv=0,m=0;
+  for(let p=0;p<s.length;p+=4){const [h,sa,v]=hsv(s[p]/255,s[p+1]/255,s[p+2]/255); cx+=Math.cos(h*Math.PI/180); cy+=Math.sin(h*Math.PI/180); ss+=sa; vv+=v; m++;}
+  let h=Math.atan2(cy,cx)*180/Math.PI; if(h<0)h+=360;
+  S.hue=h; S.minSat=Math.min(.35,(ss/m)*.55); S.minVal=Math.min(.25,(vv/m)*.5);
+  calibrating=false; $('calib').classList.remove('on'); $('calib').textContent='Dot color set';
+  setTimeout(()=>{$('calib').textContent='Set dot color'},1500);
+  track={a:null,b:null,lastSeen:0,ok:false};
+});
+
+/* ---------- overlay ---------- */
+function geom(){
+  const offmm=S.depth/Math.tan(S.angle*Math.PI/180);
+  const pathmm=S.depth/Math.sin(S.angle*Math.PI/180);
+  return {offmm,pathmm};
+}
+function label(text,cx,cy,color,fs,ox=0,oy=0){
+  ctx.font=`600 ${fs}px system-ui,-apple-system,sans-serif`;
+  const w=ctx.measureText(text).width, pad=fs*.4;
+  const off=Math.abs(ox)*(w/2+fs*1.1)+Math.abs(oy)*(fs*1.5);
+  let x=cx+ox*off-w/2, y=cy+oy*off+fs*.35;
+  x=Math.min(Math.max(x,pad),view.width-w-pad*2); y=Math.min(Math.max(y,fs+pad),view.height-pad);
+  ctx.fillStyle='rgba(10,12,16,.78)'; rr(ctx,x-pad,y-fs-pad*.4,w+pad*2,fs+pad*1.4,fs*.35); ctx.fill();
+  ctx.fillStyle=color; ctx.fillText(text,x,y);
+}
+function drawOverlay(W,H){
+  const fs=Math.round(W/30);
+  if(!track.a) return;
+  let A=track.a,B=track.b; if(S.flip)[A,B]=[B,A];
+  const dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy); if(L<12) return;
+  const ux=dx/L,uy=dy/L,nx=-uy,ny=ux, pxmm=L/S.spacing;
+  const vw=Math.max(4,S.diam*pxmm);
+  ctx.save(); ctx.lineCap='round';
+  // vein
+  ln(A,B,'rgba(61,123,255,.22)',vw*2.4); ln(A,B,'rgba(61,123,255,.85)',vw);
+  ln({x:A.x+nx*vw*.22,y:A.y+ny*vw*.22},{x:B.x+nx*vw*.22,y:B.y+ny*vw*.22},'rgba(190,215,255,.55)',Math.max(1.5,vw*.18));
+  // flow arrow (toward heart = away from needle end)
+  const {offmm}=geom();
+  const T={x:A.x+dx*S.target,y:A.y+dy*S.target};
+  const P={x:T.x-ux*offmm*pxmm,y:T.y-uy*offmm*pxmm};
+  // needle path
+  ctx.setLineDash([fs*.7,fs*.45]); ln(P,T,'#ffffff',Math.max(3,fs*.18)); ctx.setLineDash([]);
+  const ah=fs*.9; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.moveTo(T.x-ux*fs*.6,T.y-uy*fs*.6);
+  ctx.lineTo(T.x-ux*(fs*.6+ah)+nx*ah*.55,T.y-uy*(fs*.6+ah)+ny*ah*.55); ctx.lineTo(T.x-ux*(fs*.6+ah)-nx*ah*.55,T.y-uy*(fs*.6+ah)-ny*ah*.55); ctx.fill();
+  // target ring
+  ctx.strokeStyle='#3ddc84'; ctx.lineWidth=Math.max(3,fs*.2); ctx.beginPath(); ctx.arc(T.x,T.y,Math.max(vw*.9,fs*.8),0,7); ctx.stroke();
+  // puncture X
+  const xs=fs*.7; ctx.strokeStyle='#ff5d73'; ctx.lineWidth=Math.max(4,fs*.24);
+  ctx.beginPath(); ctx.moveTo(P.x-xs,P.y-xs); ctx.lineTo(P.x+xs,P.y+xs); ctx.moveTo(P.x+xs,P.y-xs); ctx.lineTo(P.x-xs,P.y+xs); ctx.stroke();
+  // markers
+  for(const q of [A,B]){ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(q.x,q.y,fs*.75,0,7);ctx.stroke();}
+  // labels, offset sideways from the vein
+  // puncture label on one side of the vein, target on the other, angle out past the puncture
+  label('Skin puncture',P.x,P.y,'#ff8a9a',fs,nx,ny);
+  label('Vein entry',T.x,T.y,'#7cf0ad',fs,-nx,-ny);
+  label(`${S.angle}°, bevel up`,P.x-ux*fs*5.5,P.y-uy*fs*5.5,'#ffffff',fs,-nx*.0001,-ny*.0001);
+  // warning if puncture falls outside the dots
+  const behind=(P.x-A.x)*ux+(P.y-A.y)*uy;
+  if(behind<0) label('Puncture is past the dot: move target up',W/2,H-fs*1.2,'#ffb020',fs);
+  ctx.restore();
+}
+function ln(p,q,c,w){ctx.strokeStyle=c;ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();}
+
+/* ---------- side view ---------- */
+function drawSide(){
+  const W=side.width,H=side.height,{offmm,pathmm}=geom();
+  sctx.clearRect(0,0,W,H);
+  const skinY=60, margin=60;
+  const scale=Math.min((W-margin*2-40)/(offmm+S.diam*2+6),(H-skinY-30)/(S.depth+S.diam+2));
+  const Tx=W-margin-S.diam*scale-20, Px=Tx-offmm*scale;
+  // tissue
+  sctx.fillStyle='#e9d2bb'; sctx.fillRect(0,skinY,W,H-skinY);
+  sctx.fillStyle='#d9b99c'; sctx.fillRect(0,skinY,W,4);
+  // vein (cross-section along its length = band)
+  const vTop=skinY+S.depth*scale, vH=S.diam*scale;
+  sctx.fillStyle='#3d7bff'; sctx.fillRect(0,vTop,W,vH);
+  sctx.fillStyle='rgba(255,255,255,.25)'; sctx.fillRect(0,vTop+2,W,Math.max(2,vH*.18));
+  // needle
+  const ang=S.angle*Math.PI/180, len=Math.min(260,Px+40);
+  sctx.strokeStyle='#c9ced8'; sctx.lineWidth=6; sctx.lineCap='round';
+  sctx.beginPath(); sctx.moveTo(Px-Math.cos(ang)*len,skinY-Math.sin(ang)*len); sctx.lineTo(Tx,vTop); sctx.stroke();
+  sctx.strokeStyle='#ffffff'; sctx.setLineDash([8,6]); sctx.lineWidth=2; sctx.beginPath(); sctx.moveTo(Px,skinY); sctx.lineTo(Tx,vTop); sctx.stroke(); sctx.setLineDash([]);
+  // angle arc
+  sctx.strokeStyle='#ffb020'; sctx.lineWidth=2.5; sctx.beginPath(); sctx.arc(Px,skinY,46,Math.PI,Math.PI+ang); sctx.stroke();
+  sctx.fillStyle='#ffb020'; sctx.font='700 22px system-ui'; sctx.fillText(S.angle+'°',Px-46-Math.cos(ang/2)*16-44,skinY-Math.sin(ang/2)*46-4);
+  // points
+  sctx.fillStyle='#ff5d73'; sctx.beginPath(); sctx.arc(Px,skinY,8,0,7); sctx.fill();
+  sctx.strokeStyle='#3ddc84'; sctx.lineWidth=4; sctx.beginPath(); sctx.arc(Tx,vTop,10,0,7); sctx.stroke();
+  // dims
+  sctx.strokeStyle='#0f1115'; sctx.fillStyle='#0f1115'; sctx.lineWidth=1.5; sctx.font='600 19px system-ui';
+  sctx.beginPath(); sctx.moveTo(Px,skinY-22); sctx.lineTo(Tx,skinY-22); sctx.moveTo(Px,skinY-28); sctx.lineTo(Px,skinY-16); sctx.moveTo(Tx,skinY-28); sctx.lineTo(Tx,skinY-16); sctx.strokeStyle='#e8eaf0'; sctx.stroke();
+  sctx.fillStyle='#e8eaf0'; sctx.fillText(offmm.toFixed(1)+' mm',(Px+Tx)/2-30,skinY-30);
+  sctx.beginPath(); sctx.moveTo(Tx+22,skinY); sctx.lineTo(Tx+22,vTop); sctx.strokeStyle='#0f1115'; sctx.stroke();
+  sctx.fillStyle='#0f1115'; sctx.fillText(S.depth+' mm',Tx+28,(skinY+vTop)/2+7);
+  sctx.fillStyle='#8a6a52'; sctx.font='600 16px system-ui'; sctx.fillText('skin',8,skinY+22);
+  $('readout').innerHTML=`At <b>${S.angle}°</b> to reach a vein <b>${S.depth} mm</b> deep, puncture the skin <b>${offmm.toFixed(1)} mm</b> before the target. The needle travels ${pathmm.toFixed(1)} mm under the skin to get there.`;
+}
+
+/* ---------- loop ---------- */
+let lastPill='';
+function pill(ok,txt){const k=ok+txt; if(k===lastPill) return; lastPill=k; $('pill').classList.toggle('ok',ok); $('pillTxt').textContent=txt;}
+function srcOf(){
+  if(mode==='demo'){drawDemo(); return demo;}
+  if(mode==='live'&&video&&video.readyState>=2) return video;
+  if(mode==='photo'&&photo) return photo;
+  return null;
+}
+function frame(){
+  const src=srcOf();
+  if(src){
+    const sw=src.videoWidth||src.naturalWidth||src.width, sh=src.videoHeight||src.naturalHeight||src.height;
+    const sc=Math.min(1,960/Math.max(sw,sh)), W=Math.round(sw*sc), H=Math.round(sh*sc);
+    if(view.width!==W||view.height!==H){view.width=W;view.height=H;}
+    ctx.drawImage(src,0,0,W,H);
+    detect(src,W,H);
+    drawOverlay(W,H);
+    if(calibrating) pill(false,'Tap a dot to set its color');
+    else if(track.ok) pill(true,'Tracking');
+    else pill(false,track.blobs===1?'Only 1 dot found':'Looking for 2 dots');
+  }else{
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,view.width,view.height);
+    pill(false,'Starting camera…');
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

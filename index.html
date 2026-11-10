@@ -108,6 +108,9 @@ textarea{resize:vertical;min-height:64px;overflow:hidden}
 .ltheme-f label{font-size:13.5px;color:var(--muted);white-space:nowrap}
 .ltheme-f input{flex:1;font-weight:700}
 .ltheme-f input::placeholder{font-weight:400}
+.author-f input{font-weight:600}
+.ltheme-f label{flex:0 0 96px}.author-f{margin-bottom:8px}
+.sheet .cauthor{font-size:14px;margin:2px 0 0}.sheet .cauthor span{color:var(--muted)}
 .sheet .ltheme{font-size:14.5px;margin:2px 0 4px}
 .sheet .ltheme span{color:var(--muted)}
 
@@ -1216,7 +1219,7 @@ const ls = {
 
 function blankCase(){
   return {
-    title:'Untitled case', lleapTheme:'', level:'', duration:'', status:'draft',
+    title:'Untitled case', author:'', lleapTheme:'', level:'', duration:'', status:'draft',
     scenario:'', summary:'', objective:'', patient:'', handoff:'written', learnerBrief:'', roles:'', setup:'',
     vitals:{hr:'',rhythm:'',bp:'',spo2:'',rr:'',etco2:'',temp:''}, vent:'',
     stages: DEFAULT_STAGES.map(n => ({id:rid(), name:n, trigger:'', event:'', actions:'', cues:'', lleap:''})),
@@ -1626,7 +1629,7 @@ function sortedCases(){
 function renderList(){
   const list = $('#list'), pick = $('#mobilePick');
   const f = S.filter.trim().toLowerCase();
-  const rows = sortedCases().filter(({c}) => !f || [c.caseNo,c.title,c.lleapTheme,c.patient,c.objective,c.level].join(' ').toLowerCase().includes(f));
+  const rows = sortedCases().filter(({c}) => !f || [c.caseNo,c.title,c.author,c.lleapTheme,c.patient,c.objective,c.level].join(' ').toLowerCase().includes(f));
   list.innerHTML = rows.length ? rows.map(({id,c}) => {
     const cc = id === S.currentId && S.draft ? S.draft : c;
     const n = tbcList(cc).length;
@@ -1698,6 +1701,7 @@ function renderEditor(){
       ${c.caseNo ? `<div class="cno big" title="Case number: used in file names and to match AI files to this case">${esc(c.caseNo)}</div>` : ''}
       <input class="title-input" type="text" id="f-title" data-path="title" value="${esc(c.title)}" aria-label="Case title" placeholder="Case title" ${dis}>
       <p class="help" style="padding:0 10px">${esc(HELP.title)}</p>
+      <div class="ltheme-f author-f"><label for="f-author">Author:</label><input type="text" id="f-author" data-path="author" value="${esc(c.author || '')}" placeholder="Required for the AI handoff (co-authors: separate with commas)" ${dis}></div>
       <div class="ltheme-f"><label for="f-lleapTheme">LLEAP theme:</label><input type="text" id="f-lleapTheme" data-path="lleapTheme" value="${esc(c.lleapTheme || '')}" placeholder="Name of the theme in the LLEAP app" ${dis}></div>
       <div class="grid g3">
         <div class="field"><label class="lab" for="f-level">Learner level</label><p class="help">${esc(HELP.level)}</p>
@@ -1717,8 +1721,8 @@ function renderEditor(){
       <div class="sec-body" ${S.collapsed.has('scenario')?'hidden':''}>
       ${fieldHtml('scenario','Your case, in your words','scenario',c.scenario,{rows:6})}
       <div class="next-step">
-        <span class="help">${(c.scenario||'').trim() ? 'Ready for the AI. It will fill every section below from your scenario, then you review and import.' : 'Write the scenario first. The AI handoff unlocks once it has text.'}</span>
-        <button type="button" class="btn ${(c.scenario||'').trim() ? 'primary' : ''} small" data-act="goHandoff">2 · Go to AI handoff</button>
+        <span class="help">${handoffHint(c)}</span>
+        <button type="button" class="btn ${handoffMissing(c).length ? '' : 'primary'} small" data-act="goHandoff">2 · Go to AI handoff</button>
       </div>
       </div>
     </div>
@@ -1941,8 +1945,10 @@ function splitNumbered(t){
   return t;
 }
 /* LLEAP theme: the theme's name in the LLEAP app, bold under the case title so it is easy to find. Author-entered; not sent to the AI. */
-const lthemeHtml = c => (c.lleapTheme || '').trim() ? `<div class="ltheme"><span>LLEAP theme:</span> <b>${esc(c.lleapTheme.trim())}</b></div>` : '';
-const lthemeDoc = c => (c.lleapTheme || '').trim() ? para(runs('LLEAP theme: ', {color:'566472', sz:22}) + runs(c.lleapTheme.trim(), {b:true, sz:22}), {after:40}) : '';
+const authorHtml = c => (c.author || '').trim() ? `<div class="cauthor"><span>Author:</span> ${esc(c.author.trim())}</div>` : '';
+const authorDoc = c => (c.author || '').trim() ? para(runs('Author: ', {color:'566472', sz:21}) + runs(c.author.trim(), {sz:21}), {after:20}) : '';
+const lthemeHtml = c => authorHtml(c) + ((c.lleapTheme || '').trim() ? `<div class="ltheme"><span>LLEAP theme:</span> <b>${esc(c.lleapTheme.trim())}</b></div>` : '');
+const lthemeDoc = c => authorDoc(c) + ((c.lleapTheme || '').trim() ? para(runs('LLEAP theme: ', {color:'566472', sz:22}) + runs(c.lleapTheme.trim(), {b:true, sz:22}), {after:40}) : '');
 const oneLine = t => String(t || '').split('\n').map(l => l.trim()).filter(Boolean).join(' ');
 const blk = (h, inner, cls='') => `<section class="blk ${cls}"><h4>${esc(h)}</h4>${inner}</section>`;
 function renderSheet(){
@@ -2891,16 +2897,25 @@ async function copyOrders(){
   try { await navigator.clipboard.writeText(S.draft.orders || ''); toast('Mannequin orders copied'); }
   catch(e) { toast('Copy is blocked here. Use Export to Word instead.'); }
 }
+/* The AI handoff needs the author and the case scenario. */
+const handoffMissing = c => [!(c.author || '').trim() && 'author', !(c.scenario || '').trim() && 'scenario'].filter(Boolean);
+const handoffHint = c => { const m = handoffMissing(c);
+  return !m.length ? 'Ready for the AI. It will fill every section below from your scenario, then you review and import.'
+    : m.length === 2 ? 'Add the author (under the title) and write the scenario first. The AI handoff unlocks once both are filled.'
+    : m[0] === 'author' ? 'Add the author under the case title. The AI handoff unlocks once it is filled.'
+    : 'Write the scenario first. The AI handoff unlocks once it has text.'; };
 function renderHandoff(){
   const c = S.draft, v = $('#view'), n = tbcList(c).length;
-  if (!(c.scenario || '').trim()) {
+  const miss = handoffMissing(c);
+  if (miss.length) {
+    const noA = miss.includes('author'), noS = miss.includes('scenario');
     v.innerHTML = `${banners()}
       <div class="sec">
         <div class="sec-h"><h2>AI handoff</h2></div>
         <div class="empty" style="padding:8px 0">
-          <h1>Write the case scenario first</h1>
-          <p>The AI builds the whole case from your scenario: the patient and how the case evolves, in your own words. It's the first box on the Edit tab.</p>
-          <button type="button" class="btn primary" data-act="goScenario">Go to Case scenario</button>
+          <h1>${noA && noS ? 'Add the author and the case scenario first' : noA ? 'Add the author first' : 'Write the case scenario first'}</h1>
+          <p>${noA ? 'Every case needs an author: type your name under the case title on the Edit tab. ' : ''}${noS ? "The AI builds the whole case from your scenario: the patient and how the case evolves, in your own words. It's the first box on the Edit tab." : ''}</p>
+          <div class="foot">${noA ? '<button type="button" class="btn primary" data-act="goAuthor">Go to Author</button>' : ''}${noS ? `<button type="button" class="btn ${noA ? '' : 'primary'}" data-act="goScenario">Go to Case scenario</button>` : ''}</div>
         </div>
       </div>`;
     renderTop(); return;
@@ -3065,7 +3080,7 @@ async function applyImport(asNew){
   const r = parseImport(S.importText); if (!r.case) return;
   if (asNew) { await createCase(null, r.case); S.importText = ''; S.view = 'edit'; renderMain(); return; }
   if (!S.draft) return;
-  const keep = {caseNo:S.draft.caseNo || '', lleapTheme:S.draft.lleapTheme || '', imagesDone:S.draft.imagesDone || [], createdAt:S.draft.createdAt, llmNotes:S.draft.llmNotes, scenario:(S.draft.scenario||'').trim() ? S.draft.scenario : r.case.scenario, rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy, images:remapImages(S.draft.images, S.draft.stages, r.case.stages), labs: r.case.labs ? r.case.labs : remapLabs(S.draft.labs, S.draft.stages, r.case.stages)};
+  const keep = {caseNo:S.draft.caseNo || '', author:S.draft.author || '', lleapTheme:S.draft.lleapTheme || '', imagesDone:S.draft.imagesDone || [], createdAt:S.draft.createdAt, llmNotes:S.draft.llmNotes, scenario:(S.draft.scenario||'').trim() ? S.draft.scenario : r.case.scenario, rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy, images:remapImages(S.draft.images, S.draft.stages, r.case.stages), labs: r.case.labs ? r.case.labs : remapLabs(S.draft.labs, S.draft.stages, r.case.stages)};
   if (keep.labs && S.draft.labs && !keep.labs.patient.dob && keep.labs.patient.age === S.draft.labs.patient.age) keep.labs.patient.dob = S.draft.labs.patient.dob;
   S.draft = Object.assign(r.case, keep);
   S.importText = ''; S.confirmReplace = false; S.view = 'edit';
@@ -3430,11 +3445,11 @@ document.addEventListener('input', e => {
   changed(); refreshFieldTbc(p);
   if (p === 'handoff' && S.view === 'edit') { renderEditor(); const h = $('#f-handoff'); if (h) h.focus({preventScroll:true}); }
   if (p === 'llmNotes') { const out = $('#promptOut'); if (out) out.value = buildPrompt(S.draft); }
-  if (p === 'scenario') {
-    const has = !!el.value.trim(), ns = document.querySelector('.next-step');
+  if (p === 'scenario' || p === 'author') {
+    const ns = document.querySelector('.next-step');
     if (ns) {
-      ns.querySelector('.help').textContent = has ? 'Ready for the AI. It will fill every section below from your scenario, then you review and import.' : 'Write the scenario first. The AI handoff unlocks once it has text.';
-      ns.querySelector('button').classList.toggle('primary', has);
+      ns.querySelector('.help').textContent = handoffHint(S.draft);
+      ns.querySelector('button').classList.toggle('primary', !handoffMissing(S.draft).length);
     }
   }
 });
@@ -3496,6 +3511,11 @@ document.addEventListener('click', e => {
   if (act === 'omode') { S.ordersEdit = b.dataset.mode === 'edit'; renderOrders(); if (S.ordersEdit) { const t = $('#f-orders'); if (t) t.focus({preventScroll:true}); } return; }
   if (b.id === 'copyOrders') return copyOrders();
   if (act === 'goHandoff') { flush(); S.view = 'handoff'; renderMain(); window.scrollTo(0,0); return; }
+  if (act === 'goAuthor') {
+    S.view = 'edit'; renderMain();
+    const t = $('#f-author'); if (t) { t.scrollIntoView({block:'center'}); t.focus({preventScroll:true}); }
+    return;
+  }
   if (act === 'goScenario') {
     S.view = 'edit'; S.collapsed.delete('scenario'); saveCollapsed(); renderMain();
     const t = $('#f-scenario'); if (t) { t.scrollIntoView({block:'center'}); t.focus({preventScroll:true}); }

@@ -296,7 +296,8 @@ textarea.mono{overflow:auto;resize:vertical}
 .dcard-h{font-weight:600}
 /* LabGen */
 .chip.lab-err{background:var(--danger-bg);color:var(--danger)}
-.labpt{display:grid;grid-template-columns:2fr .6fr .6fr 1.2fr 1fr .8fr;gap:12px;align-items:end}
+.labpt{display:grid;grid-template-columns:2fr .8fr .6fr 1.3fr 1fr .8fr;gap:12px;align-items:end}
+.labpt.peds{grid-template-columns:1.8fr .8fr .8fr .6fr 1.4fr 1fr .8fr}
 .ro{padding:8px 0;display:flex;gap:8px;align-items:center;min-height:40px}
 .lrules-box{font-size:13.5px;color:var(--muted)}
 .lrules-box summary{cursor:pointer;font-weight:600;color:var(--ink)}
@@ -353,6 +354,7 @@ textarea.mono{overflow:auto;resize:vertical}
 .pngfig img{max-width:100%;width:560px;border:1px solid var(--line);background:#fff}
 .catgrp{display:flex;flex-direction:column;gap:8px}
 #labCatSec #lc-search{max-width:420px}
+#labCatSec .catbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#labCatSec .catbar select{width:auto}
 .slip-missing{padding:12px;border:1px dashed var(--danger);color:var(--danger);border-radius:6px;font-size:13px;max-width:420px;background:var(--surface)}
 @media (max-width:1100px){.labed-g{grid-template-columns:1fr}.labpv{position:static}}
 @media (max-width:760px){.labpt{grid-template-columns:1fr 1fr}.labmeta{grid-template-columns:1fr}.lc{grid-template-columns:minmax(0,1fr) 96px}.lc .lcu,.lc .lcr{font-size:11px}.slipz{zoom:.6}.slipz.sm{zoom:.55}.labprev{zoom:.5}}
@@ -484,13 +486,8 @@ textarea.mono{overflow:auto;resize:vertical}
   window.claude = { async use(name) { await ready; return caps[name] || null; } };
 })();
 </script>
-<script>
-/* Lab engine (catalog + slip renderer), pasted unchanged. */
-/* LAB ENGINE v1.0 (2026-11-09) for the Sim Case Builder.
-   Part 1: LAB_CATALOG (panels, components, units, decimals, ranges, criticals). ABIM Jan 2026 + standard fallbacks.
-   Part 2: LabSlip renderer + consistency checker. Exposes window.LabSlip = { renderSlip, panelById, rangeText, dobForAge, CALC, egfr }.
-   Slip CSS is at the end of this file as LAB_SLIP_CSS (inject into the page once). */
-/* LAB CATALOG — single source of truth for every simulated lab slip.
+<script>/* Lab engine v1.2 (catalog + pediatric ranges + slip renderer), pasted unchanged. */</script>
+<script>/* LAB CATALOG — single source of truth for every simulated lab slip.
    Ranges: ABIM Laboratory Test Reference Ranges, January 2026 (src "A").
    src "S" = not in ABIM; standard US hospital value (see LAB-STANDARD.md §4).
    Fields per analyte:
@@ -715,6 +712,7 @@ window.LAB_CATALOG = {
     a: [ { k:"axa", n:"Heparin Anti-Xa", u:"IU/mL", d:2, r:[0.3,0.7], rt:"0.30 - 0.70 (therapeutic)", demo:0.45 } ]},
   { id: "TEG", group: "Coagulation", title: "THROMBOELASTOGRAPHY (TEG), KAOLIN", specimen: "Whole blood (citrate)", lab: "POC", tat: 30, trace:"teg",
     comment: "Reference ranges per device manufacturer (citrated kaolin). Verify against your institution's analyzer.",
+    commentPeds: "Children 1 month and older are interpreted against adult kaolin ranges (no age difference reported in the pediatric literature). No neonatal reference range. Verify against your institution's analyzer.",
     a: [
     { k:"r",    n:"R Time", u:"min", d:1, r:[5,10], s:"S", demo:6.5 },
     { k:"kt",   n:"K Time", u:"min", d:1, r:[1,3], s:"S", demo:1.8 },
@@ -723,6 +721,7 @@ window.LAB_CATALOG = {
     { k:"ly30", n:"LY30", u:"%", d:1, r:[0,8], s:"S", demo:1.2 } ]},
   { id: "ROTEM", group: "Coagulation", title: "ROTATIONAL THROMBOELASTOMETRY (ROTEM)", specimen: "Whole blood (citrate)", lab: "POC", tat: 20, trace:"rotem",
     comment: "Reference ranges per device manufacturer. HEPTEM is interpreted against INTEM. Verify against your institution's analyzer.",
+    commentPeds: "Pediatric reference ranges from a published pediatric ROTEM study (2.5th-97.5th percentile); no pediatric range for maximum lysis. HEPTEM is interpreted against INTEM. Verify against your institution's analyzer.",
     a: [
     { k:"ex_ct",  n:"EXTEM CT", u:"s", d:0, r:[38,79], s:"S", demo:62 },
     { k:"ex_cft", n:"EXTEM CFT", u:"s", d:0, r:[34,159], s:"S", demo:95 },
@@ -857,7 +856,177 @@ window.LAB_CATALOG = {
     { k:"gram", n:"Gram Stain", t:"x", rt:"", demo:"Not performed (no growth)" } ]}
   ]
 };
-/* LAB SLIP RENDERER + CONSISTENCY CHECKER
+</script>
+<script>/* PEDIATRIC REFERENCE RANGES (v1.2) — term-born children, birth to <18 years.
+   Attached to LAB_CATALOG analytes as an.ped = [bands]. Lookup: "PANEL.key" first, then "key".
+   Band: { to:"<age>" (exclusive upper bound: d days, w weeks, m months, y years), r | rM/rF, rt, cl, ch (null = no critical), s: source code }
+   { adult:1 } = source shows children match adults (adult range used). { none:1 } = no reference available.
+   Anything not listed and not age-independent prints "No reference available" for patients under 18.
+   Source codes (full citations in LAB-STANDARD.md §4.7):
+     CAL-C1  CALIPER Hematology (I), Tahmasebi 2020 Am J Clin Pathol 154:330 (Beckman DxH 900)
+     CAL-C2  CALIPER Hematology (II), Higgins 2020 Am J Clin Pathol 154:342 (Beckman DxH 520)
+     CAL-VG  CALIPER venous blood gas, Bohn 2021 Am J Clin Pathol 156:1030 (Radiometer ABL90)
+     CAL-CH  CALIPER chemistry (see per-band notes)
+     NEO-M   Scholkmann 2019 Children 6:38 (model of Henry & Christensen 2015 neonatal Hgb/Hct, 5th-95th pct, 40 wk)
+     NEO-PLT Wiedmeier 2009 J Perinatol 29:130 (neonatal platelets)
+     CHL     published US children's hospital laboratory reference document (2024); used only where no peer-reviewed interval exists
+     LAB-BG  hospital blood gas reference sheets (arterial, by age); no peer-reviewed arterial intervals by age exist
+     LAB-NEO neonatal blood gas reference sheet (provincial health service, 2019): arterial BE -4 to +1
+     LOU     Loughead 1988 Am J Dis Child 142:516 (iCa at 24 h, 95% limits)
+     PES     Pediatric Endocrine Society 2015, Thornton J Pediatr 167:238 (glucose thresholds)
+     LUO     Luo 2026 Health Sci Rep 9:e72023 (Sysmex CN-6000, Siemens reagents, 2.5-97.5 pct)
+     OSW     Oswald 2010 Br J Anaesth 105:827 (ROTEM, 2.5-97.5 pct)
+     CHAN    Chan 2007 Anesth Analg 105:1610 (kaolin TEG, 1 mo-16 y: no difference from adults)
+     HAB     Haberle 2019 J Inherit Metab Dis 42:1192 / Savy 2018 Hepat Med 10:105 (ammonia upper limits)
+     CAL-CH  CALIPER Colantonio 2012 Clin Chem 58:854 (Abbott ARCHITECT, serum; enzymatic creatinine, BCG albumin, AST/ALT without P5P)
+     CAL-SEC CALIPER serum K as quoted by secondary sources (Tahmasebi 2019 ADVIA via Zhang 2020; neonatal via Biochem Med 2024) - verify
+     CAL-GL  CALIPER Bohn 2022 J Appl Lab Med 7:582 (random glucose, serum)
+     FEC     Fechner 2024 Clin Chim Acta 560:119726 (CK, LIFE Child, Roche cobas; no data under 1 y)
+     MAD     Madigan 2020 J Appl Lab Med 5:363 (ammonia, term newborns first week)
+     KOST    Kost 1991 Pediatrics 88:597 (children) / Kost 2024 Clin Chem Lab Med 62:2294 (newborn) critical limits
+*/
+(function () {
+  const PED = {
+  /* ---------- blood gas (arterial) ---------- */
+  "ABG.ph":   [{ to:"5d", r:[7.27,7.47], s:"LAB-BG" }, { to:"18y", r:[7.35,7.45], s:"LAB-BG" }],
+  "ABG.pco2": [{ to:"6d", r:[27,40], cl:21, ch:66, s:"LAB-BG" }, { to:"2y", r:[27,41], cl:21, ch:66, s:"LAB-BG" }, { to:"18y", r:[35,45], cl:21, ch:66, s:"LAB-BG" }],
+  "ABG.po2":  [{ to:"2d", r:[54,95], cl:45, s:"LAB-BG" }, { to:"18y", r:[80,100], cl:45, s:"LAB-BG" }],
+  "ABG.hco3": [{ to:"5d", r:[16,23], s:"LAB-BG" }, { to:"13y", r:[19,27], s:"LAB-BG" }, { to:"18y", r:[23,29], s:"LAB-BG" }],
+  "ABG.be":   [{ to:"1m", r:[-4,1], s:"LAB-NEO" }, { to:"18y", adult:1, s:"LAB-BG" }],
+  "ABG.lac":  [{ to:"18y", r:[0.6,2.1], s:"CAL-VG" }],
+  /* ---------- blood gas (venous) ---------- */
+  "VBG.ph":   [{ to:"18y", r:[7.31,7.41], s:"CAL-VG" }],
+  "VBG.pco2": [{ to:"5y", r:[40,51], cl:21, ch:66, s:"CAL-VG" }, { to:"18y", r:[41,61], cl:21, ch:66, s:"CAL-VG" }],
+  "VBG.po2":  [{ to:"5y", r:[25,49], s:"CAL-VG" }, { to:"18y", r:[15,52], s:"CAL-VG" }],
+  "VBG.lac":  [{ to:"18y", r:[0.6,2.1], s:"CAL-VG" }],
+  "VBG.hco3": [{ to:"18y", none:1 }],
+  "VBG.be":   [{ to:"18y", none:1 }],
+  "VBG.so2":  [{ to:"18y", none:1 }],
+  "VBG.na":   [{ to:"5y", r:[135,143], cl:121, ch:156, s:"CAL-VG" }, { to:"18y", r:[138,143], cl:121, ch:156, s:"CAL-VG" }],
+  "VBG.k":    [{ to:"1m", r:[3.5,4.7], cl:2.8, ch:7.0, s:"CAL-VG" }, { to:"18y", r:[3.5,4.7], cl:2.8, ch:6.4, s:"CAL-VG" }],
+  /* ---------- chemistry (CALIPER Colantonio 2012, Abbott ARCHITECT, serum; enzymatic creatinine, BCG albumin, AST/ALT without P5P) ---------- */
+  "na":   [{ to:"5y", r:[135,143], cl:121, ch:156, s:"CAL-VG" }, { to:"18y", r:[138,143], cl:121, ch:156, s:"CAL-VG" }],
+  "k":    [{ to:"15d", r:[4.2,6.2], cl:2.8, ch:7.0, s:"CAL-SEC" }, { to:"1y", r:[4.3,6.7], cl:2.8, ch:7.0, s:"CAL-SEC" }, { to:"18y", r:[4.0,5.3], cl:2.8, ch:6.4, s:"CAL-SEC" }],
+  "ABG.k":[{ to:"1m", r:[3.5,4.7], cl:2.8, ch:7.0, s:"CAL-VG" }, { to:"18y", r:[3.5,4.7], cl:2.8, ch:6.4, s:"CAL-VG" }],
+  "cl":   [{ to:"1y", r:[96,108], s:"CAL-VG" }, { to:"5y", r:[101,111], s:"CAL-VG" }, { to:"18y", r:[101,107], s:"CAL-VG" }],
+  "co2":  [{ to:"15d", none:1 }, { to:"1y", r:[10,24], s:"CAL-CH" }, { to:"5y", r:[14,24], s:"CAL-CH" }, { to:"15y", r:[17,26], s:"CAL-CH" }, { to:"18y", rM:[18,28], rF:[17,26], s:"CAL-CH" }],
+  "bun":  [{ to:"15d", r:[2.8,23.0], s:"CAL-CH" }, { to:"1y", r:[3.4,16.8], s:"CAL-CH" }, { to:"10y", r:[9.0,22.1], s:"CAL-CH" }, { to:"18y", rM:[7.3,21.0], rF:[7.3,19.0], s:"CAL-CH" }],
+  "cr":   [{ to:"15d", r:[0.32,0.92], s:"CAL-CH" }, { to:"2y", r:[0.10,0.36], s:"CAL-CH" }, { to:"5y", r:[0.20,0.43], s:"CAL-CH" }, { to:"12y", r:[0.31,0.61], s:"CAL-CH" },
+           { to:"15y", r:[0.45,0.81], s:"CAL-CH" }, { to:"18y", rM:[0.62,1.08], rF:[0.49,0.84], s:"CAL-CH" }],
+  "ca":   [{ to:"1m", r:[8.5,11.0], cl:6.2, ch:12.0, s:"CAL-CH" }, { to:"1y", r:[8.5,11.0], cl:6.5, ch:12.7, s:"CAL-CH" }, { to:"18y", r:[9.2,10.5], cl:6.5, ch:12.7, s:"CAL-CH" }],
+  "tp":   [{ to:"15d", r:[5.3,8.3], s:"CAL-CH" }, { to:"1y", r:[4.4,7.1], s:"CAL-CH" }, { to:"6y", r:[6.1,7.5], s:"CAL-CH" }, { to:"9y", r:[6.4,7.7], s:"CAL-CH" }, { to:"18y", r:[6.5,8.1], s:"CAL-CH" }],
+  "alb":  [{ to:"15d", r:[3.3,4.5], s:"CAL-CH" }, { to:"1y", r:[2.8,4.7], s:"CAL-CH" }, { to:"8y", r:[3.8,4.7], s:"CAL-CH" }, { to:"15y", r:[4.1,4.8], s:"CAL-CH" }, { to:"18y", rM:[4.1,5.1], rF:[4.0,4.9], s:"CAL-CH" }],
+  "tbili":[{ to:"15d", r:[0.2,16.6], s:"CAL-CH" }, { to:"1y", r:[0.1,0.7], s:"CAL-CH" }, { to:"9y", r:[0.1,0.4], s:"CAL-CH" }, { to:"12y", r:[0.1,0.6], s:"CAL-CH" }, { to:"15y", r:[0.1,0.7], s:"CAL-CH" }, { to:"18y", r:[0.1,0.8], s:"CAL-CH" }],
+  "dbili":[{ to:"15d", r:[0.3,0.7], s:"CAL-CH" }, { to:"1y", r:[0.1,0.3], s:"CAL-CH" }, { to:"9y", r:[0.1,0.2], s:"CAL-CH" }, { to:"13y", r:[0.1,0.3], s:"CAL-CH" }, { to:"18y", r:[0.1,0.4], s:"CAL-CH" }],
+  "alp":  [{ to:"15d", r:[90,273], s:"CAL-CH" }, { to:"1y", r:[134,518], s:"CAL-CH" }, { to:"10y", r:[156,369], s:"CAL-CH" }, { to:"13y", r:[141,460], s:"CAL-CH" },
+           { to:"15y", rM:[127,517], rF:[62,280], s:"CAL-CH" }, { to:"17y", rM:[89,365], rF:[54,128], s:"CAL-CH" }, { to:"18y", rM:[59,164], rF:[48,95], s:"CAL-CH" }],
+  "ast":  [{ to:"15d", r:[32,162], s:"CAL-CH" }, { to:"1y", r:[20,67], s:"CAL-CH" }, { to:"7y", r:[21,44], s:"CAL-CH" }, { to:"12y", r:[18,36], s:"CAL-CH" }, { to:"18y", rM:[14,35], rF:[13,26], s:"CAL-CH" }],
+  "alt":  [{ to:"1y", r:[5,33], s:"CAL-CH" }, { to:"13y", r:[9,25], s:"CAL-CH" }, { to:"18y", rM:[9,24], rF:[8,22], s:"CAL-CH" }],
+  "mg":   [{ to:"15d", r:[2.0,3.9], s:"CAL-CH" }, { to:"1y", r:[2.0,3.1], s:"CAL-CH" }, { to:"18y", adult:1 }],
+  "MGOB.mg": [{ to:"18y", adult:1 }],
+  "phos": [{ to:"15d", r:[5.6,10.5], s:"CAL-CH" }, { to:"1y", r:[4.8,8.4], s:"CAL-CH" }, { to:"5y", r:[4.3,6.8], s:"CAL-CH" }, { to:"13y", r:[4.1,5.9], s:"CAL-CH" },
+           { to:"16y", rM:[3.5,6.2], rF:[3.2,5.5], s:"CAL-CH" }, { to:"18y", r:[2.9,5.0], s:"CAL-CH" }],
+  "uric": [{ to:"15d", r:[2.8,12.7], s:"CAL-CH" }, { to:"1y", r:[1.6,6.3], s:"CAL-CH" }, { to:"12y", r:[1.8,4.9], s:"CAL-CH" }, { to:"18y", rM:[2.6,7.6], rF:[2.6,5.9], s:"CAL-CH" }],
+  "lipase":[{ to:"18y", r:[4,39], s:"CAL-CH" }],
+  "ck":   [{ to:"1y", none:1 }, { to:"3y", rM:[71,432], rF:[58,408], s:"FEC" }, { to:"12y", rM:[67,343], rF:[58,270], s:"FEC" }, { to:"15y", rM:[67,486], rF:[49,265], s:"FEC" }, { to:"18y", rM:[69,869], rF:[46,344], s:"FEC" }],
+  "pche": [{ to:"15d", r:[4421,9722], s:"CAL-CH" }, { to:"1y", r:[5182,16027], s:"CAL-CH" }, { to:"17y", r:[7769,15206], s:"CAL-CH" }, { to:"18y", rM:[8186,12639], rF:[7511,10904], s:"CAL-CH" }],
+  "dn":   [{ to:"18y", adult:1 }],
+  /* ---------- POC / shared chemistry keys ---------- */
+  "lac":  [{ to:"18y", r:[0.6,2.1], s:"CAL-VG" }],
+  "ica":  [{ to:"3d", r:[1.10,1.36], s:"LOU" }, { to:"18y", r:[1.19,1.33], s:"CAL-VG" }],
+  "glu":  [{ to:"2d", r:[50,99], cl:40, ch:225, s:"PES" }, { to:"1m", r:[56,99], cl:40, ch:225, s:"CAL-GL" }, { to:"6m", r:[72,108], cl:47, ch:445, s:"CAL-GL" }, { to:"18y", r:[72,112], cl:47, ch:445, s:"CAL-GL" }],
+  "nh3":  [{ to:"7d", r:[null,112], rt:"<=112", s:"MAD" }, { to:"1m", r:[null,136], rt:"<=136", s:"HAB" }, { to:"18y", r:[null,85], rt:"<=85", s:"HAB" }],
+  /* ---------- hematology ---------- */
+  "hgb": [ { to:"4d", r:[13.3,21.7], ch:null, s:"NEO-M" }, { to:"8d", r:[12.2,20.8], ch:null, s:"NEO-M" }, { to:"15d", r:[10.8,19.7], ch:null, s:"NEO-M" },
+           { to:"1m", r:[9.6,18.3], ch:null, s:"NEO-M" }, { to:"2m", r:[9.0,13.5], ch:20.8, s:"CHL" }, { to:"1y", r:[9.3,13.4], ch:20.8, s:"CAL-C1" },
+           { to:"4y", r:[9.9,13.4], ch:20.8, s:"CAL-C1" }, { to:"14y", r:[11.4,14.1], ch:20.8, s:"CAL-C1" }, { to:"18y", rM:[12.9,16.5], rF:[11.3,14.9], ch:20.8, s:"CAL-C1" } ],
+  "hct": [ { to:"4d", r:[38.6,62.9], cl:20, ch:68, s:"NEO-M" }, { to:"8d", r:[35.3,60.0], cl:20, ch:68, s:"NEO-M" }, { to:"15d", r:[30.9,56.7], cl:20, ch:68, s:"NEO-M" },
+           { to:"1m", r:[27.8,52.3], cl:20, ch:68, s:"NEO-M" }, { to:"2m", r:[28,42], cl:20, ch:62, s:"CHL" }, { to:"1y", r:[26.5,40.0], cl:20, ch:62, s:"CAL-C1" },
+           { to:"4y", r:[30.4,39.8], cl:20, ch:62, s:"CAL-C1" }, { to:"14y", r:[33.5,41.8], cl:20, ch:62, s:"CAL-C1" }, { to:"18y", rM:[38.8,48.2], rF:[34.4,43.7], cl:20, ch:62, s:"CAL-C1" } ],
+  "wbc": [ { to:"15d", r:[8.0,15.4], cl:2.1, ch:null, s:"CHL" }, { to:"1m", r:[7.8,15.9], cl:2.1, ch:null, s:"CHL" }, { to:"2m", r:[7.1,15.0], cl:2.1, ch:42.9, s:"CHL" },
+           { to:"6m", r:[6.0,13.3], cl:2.1, ch:42.9, s:"CHL" }, { to:"3y", r:[5.3,13.2], cl:2.1, ch:42.9, s:"CAL-C1" }, { to:"5y", r:[4.8,11.5], cl:2.1, ch:42.9, s:"CAL-C1" },
+           { to:"18y", r:[4.2,10.2], cl:2.1, ch:42.9, s:"CAL-C1" } ],
+  "rbc": [ { to:"4d", r:[3.90,6.60], s:"CHL" }, { to:"8d", r:[3.90,6.30], s:"CHL" }, { to:"15d", r:[3.60,6.20], s:"CHL" }, { to:"1m", r:[3.00,5.40], s:"CHL" },
+           { to:"2m", r:[2.70,4.90], s:"CHL" }, { to:"1y", r:[2.90,5.16], s:"CAL-C1" }, { to:"14y", rM:[4.10,5.08], rF:[3.94,4.97], s:"CAL-C1" },
+           { to:"18y", rM:[4.26,5.60], rF:[3.95,5.13], s:"CAL-C1" } ],
+  "mcv": [ { to:"4d", r:[98,121], s:"CHL" }, { to:"1m", r:[85,124], s:"CHL" }, { to:"2m", r:[77,115], s:"CHL" }, { to:"1y", r:[70.5,94.9], s:"CAL-C1" },
+           { to:"4y", r:[72.8,85.2], s:"CAL-C1" }, { to:"14y", r:[77.4,89.9], s:"CAL-C1" }, { to:"18y", r:[77.6,95.7], s:"CAL-C1" } ],
+  "mch": [ { to:"4d", r:[31,37], s:"CHL" }, { to:"1m", r:[28,40], s:"CHL" }, { to:"2m", r:[26,34], s:"CHL" }, { to:"1y", r:[22.9,32.7], s:"CAL-C1" },
+           { to:"3y", r:[22.7,29.0], s:"CAL-C1" }, { to:"6y", r:[25.2,29.3], s:"CAL-C1" }, { to:"13y", r:[25.4,30.8], s:"CAL-C1" }, { to:"18y", r:[25.9,32.4], s:"CAL-C1" } ],
+  "mchc":[ { to:"15d", r:[28,38], s:"CHL" }, { to:"2m", r:[29,37], s:"CHL" }, { to:"18y", r:[32.3,35.0], s:"CAL-C1" } ],
+  "rdw": [ { to:"1m", r:[14.4,17.3], s:"CHL" }, { to:"2m", r:[13.6,16.1], s:"CHL" }, { to:"2y", r:[12.2,17.7], s:"CAL-C1" }, { to:"18y", r:[12.2,15.2], s:"CAL-C1" } ],
+  "plt": [ { to:"1m", r:[123,750], s:"NEO-PLT" }, { to:"1y", r:[287,589], s:"CAL-C1" }, { to:"12y", r:[212,480], s:"CAL-C1" }, { to:"18y", r:[170,380], s:"CAL-C1" } ],
+  "mpv": [ { to:"7y", r:[6.9,9.7], s:"CAL-C1" }, { to:"18y", r:[7.3,10.7], s:"CAL-C1" } ],
+  "neut":[ { to:"15d", r:[15,66], s:"CHL" }, { to:"1m", r:[11,57], s:"CHL" }, { to:"2m", r:[9,68], s:"CHL" }, { to:"1y", r:[9,45], s:"CAL-C1" },
+           { to:"5y", r:[18,68], s:"CAL-C1" }, { to:"15y", r:[30,69], s:"CAL-C1" }, { to:"18y", rM:[41,76], rF:[43,75], s:"CAL-C1" } ],
+  "band":[ { to:"18y", none:1 } ],
+  "lymph":[{ to:"15d", r:[25,69], s:"CHL" }, { to:"1m", r:[32,83], s:"CHL" }, { to:"2m", r:[38,87], s:"CHL" }, { to:"2y", r:[35,82], s:"CAL-C1" },
+           { to:"4y", r:[21,72], s:"CAL-C1" }, { to:"12y", r:[23,58], s:"CAL-C1" }, { to:"18y", r:[20,49], s:"CAL-C1" } ],
+  "mono":[ { to:"15d", r:[5,21], s:"CHL" }, { to:"2m", r:[4,18], s:"CHL" }, { to:"15y", r:[5,12], s:"CAL-C1" }, { to:"18y", rM:[4,12], rF:[4,11], s:"CAL-C2" } ],
+  "eos": [ { to:"2m", r:[0,5], s:"CHL" }, { to:"1y", r:[1,9], s:"CAL-C1" }, { to:"5y", r:[0,9], s:"CAL-C1" }, { to:"18y", r:[0,8], s:"CAL-C1" } ],
+  "baso":[ { to:"2m", r:[0,1], s:"CHL" }, { to:"18y", r:[0,1], s:"CAL-C1" } ],
+  "retic":[{ to:"4d", r:[3.5,5.4], s:"CHL" }, { to:"1m", r:[1.1,2.4], s:"CHL" }, { to:"2m", r:[2.1,3.5], s:"CHL" }, { to:"2y", r:[0.7,2.6], s:"CAL-C1" }, { to:"18y", r:[0.6,1.9], s:"CAL-C1" }],
+  /* ---------- coagulation ---------- */
+  "pt":   [ { to:"6m", r:[10.2,13.0], s:"LUO" }, { to:"3y", r:[10.1,12.4], s:"LUO" }, { to:"12y", r:[10.3,12.4], s:"LUO" }, { to:"18y", r:[10.4,13.0], s:"LUO" } ],
+  "inr":  [ { to:"6m", r:[0.87,1.12], s:"LUO" }, { to:"3y", r:[0.87,1.07], s:"LUO" }, { to:"12y", r:[0.88,1.07], s:"LUO" }, { to:"18y", r:[0.89,1.13], s:"LUO" } ],
+  "aptt": [ { to:"1m", r:[22.7,46.5], s:"LUO" }, { to:"6m", r:[24.1,38.1], s:"LUO" }, { to:"3y", r:[23.4,32.6], s:"LUO" }, { to:"18y", r:[24.7,32.9], s:"LUO" } ],
+  "fib":  [ { to:"1m", r:[148,324], s:"LUO" }, { to:"1y", r:[129,303], s:"LUO" }, { to:"3y", r:[152,358], s:"LUO" }, { to:"18y", r:[174,365], s:"LUO" } ],
+  "dd":   [ { to:"1m", r:[null,1.41], rt:"<=1.41", s:"LUO" }, { to:"18y", r:[null,0.63], rt:"<=0.63", s:"LUO" } ],
+  /* TEG: no age-banded pediatric limits published in readable form; Chan 2007 found no difference from adults (1 mo-16 y) */
+  "r":    [ { to:"1m", none:1 }, { to:"18y", adult:1, s:"CHAN" } ],
+  "kt":   [ { to:"1m", none:1 }, { to:"18y", adult:1, s:"CHAN" } ],
+  "ang":  [ { to:"1m", none:1 }, { to:"18y", adult:1, s:"CHAN" } ],
+  "ma":   [ { to:"1m", none:1 }, { to:"18y", adult:1, s:"CHAN" } ],
+  "ly30": [ { to:"1m", none:1 }, { to:"18y", adult:1, s:"CHAN" } ],
+  /* ROTEM (Oswald 2010): age groups 0-3 mo, 4-12 mo, 13-24 mo, 2-5 y, 6-10 y, 11-16 y (used to 18 y) */
+  "ex_ct":  [ { to:"4m", r:[38,65] }, { to:"1y", r:[37,77] }, { to:"2y", r:[37,73] }, { to:"6y", r:[46,97] }, { to:"11y", r:[43,74] }, { to:"18y", r:[44,91] } ],
+  "ex_cft": [ { to:"4m", r:[30,105] }, { to:"1y", r:[44,146] }, { to:"2y", r:[46,139] }, { to:"6y", r:[41,109] }, { to:"11y", r:[49,114] }, { to:"18y", r:[53,115] } ],
+  "ex_a":   [ { to:"4m", r:[69,84] }, { to:"1y", r:[68,82] }, { to:"2y", r:[64,81] }, { to:"6y", r:[69,82] }, { to:"11y", r:[67,80] }, { to:"18y", r:[67,80] } ],
+  "ex_a10": [ { to:"4m", r:[51,72] }, { to:"1y", r:[46,68] }, { to:"2y", r:[41,68] }, { to:"6y", r:[49,68] }, { to:"11y", r:[49,65] }, { to:"18y", r:[49,67] } ],
+  "ex_mcf": [ { to:"4m", r:[54,74] }, { to:"1y", r:[46,71] }, { to:"2y", r:[46,72] }, { to:"6y", r:[52,70] }, { to:"11y", r:[53,68] }, { to:"18y", r:[53,72] } ],
+  "ex_ml":  [ { to:"18y", none:1 } ],
+  "in_ct":  [ { to:"4m", r:[105,285] }, { to:"1y", r:[76,239] }, { to:"2y", r:[99,207] }, { to:"6y", r:[99,239] }, { to:"11y", r:[97,212] }, { to:"18y", r:[128,206] } ],
+  "in_cft": [ { to:"4m", r:[27,88] }, { to:"1y", r:[37,100] }, { to:"2y", r:[42,112] }, { to:"6y", r:[40,94] }, { to:"11y", r:[48,93] }, { to:"18y", r:[45,106] } ],
+  "in_a":   [ { to:"4m", r:[74,85] }, { to:"1y", r:[73,83] }, { to:"2y", r:[70,82] }, { to:"6y", r:[72,82] }, { to:"11y", r:[72,80] }, { to:"18y", r:[70,81] } ],
+  "in_a10": [ { to:"4m", r:[50,72] }, { to:"1y", r:[47,70] }, { to:"2y", r:[45,67] }, { to:"6y", r:[49,68] }, { to:"11y", r:[49,66] }, { to:"18y", r:[48,67] } ],
+  "in_mcf": [ { to:"4m", r:[54,73] }, { to:"1y", r:[52,73] }, { to:"2y", r:[50,72] }, { to:"6y", r:[53,73] }, { to:"11y", r:[53,69] }, { to:"18y", r:[54,71] } ],
+  "in_ml":  [ { to:"18y", none:1 } ],
+  "fi_a10": [ { to:"4m", r:[8,22] }, { to:"1y", r:[6,24] }, { to:"2y", r:[5,24] }, { to:"6y", r:[7,22] }, { to:"11y", r:[7,21] }, { to:"18y", r:[7,22] } ],
+  "fi_mcf": [ { to:"4m", r:[8,23] }, { to:"1y", r:[7,25] }, { to:"2y", r:[6,24] }, { to:"6y", r:[7,23] }, { to:"11y", r:[7,22] }, { to:"18y", r:[8,24] } ],
+  "hp_ct":  [ { to:"4m", r:[105,285] }, { to:"1y", r:[76,239] }, { to:"2y", r:[99,207] }, { to:"6y", r:[99,239] }, { to:"11y", r:[97,212] }, { to:"18y", r:[128,206] } ],
+  "hp_mcf": [ { to:"4m", r:[54,73] }, { to:"1y", r:[52,73] }, { to:"2y", r:[50,72] }, { to:"6y", r:[53,73] }, { to:"11y", r:[53,69] }, { to:"18y", r:[54,71] } ],
+  /* eGFR: bedside Schwartz is calculated (1-17 y); no pediatric normal interval adopted */
+  "egfr": [ { to:"18y", none:1 } ]
+  };
+  PED.thb = PED.hgb;
+  // ROTEM bands: tag source
+  ["ex_ct","ex_cft","ex_a","ex_a10","ex_mcf","in_ct","in_cft","in_a","in_a10","in_mcf","fi_a10","fi_mcf","hp_ct","hp_mcf"].forEach(k => PED[k].forEach(b => b.s = b.s || "OSW"));
+
+  /* Age-independent (adult range applies to children): whole panels and single analytes */
+  const PANEL_SAME = ["COOX", "TS", "XM", "DAT", "KB", "TOX", "UDS", "DIGOXIN", "LITHIUM", "VANCO", "PHENYTOIN", "UA", "UMYO", "UHCG", "ULYTES", "BCX", "ANTIXA"];
+  const KEY_SAME = ["so2", "cohb", "methb", "o2hb", "hhb", "temp", "fio2", "be"];
+
+  /* Median height-for-age, cm: WHO length 0-24 mo, CDC 2000 stature 2-17 y. [age in months, cm] */
+  const H = {
+    M: [[0,49.9],[1,54.7],[2,58.4],[3,61.4],[6,67.6],[9,72.0],[12,75.7],[18,82.3],[24,87.8],[36,95.3],[48,102.5],[60,109.2],[72,115.7],[84,122.0],[96,128.1],[108,133.7],[120,138.8],[132,143.7],[144,149.3],[156,156.4],[168,164.1],[180,170.1],[192,173.6],[204,175.3],[216,176.1]],
+    F: [[0,49.1],[1,53.7],[2,57.1],[3,59.8],[6,65.7],[9,70.1],[12,74.0],[18,80.7],[24,86.4],[36,94.2],[48,101.0],[60,108.0],[72,115.0],[84,121.8],[96,127.8],[108,133.1],[120,138.2],[132,144.3],[144,151.5],[156,157.3],[168,160.5],[180,161.9],[192,162.6],[204,162.9],[216,163.1]]
+  };
+
+  window.LAB_PEDS = { PED, PANEL_SAME, KEY_SAME, H };
+  const C = window.LAB_CATALOG;
+  C.medianHeight = H;
+  C.pedsVersion = "1.2 (2026-11-10)";
+  for (const p of C.panels) {
+    if (PANEL_SAME.includes(p.id)) p.pa = 1;
+    for (const a of p.a) {
+      const band = PED[p.id + "." + a.k] || PED[a.k];
+      if (band) a.ped = band;
+      if (KEY_SAME.includes(a.k) && !band) a.pa = 1;
+    }
+  }
+})();
+</script>
+<script>/* LAB SLIP RENDERER + CONSISTENCY CHECKER
    Depends on window.LAB_CATALOG (catalog-data.js).
    renderSlip(slip, patient, ctx) -> { html, warnings }
      slip    = { panel:"ABG", collected:"11/09/2026 10:42", resulted?:"...", values:{ k: value | {v, f} } }
@@ -873,6 +1042,66 @@ window.LAB_CATALOG = {
   const isNum = v => typeof v === "number" && isFinite(v);
   const fmt = (v, d) => (isNum(v) ? v.toFixed(d) : String(v));
 
+  /* ---------- age (v1.2): number = years; "3 d" / "2 wk" / "4 mo" / "6 y" strings ---------- */
+  const YR = 365.25, MO = YR / 12;
+  function parseAge(a) {
+    if (isNum(a)) return { n: a, u: "y" };
+    const m = String(a == null ? "" : a).trim().toLowerCase().match(/^(\d+(?:\.\d+)?)\s*(d|day|days|w|wk|wks|week|weeks|m|mo|mos|month|months|y|yr|yrs|year|years|y\.o\.)?$/);
+    if (!m) return null;
+    const n = parseFloat(m[1]), u = (m[2] || "y")[0];
+    return { n, u: u === "w" ? "w" : u === "d" ? "d" : u === "m" ? "m" : "y" };
+  }
+  function ageDays(p) {
+    if (p && isNum(p.ageDays)) return p.ageDays;
+    const a = parseAge(p ? p.age : null);
+    if (!a) return null;
+    return a.u === "d" ? a.n : a.u === "w" ? a.n * 7 : a.u === "m" ? a.n * MO + 1 : a.n * YR + 1;
+  }
+  function ageLabel(p) {
+    const d = ageDays(p);
+    if (d == null) return "";
+    if (d < 31) return Math.floor(d) + (Math.floor(d) === 1 ? " day" : " days");
+    if (d < 2 * YR) return Math.floor(d / MO) + " m.o.";
+    return Math.floor(d / YR) + " y.o.";
+  }
+  const isPeds = p => { const d = ageDays(p); return d != null && d < 18 * YR; };
+  const toDays = t => { const m = String(t).match(/^(\d+(?:\.\d+)?)(d|w|m|y)$/); const n = +m[1]; return m[2] === "d" ? n : m[2] === "w" ? n * 7 : m[2] === "m" ? n * MO : n * YR; };
+  /* Effective analyte spec for this patient: adult spec, or the pediatric band that covers the age.
+     Pediatric bands: an.ped = [{ to:"7d"|"1m"|"1y"|"18y", r|rM|rF, rt.., cl, ch, n, s }], sorted, upper bound exclusive.
+     an.pa = 1 (or panel.pa = 1): range does not depend on age, adult spec used for children too. */
+  function eff(an, patient, panel) {
+    if (!isPeds(patient) || an.t === "in") return an;
+    if (an.ped) {
+      const d = ageDays(patient);
+      const b = an.ped.find(x => d < toDays(x.to));
+      if (b && b.adult) return an;                       // source says children = adult range
+      if (b && !b.none) {
+        const o = Object.assign({}, an);
+        ["r", "rM", "rF", "rt", "rtM", "rtF"].forEach(k => delete o[k]);   // criticals stay adult unless the band sets cl/ch (null = none)
+        return Object.assign(o, b, { pedBand: true });
+      }
+    }
+    if (!(an.ped && an.ped.some(x => x.none && ageDays(patient) < toDays(x.to))) && (an.pa || (panel && panel.pa) || an.t === "x")) return an;
+    const o = Object.assign({}, an);
+    ["r", "rM", "rF", "rtM", "rtF", "cl", "ch"].forEach(k => delete o[k]);
+    o.rt = "No reference available"; o.noPed = true;
+    return o;
+  }
+
+  /* median height-for-age (cm), filled from WHO (0-24 mo) / CDC (2-18 y); used only when the case gives no height */
+  function medianHeight(p) {
+    const H = (window.LAB_CATALOG && window.LAB_CATALOG.medianHeight) || null, d = ageDays(p);
+    if (!H || d == null) return null;
+    const t = H[p.sex === "F" ? "F" : "M"]; if (!t) return null;
+    const mo = d / MO;
+    for (let i = 1; i < t.length; i++) if (mo <= t[i][0]) { const [a0, h0] = t[i - 1], [a1, h1] = t[i]; return h0 + (h1 - h0) * (mo - a0) / (a1 - a0); }
+    return t[t.length - 1][1];
+  }
+  function schwartz(cr, p) {           // bedside Schwartz 2009: 0.413 x height(cm) / SCr(mg/dL), ages 1-17 y
+    const h = isNum(p.heightCm) ? p.heightCm : medianHeight(p);
+    return h ? 0.413 * h / cr : null;
+  }
+
   /* ---------- derived values (what the analyzer / LIS would calculate) ---------- */
   function egfr(cr, age, sex) {           // CKD-EPI 2021, race-free
     const f = sex === "F", k = f ? 0.7 : 0.9, a = f ? -0.241 : -0.302;
@@ -886,7 +1115,11 @@ window.LAB_CATALOG = {
     ag_abg: v => (isNum(v.na) && isNum(v.cl) && isNum(v.hco3)) ? v.na - v.cl - Math.round(v.hco3 * 10) / 10 : null,
     ag_bmp: v => (isNum(v.na) && isNum(v.cl) && isNum(v.co2)) ? v.na - v.cl - v.co2 : null,
     so2_coox: v => (isNum(v.o2hb) && isNum(v.hhb)) ? 100 * v.o2hb / (v.o2hb + v.hhb) : null,
-    egfr: (v, p) => isNum(v.cr) ? egfr(v.cr, p.age, p.sex) : null,
+    egfr: (v, p) => {
+      if (!isNum(v.cr)) return null;
+      if (!isPeds(p)) return egfr(v.cr, ageDays(p) / YR, p.sex);
+      return ageDays(p) >= YR ? schwartz(v.cr, p) : null;   // under 1 y: not reported
+    },
     cosm: (v, p, c) => (isNum(c.na) && isNum(c.glu) && isNum(c.bun)) ? 2 * c.na + c.glu / 18 + c.bun / 2.8 : null,
     ogap: (v, p, c) => (isNum(v.osm) && isNum(v.cosm)) ? v.osm - v.cosm : null,
     fena: (v, p, c) => (isNum(v.una) && isNum(v.ucr) && isNum(c.na) && isNum(c.cr)) ? 100 * (v.una * c.cr) / (c.na * v.ucr) : null
@@ -913,7 +1146,7 @@ window.LAB_CATALOG = {
       if (an.t === "x" && an.rt && NORMAL_WORDS.includes(an.rt.toLowerCase()) && !v.toLowerCase().startsWith(an.rt.toLowerCase())) return "A";
       return "";                                   // "<10", "None detected" etc. are never flagged
     }
-    if (!isNum(v)) return "";
+    if (!isNum(v) || an.noPed) return "";
     const rv = Number(v.toFixed(an.d ?? 0));       // flag on the displayed (rounded) value
     if (an.cl != null && rv < an.cl) return "LL";
     if (an.ch != null && rv > an.ch) return "HH";
@@ -958,7 +1191,7 @@ window.LAB_CATALOG = {
     if (panel.id === "ABG" && isNum(v.po2) && isNum(v.fio2) && isNum(v.pco2)) {
       const pao2 = (v.fio2 / 100) * (760 - 47) - v.pco2 / 0.8;
       if (v.po2 > pao2 + 5) W("error", `pO2 ${v.po2} exceeds alveolar PAO2 ${pao2.toFixed(0)} at FiO2 ${v.fio2}% (impossible).`);
-      else if (v.fio2 === 21 && pao2 - v.po2 > patient.age / 4 + 4 + 10) W("info", `A-a gradient ${(pao2 - v.po2).toFixed(0)} mm Hg on room air: make sure the case explains it.`);
+      else if (v.fio2 === 21 && ageDays(patient) >= 18 * YR && pao2 - v.po2 > ageDays(patient) / YR / 4 + 4 + 10) W("info", `A-a gradient ${(pao2 - v.po2).toFixed(0)} mm Hg on room air: make sure the case explains it.`);
     }
     if (panel.id === "ABG" && isNum(v.po2) && isNum(v.so2) && v.po2 < 150) {
       const s = 100 / (1 + 23400 / (Math.pow(v.po2, 3) + 150 * v.po2));
@@ -1057,24 +1290,34 @@ window.LAB_CATALOG = {
     const resulted = slip.resulted || addMin(collected, panel.tat || 30);
     const status = slip.status || panel.status || "Final result";
     let anyCrit = false;
-    const rows = panel.a.map(an => {
+    const peds = isPeds(patient);
+    let noPedRows = 0, estHt = false;
+    const rows = panel.a.map(an0 => {
+      const an = eff(an0, patient, panel);
+      if (an.noPed && R.v[an.k] != null) noPedRows++;
+      if (an0.k === "egfr" && peds && !isNum(patient.heightCm) && R.v.egfr != null) estHt = true;
       let val = R.v[an.k];
+      if (an0.k === "egfr" && peds && val == null && isNum(R.v.cr)) val = "Not reported";
       let f = R.forced[an.k] || flagFor(an, val, patient.sex);
       if (f === "LL" || f === "HH") anyCrit = true;
       const shown = val == null ? "Pending" : (isNum(val) ? fmt(val, an.d ?? 0) : String(val));
       const abn = f ? " abn" : "", crit = (f === "LL" || f === "HH") ? " crit" : "";
       const arrow = f === "H" || f === "HH" ? " ▲" : f === "L" || f === "LL" ? " ▼" : "";
-      return `<tr class="${crit.trim()}"><td class="cmp">${esc(an.n)}</td>
+      const nm = an0.k === "egfr" && peds ? "eGFR (bedside Schwartz)" : an.n;
+      return `<tr class="${crit.trim()}"><td class="cmp">${esc(nm)}</td>
         <td class="val${abn}">${esc(shown)}${f ? `<span class="fl">${f === "LL" || f === "HH" ? " !!" : ""}${arrow}</span>` : ""}</td>
         <td class="rng">${esc(rangeText(an, patient.sex))}</td><td class="unit">${esc(an.u || "")}</td>
         <td class="flag${abn}">${f ? FLAG_TEXT[f] : ""}</td></tr>`;
     }).join("");
     const trace = panel.trace === "teg" ? teg(R.v) : panel.trace === "rotem" ? rotem(R.v) : "";
-    const comments = [panel.comment, slip.comment].filter(Boolean);
+    const comments = [(peds && panel.commentPeds) || panel.comment, slip.comment].filter(Boolean);
+    if (peds && panel.a.some(a => a.k === "egfr") && isNum(R.v.cr)) comments.push(ageDays(patient) >= YR
+      ? `eGFR by bedside Schwartz (0.413 x height / creatinine)${estHt ? ", using median height for age and sex (height not recorded)" : ", height " + patient.heightCm + " cm"}. CKD-EPI is not used under 18 years.`
+      : "eGFR is not reported under 1 year of age.");
     if (anyCrit) comments.unshift(`Critical result(s) called to and read back by ordering team at ${addMin(resulted, 2).split(" ")[1]}.`);
     const html = `<div class="slip" data-panel="${panel.id}">
   <div class="ph"><div class="pn">${esc(patient.name)}</div>
-    <div class="pd"><span>MRN: <b>${esc(patient.mrn)}</b></span><span>DOB: <b>${esc(patient.dob)}</b> (${patient.age} y.o.)</span><span>Sex: <b>${esc(patient.sex)}</b></span></div></div>
+    <div class="pd"><span>MRN: <b>${esc(patient.mrn)}</b></span><span>DOB: <b>${esc(patient.dob)}</b> (${esc(ageLabel(patient))})</span><span>Sex: <b>${esc(patient.sex)}</b></span></div></div>
   <div class="ob"><div class="ot">${esc(panel.title)}</div><div class="st${status.startsWith("Final") ? "" : " pre"}">${esc(status)}</div></div>
   <div class="meta">
     <div><span>Collected</span>${esc(collected)}</div><div><span>Resulted</span>${esc(resulted)}</div>
@@ -1085,6 +1328,7 @@ window.LAB_CATALOG = {
   ${comments.length ? `<div class="cm"><div class="cmh">Result Comments</div>${comments.map(x => `<div>${esc(x)}</div>`).join("")}</div>` : ""}
   <div class="ft">SIMULATION · education only · not a medical record</div>
 </div>`;
+    if (noPedRows) warnings.push({ lvl: "warn", msg: `${noPedRows} value(s) on this slip have no pediatric reference range for this age; they print "No reference available" and are never flagged.` });
     return { html, warnings, values: R.v };
   }
 
@@ -1092,15 +1336,37 @@ window.LAB_CATALOG = {
   function dobForAge(age, onDate, seed) {
     const [mo, da, yr] = onDate.split("/").map(Number);
     let h = 17; for (const ch of String(seed)) h = (h * 131 + ch.charCodeAt(0)) % 100003;
-    const end = new Date(yr - age, mo - 1, da);           // latest DOB for this age
-    const d = new Date(end.getTime() - (h % 364) * 86400000);
-    const p = n => String(n).padStart(2, "0");
+    const a = parseAge(age) || { n: 0, u: "y" };
+    const n = Math.floor(a.n), on = new Date(yr, mo - 1, da), day = 86400000;
+    let d;
+    if (a.u === "d") d = new Date(on.getTime() - n * day);                              // exact day of life
+    else if (a.u === "w") d = new Date(on.getTime() - n * 7 * day);
+    else if (a.u === "m") {                                                               // any day that keeps the age at n months
+      const end = new Date(yr, mo - 1 - n, da), start = new Date(yr, mo - 2 - n, da + 1);
+      const span = Math.max(1, Math.round((end - start) / day));
+      d = new Date(end.getTime() - (h % span) * day);
+    } else {
+      const end = new Date(yr - n, mo - 1, da);                                           // latest DOB for this age
+      d = new Date(end.getTime() - (h % 364) * day);
+    }
+    const p = x => String(x).padStart(2, "0");
     return `${p(d.getMonth() + 1)}/${p(d.getDate())}/${d.getFullYear()}`;
   }
 
-  window.LabSlip = { renderSlip, panelById, rangeText, dobForAge, CALC, egfr };
+  window.LabSlip = { renderSlip, panelById, rangeText, dobForAge, CALC, egfr, eff, parseAge, ageDays, ageLabel, isPeds, medianHeight, schwartz, version: "1.2" };
 })();
-
+</script>
+<script>/* Author decision (2026-11-10): pediatric bands whose source is not peer-reviewed print "No reference available"
+   and are never flagged: LAB-BG and LAB-NEO (blood gas reference sheets), CHL (children's hospital document), CAL-SEC (CALIPER K via secondary sources, "verify").
+   The engine above is pasted unchanged; this only swaps those bands for { none:1 }. */
+(function () {
+  const WEAK = { "LAB-BG": 1, "LAB-NEO": 1, "CHL": 1, "CAL-SEC": 1 };
+  for (const p of window.LAB_CATALOG.panels) for (const a of p.a)
+    if (Array.isArray(a.ped)) a.ped = a.ped.map(b => WEAK[b.s] ? { to: b.to, none: 1, s: b.s } : b);
+  window.LAB_CATALOG.pedsPolicy = "peer-reviewed sources only";
+})();
+</script>
+<script>/* Slip CSS (unchanged from engine v1.1). */
 window.LAB_SLIP_CSS = `
 /* ---------- the slip (Epic-style results view, generic) ---------- */
   .slip { background:#fff; border:1px solid #b9c4cc; width:540px; font-size:12.5px; box-shadow:0 1px 2px rgba(0,0,0,.06); }
@@ -1515,7 +1781,8 @@ function parseUpdate(text, cur){
   if ('orders' in src && (!full || jstr(src.orders).trim())) { const v = jstr(src.orders); if (add('Mannequin orders (whole section)', cur.orders, v)) next.orders = v; }
   if ('labs' in src && (!full || src.labs)) {
     const nl = src.labs == null ? null : cleanLabs(normLabs(src.labs, cur.stages)).labs;
-    if (nl && cur.labs && !nl.patient.dob && nl.patient.age === cur.labs.patient.age) nl.patient.dob = cur.labs.patient.dob;
+    if (nl && cur.labs && !nl.patient.dob && String(nl.patient.age).trim() === String(cur.labs.patient.age).trim()) nl.patient.dob = cur.labs.patient.dob;
+    if (nl && cur.labs && nl.patient.heightCm === '' && !(src.labs.patient && 'heightCm' in src.labs.patient)) nl.patient.heightCm = cur.labs.patient.heightCm || '';
     const ld = labDiff(cur.labs, nl, cur.stages);
     if (ld.length) { ld.forEach(x => changes.push(x)); next.labs = nl; }
   }
@@ -2205,11 +2472,16 @@ function stageRef(st, stages){
   const n = parseInt(st, 10);
   return n >= 1 && stages[n - 1] ? stages[n - 1].id : '';
 }
+/* Age is kept as typed: a number (years) or "3 d" / "6 wk" / "4 mo" / "6 y". The engine parses it. */
+const normAge = a => typeof a === 'number' ? (isFinite(a) ? a : '') : /^\s*\d+(\.\d+)?\s*$/.test(String(a == null ? '' : a)) ? +String(a).trim() : String(a == null ? '' : a).trim();
+const ageOk = a => a !== '' && !!(window.LabSlip && window.LabSlip.parseAge && window.LabSlip.parseAge(a) != null);
+const labIsPeds = P => !!(P && ageOk(P.age) && window.LabSlip.isPeds({age:P.age}));
+const ptForEngine = (c, P) => ({name:P.name || 'LAST, First', mrn:c.caseNo || 'NO-CASE-NUMBER', dob:labDob(c) || '—', age:P.age, sex:P.sex || '', heightCm: P.heightCm === '' || P.heightCm == null ? undefined : +P.heightCm});
 function normLabs(L, stages){
   if (!L || typeof L !== 'object' || Array.isArray(L)) return null;
-  const p = L.patient || {}, age = parseInt(p.age, 10), st = String(L.start || '').trim();
+  const p = L.patient || {}, st = String(L.start || '').trim(), h = +p.heightCm;
   return {
-    patient:{name:String(p.name || ''), age: isFinite(age) ? age : '', sex: /^f/i.test(p.sex || '') ? 'F' : /^m/i.test(p.sex || '') ? 'M' : '', dob:String(p.dob || '')},
+    patient:{name:String(p.name || ''), age: normAge(p.age), sex: /^f/i.test(p.sex || '') ? 'F' : /^m/i.test(p.sex || '') ? 'M' : '', dob:String(p.dob || ''), heightCm: p.heightCm !== '' && p.heightCm != null && isFinite(h) && h > 0 ? h : ''},
     start: /^\d{1,2}:\d{2}$/.test(st) ? st.padStart(5, '0') : '10:00',
     slips:(Array.isArray(L.slips) ? L.slips : []).filter(s => s && typeof s === 'object').map(s => ({
       id:String(s.id || rid()), stage:stageRef(s.stage, stages || []), label:String(s.label || ''), panel:String(s.panel || '').trim().toUpperCase(),
@@ -2241,12 +2513,21 @@ function remapLabs(L, oldStages, newStages){
 function labsForAI(c){
   if (!c.labs) return null;
   const L = c.labs;
-  return {patient:{name:L.patient.name, age:L.patient.age, sex:L.patient.sex}, start:L.start,
+  const pt = {name:L.patient.name, age:L.patient.age, sex:L.patient.sex}; if (L.patient.heightCm !== '' && L.patient.heightCm != null) pt.heightCm = L.patient.heightCm;
+  return {patient:pt, start:L.start,
     slips:L.slips.map(s => { const i = c.stages.findIndex(x => x.id === s.stage); const o = {stage: s.stage === 'before' ? 'before' : i >= 0 ? i + 1 : '', label:s.label, panel:s.panel, at:s.at, values:s.values}; if (s.comment) o.comment = s.comment; return o; })};
 }
 function guessPatient(c){
-  const m = String((c.patient || '') + ' ' + (c.summary || '')).match(/(\d{1,3})[- ]?(?:year|yr)s?[- ]old\s+(man|woman|male|female|boy|girl|gentleman|lady)/i);
-  return m ? {age:+m[1], sex:/woman|female|girl|lady/i.test(m[2]) ? 'F' : 'M'} : {age:'', sex:''};
+  const t = String((c.patient || '') + ' ' + (c.summary || ''));
+  const sexOf = w => /woman|female|girl|lady/i.test(w || '') ? 'F' : /\b(man|male|boy|gentleman)\b/i.test(w || '') ? 'M' : '';
+  const W = '(man|woman|male|female|boy|girl|gentleman|lady|infant|neonate|newborn|baby|child|toddler)?';
+  let m = t.match(new RegExp('(\\d{1,3})[- ]?(day|week|wk|month|mo|year|yr)s?[- ]old\\s*' + W, 'i'));
+  if (m) {
+    const n = +m[1], u = m[2].toLowerCase(), unit = u.startsWith('d') ? 'd' : u.startsWith('w') ? 'wk' : u.startsWith('mo') ? 'mo' : 'y';
+    return {age: unit === 'y' ? (n >= 18 ? n : n + ' y') : n + ' ' + unit, sex: sexOf(m[3])};
+  }
+  if (/\b(newborn|neonate)\b/i.test(t)) return {age:'1 d', sex: /\bgirl\b|\bfemale\b/i.test(t) ? 'F' : /\bboy\b|\bmale\b/i.test(t) ? 'M' : ''};
+  return {age:'', sex:''};
 }
 function simDate(c){
   const m = String(c.caseNo || '').match(/^(\d{4})(\d{2})(\d{2})S/), p = n => String(n).padStart(2, '0');
@@ -2257,9 +2538,9 @@ function simDate(c){
 function labDob(c){
   const P = c.labs.patient;
   if (P.dob) return P.dob;
-  return P.age !== '' && LABS_READY() ? window.LabSlip.dobForAge(+P.age, simDate(c), c.caseNo || 'case') : '';
+  return ageOk(P.age) && LABS_READY() ? window.LabSlip.dobForAge(P.age, simDate(c), c.caseNo || 'case') : '';
 }
-function ensureDob(c){ if (c && c.labs && !c.labs.patient.dob && c.labs.patient.age !== '' && S.canWrite && LABS_READY()) { c.labs.patient.dob = labDob(c); return true; } return false; }
+function ensureDob(c){ if (c && c.labs && !c.labs.patient.dob && ageOk(c.labs.patient.age) && S.canWrite && LABS_READY()) { c.labs.patient.dob = labDob(c); return true; } return false; }
 function collectedFor(c, s){
   const [hh, mm] = String(c.labs.start || '10:00').split(':').map(Number), add = parseInt(String(s.at).split(':')[0], 10) || 0;
   const t = (hh || 0) * 60 + (mm || 0) + add, p = n => String(n).padStart(2, '0');
@@ -2293,10 +2574,10 @@ function labReport(c){
   const key = JSON.stringify([c.labs, c.caseNo, c.createdAt, (c.stages || []).map(s => s.id)]);
   if (labCache.has(key)) return labCache.get(key);
   const L = c.labs, P = L.patient || {}, out = {slips:{}, errors:0, warns:0};
-  const patient = {name:P.name || 'LAST, First', mrn:c.caseNo || 'NO-CASE-NUMBER', dob:labDob(c) || '—', age:P.age === '' ? '' : +P.age, sex:P.sex || ''};
+  const patient = ptForEngine(c, P);
   const base = [];
   if (P.age === '' || !P.sex) base.push({lvl:'error', msg:'Set the patient\'s age and sex in LabGen: the reference ranges depend on them.'});
-  else if (+P.age < 18) base.push({lvl:'error', msg:'Patient is under 18. Adult (ABIM) ranges cannot be printed on a pediatric slip, so slips are not drawn until pediatric ranges are approved.'});
+  else if (!ageOk(P.age)) base.push({lvl:'error', msg:'Age not understood: use 55, 3 d, 6 wk, 4 mo or 6 y.'});
   const pre = L.slips.map(s => Object.assign(slipInputIssues(s), {s}));
   const first = {};
   if (!base.length) pre.forEach(r => { if (r.P) first[r.s.id] = window.LabSlip.renderSlip({panel:r.s.panel, collected:collectedFor(c, r.s), values:r.vals, comment:r.s.comment}, patient, {}).values || {}; });
@@ -2333,9 +2614,9 @@ const warnListHtml = w => w.length ? `<ul class="lwarn">${w.map(x => `<li class=
 const LAB_RULES = [
   'Values only: the app draws every slip. AIs never draw lab images.',
   'Calculated fields (HCO3, base excess, anion gap, ABG hematocrit, eGFR, calculated osmolality, osmolar gap, FENa, co-ox sO2) are automatic.',
-  'Flags use ABIM adult ranges (room-air ranges for blood gases, so an intraop pO2 of 140 shows High).',
+  'Adults: ABIM ranges (room-air ranges for blood gases, so an intraop pO2 of 140 shows High).',
   'Labs drawn together (same stage and time) must agree, and labs must match the monitor and the story.',
-  'Under 18: pediatric ranges are needed; adult slips are not drawn.',
+  'Under 18 (term-born): pediatric ranges by exact age from peer-reviewed sources (CALIPER and pediatric literature). No peer-reviewed range → "No reference available", never flagged (this includes arterial blood gases by age).',
   'Cues and LLEAP lines refer to slips by label, e.g. "Hand ABG 2 when sent".',
   'Red errors block "Ready to run". Amber warnings need a reason in the case.'
 ];
@@ -2403,15 +2684,16 @@ function renderLabGen(){
   const editing = S.labEdit && L.slips.find(s => s.id === S.labEdit);
   const head = `<div class="sec">
     <div class="sec-h"><h2>Patient on every slip</h2>${rep.errors ? `<span class="chip lab-err">${rep.errors} lab error${rep.errors === 1 ? '' : 's'}</span>` : ''}${rep.warns ? `<span class="chip tbc">${rep.warns} warning${rep.warns === 1 ? '' : 's'}</span>` : ''}${!rep.errors && !rep.warns && L.slips.length ? '<span class="chip ok">All slips OK</span>' : ''}<span class="spacer"></span><button type="button" class="btn small" data-act="labCat" aria-pressed="${S.labCatalog}">Catalog</button>${L.slips.length ? '<button type="button" class="btn small" data-act="slipPngAll" title="Every slip as a PNG for LLEAP, in one zip">All PNGs (.zip)</button>' : ''}</div>
-    <div class="labpt">
+    <div class="labpt ${labIsPeds(P) ? 'peds' : ''}">
       <div class="field"><label class="lab" for="lp-name">Name (LAST, First)</label><input type="text" id="lp-name" data-lp="name" value="${esc(P.name)}" placeholder="JONES, Robert" ${dis}></div>
-      <div class="field"><label class="lab" for="lp-age">Age</label><input type="text" inputmode="numeric" id="lp-age" data-lp="age" value="${esc(P.age)}" placeholder="55" ${dis}></div>
+      <div class="field"><label class="lab" for="lp-age">Age</label><input type="text" id="lp-age" data-lp="age" value="${esc(P.age)}" placeholder="55 or 3 d / 4 mo / 6 y" ${dis}></div>
+      ${labIsPeds(P) ? `<div class="field"><label class="lab" for="lp-height">Height (cm, optional)</label><input type="text" inputmode="decimal" id="lp-height" data-lp="heightCm" value="${esc(P.heightCm == null ? '' : P.heightCm)}" placeholder="e.g. 115" ${dis}></div>` : ''}
       <div class="field"><label class="lab" for="lp-sex">Sex</label><select id="lp-sex" data-lp="sex" ${dis}><option value="" ${!P.sex ? 'selected' : ''}>—</option><option value="M" ${P.sex === 'M' ? 'selected' : ''}>M</option><option value="F" ${P.sex === 'F' ? 'selected' : ''}>F</option></select></div>
-      <div class="field"><span class="lab">DOB</span><div class="ro"><span>${esc(labDob(c) || '—')}</span>${ed && P.age !== '' ? '<button type="button" class="btn small ghost" data-act="labDob">New DOB</button>' : ''}</div></div>
+      <div class="field"><span class="lab">DOB</span><div class="ro"><span>${esc(labDob(c) || '—')}</span>${ed && ageOk(P.age) ? '<button type="button" class="btn small ghost" data-act="labDob">New DOB</button>' : ''}</div></div>
       <div class="field"><span class="lab">MRN</span><div class="ro"><span class="mono-i">${esc(c.caseNo || 'no case number')}</span></div></div>
       <div class="field"><label class="lab" for="lp-start">Case start (clock)</label><input type="text" id="lp-start" data-lp="start" value="${esc(L.start)}" placeholder="10:00" ${dis}></div>
     </div>
-    <p class="help">MRN is always the case number; DOB is set once to match the age on the case date.</p>
+    <p class="help">MRN is always the case number; DOB is set once to match the age on the case date.${labIsPeds(P) ? ' Height is used for the pediatric eGFR; leave it empty to use the median height for age and sex.' : ''}</p>
     ${rules}</div>`;
   const groups = labGroups(c).map(g => `<div class="sec labgrp">
       <div class="sec-h"><h2>${esc(g.title)}</h2><span class="spacer"></span>${ed && g.key !== '' ? `<button type="button" class="btn small" data-act="labAdd" data-stage="${esc(g.key)}">Add slip</button>` : ''}</div>
@@ -2440,7 +2722,10 @@ function labInput(el){
   const c = S.draft, L = c.labs; if (!L) return;
   if (el.dataset.lp !== undefined) {
     const k = el.dataset.lp;
-    if (k === 'age') { const n = parseInt(el.value, 10); L.patient.age = isFinite(n) ? n : ''; L.patient.dob = L.patient.age === '' ? '' : window.LabSlip.dobForAge(L.patient.age, simDate(c), c.caseNo || 'case'); }
+    if (k === 'age') { const before = labIsPeds(L.patient), raw = el.value; L.patient.age = /^\d+(\.\d+)?$/.test(raw) ? +raw : raw.trim() === '' ? '' : raw; /* keep spaces while typing "3 d" */ L.patient.dob = ageOk(L.patient.age) ? window.LabSlip.dobForAge(L.patient.age, simDate(c), c.caseNo || 'case') : '';
+      if (!labIsPeds(L.patient)) L.patient.heightCm = '';
+      if (before !== labIsPeds(L.patient)) { changed(); rerenderLabs(); renderList(); return; } }
+    else if (k === 'heightCm') { const h = +el.value; L.patient.heightCm = el.value.trim() !== '' && isFinite(h) && h > 0 ? h : ''; }
     else if (k === 'start') { if (/^\d{1,2}:\d{2}$/.test(el.value.trim())) L.start = el.value.trim().padStart(5, '0'); }
     else L.patient[k] = el.value;
     changed(); rerenderLabs(); renderList(); return;
@@ -2465,7 +2750,7 @@ function labAct(act, b){
   const L = c.labs, find = id => L && L.slips.find(s => s.id === id);
   if (act === 'labStart') { const g = guessPatient(c); c.labs = {patient:{name:'', age:g.age, sex:g.sex, dob:''}, start:'10:00', slips:[]}; ensureDob(c); changed(); renderLabGen(); return true; }
   if (!L) return false;
-  if (act === 'labDob') { if (L.patient.age !== '') { L.patient.dob = window.LabSlip.dobForAge(+L.patient.age, simDate(c), (c.caseNo || 'case') + Date.now()); changed(); renderLabGen(); } return true; }
+  if (act === 'labDob') { if (ageOk(L.patient.age)) { L.patient.dob = window.LabSlip.dobForAge(L.patient.age, simDate(c), (c.caseNo || 'case') + Date.now()); changed(); renderLabGen(); } return true; }
   if (act === 'labAdd') { const s = {id:rid(), stage:b.dataset.stage || '', label:'', panel:'ABG', at:'00:00', values:{}, comment:''}; prefillText(s); L.slips.push(s); S.labEdit = s.id; S.labPanelFilter = ''; changed(); renderLabGen(); const e = $('#labEditor'); if (e) e.scrollIntoView({block:'start'}); return true; }
   if (act === 'labEdit') { S.labEdit = b.dataset.id; S.labPanelFilter = ''; renderLabGen(); const e = $('#labEditor'); if (e) e.scrollIntoView({block:'start'}); return true; }
   if (act === 'labDone') { S.labEdit = null; renderLabGen(); return true; }
@@ -2605,9 +2890,10 @@ function labSummary(c, s, stages){
 function labDiff(a, b, stages){
   const out = [], key = s => (s.label || s.panel).toLowerCase() + '|' + s.panel;
   const A = a ? a.slips : [], B = b ? b.slips : [];
-  if (a && b && JSON.stringify([a.patient.name, a.patient.age, a.patient.sex, a.start]) !== JSON.stringify([b.patient.name, b.patient.age, b.patient.sex, b.start]))
-    out.push({label:'Labs · patient', old:`${a.patient.name} · ${a.patient.age} ${a.patient.sex} · start ${a.start}`, nw:`${b.patient.name} · ${b.patient.age} ${b.patient.sex} · start ${b.start}`});
-  if (!a && b) out.push({label:'Labs · patient', old:'', nw:`${b.patient.name} · ${b.patient.age} ${b.patient.sex} · start ${b.start}`});
+  const pl = x => `${x.patient.name} · ${x.patient.age} ${x.patient.sex}${x.patient.heightCm !== '' && x.patient.heightCm != null ? ' · ' + x.patient.heightCm + ' cm' : ''} · start ${x.start}`;
+  if (a && b && JSON.stringify([a.patient.name, String(a.patient.age).trim(), a.patient.sex, a.patient.heightCm || '', a.start]) !== JSON.stringify([b.patient.name, String(b.patient.age).trim(), b.patient.sex, b.patient.heightCm || '', b.start]))
+    out.push({label:'Labs · patient', old:pl(a), nw:pl(b)});
+  if (!a && b) out.push({label:'Labs · patient', old:'', nw:pl(b)});
   B.forEach(s => {
     const o = A.find(x => key(x) === key(s));
     if (!o) out.push({label:`Labs · ${s.label || s.panel}: added`, old:'', nw:labSummary(null, s, stages)});
@@ -2622,9 +2908,9 @@ function labPromptBlock(){
   const keys = labPanels().map(p => '  ' + p.id + ': ' + p.a.filter(a => !a.calc).map(a => a.k + (a.t === 'x' ? ' (text)' : a.u ? ' ' + a.u : '')).join(', ') + (p.needs ? ' (needs ' + p.needs + ')' : ''));
   return [
 '## Labs (values only: the app draws every lab slip)',
-'The app renders all lab results as standardized EHR-style slips (ABIM January 2026 adult reference ranges, fixed units and decimals, flags and critical values). You supply only the measured values. Never draw, describe or attach a lab image, and never list labs in imagesNeeded.',
+'The app renders all lab results as standardized EHR-style slips (ABIM January 2026 adult reference ranges; age-specific pediatric ranges for children, fixed units and decimals, flags and critical values). You supply only the measured values. Never draw, describe or attach a lab image, and never list labs in imagesNeeded.',
 '- Put every lab the case uses in "labs" (an object, not a string):',
-'  {"patient": {"name": "LAST, First", "age": 55, "sex": "M"}, "start": "10:00", "slips": [{"stage": 2, "label": "ABG 1", "panel": "ABG", "at": "03:00", "values": {"temp": 36.0, "fio2": 50, "ph": 7.41, "pco2": 34, "po2": 176}}]}',
+'  {"patient": {"name": "LAST, First", "age": 55, "sex": "M", "heightCm": 175}, "start": "10:00", "slips": [{"stage": 2, "label": "ABG 1", "panel": "ABG", "at": "03:00", "values": {"temp": 36.0, "fio2": 50, "ph": 7.41, "pco2": 34, "po2": 176}}]}',
 '- patient.name: the case patient\'s name as "LAST, First". If the case gives no first name, invent one and list it in the AI notes to check. age and sex come from the case. Do not write an MRN or DOB; the app sets them.',
 '- stage: the stage number where the result is handed over, or "before" for preop labs. label: short name used in cues and lleap (e.g. "ABG 2"). at: sim clock (mm:ss) when the sample is drawn. start: wall-clock start of the case (default "10:00").',
 '- panel and values: use ONLY these panel ids and keys. Numbers as numbers, text results as strings. Measured values only. Never send calculated values: HCO3, base excess, anion gap, ABG hematocrit, eGFR, calculated osmolality, osmolar gap, FENa and co-ox sO2 are computed by the app. To get a target HCO3, choose pH and pCO2 that produce it: HCO3 = 0.0307 × pCO2 × 10^(pH − 6.1).',
@@ -2635,8 +2921,9 @@ function labPromptBlock(){
 '  - Hct ≈ 3 × Hgb; MCV = Hct/RBC × 10; MCH = Hgb/RBC × 10; MCHC = Hgb/Hct × 100; the differential totals 100%; co-ox fractions total 100%.',
 '  - Labs drawn at the same time (same stage and time) agree: K within 0.3, Na within 3, glucose within 10%, iCa within 0.05, Hgb within 0.5, BMP CO2 within 4 of the ABG HCO3.',
 '  - Labs match the monitor and the story: K ≥6.0 needs ECG changes in lleap; low iCa fits hypotension; PaCO2 sits above EtCO2 by a plausible gradient; lactate and Hgb change at physiologic speed and in proportion to the cause; repeat labs after treatment show a partial, plausible change.',
-'- Flags: values are flagged against ABIM adult ranges (room-air ranges for blood gases, so an intraop pO2 of 140 shows High). Never describe a value as "normal" or "low-normal" in any text if it falls outside the range. Key ranges: pH 7.38–7.44; pCO2 38–42; pO2 75–100; HCO3 23–26; Na 136–145; K 3.5–5.0; Cl 98–106; iCa 1.16–1.31 mmol/L; glucose 70–99; arterial lactate <1.3; Hgb men 14–18, women 12–16; platelets 150–450 K/µL; PT 11–13 s; INR 0.9–1.1; aPTT 25–35 s; fibrinogen 200–400. Critical: pH <7.20 or >7.60; pCO2 <20 or >70; pO2 <40; K <2.8 or >6.2; Na <120 or >160; iCa <0.80 or >1.60; glucose <50 or >400; lactate >4.0; Hgb <7.0; platelets <20; INR >5.0; fibrinogen <100.',
-'- Patients under 18: ABIM ranges are adult only. Still give the values, and add an AI note that pediatric ranges must be confirmed before use (the app will not draw adult slips for a child).',
+'- Flags: adults use ABIM ranges; children use pediatric ranges (room-air ranges for blood gases, so an intraop pO2 of 140 shows High). Never describe a value as "normal" or "low-normal" in any text if it falls outside the range. Key ranges: pH 7.38–7.44; pCO2 38–42; pO2 75–100; HCO3 23–26; Na 136–145; K 3.5–5.0; Cl 98–106; iCa 1.16–1.31 mmol/L; glucose 70–99; arterial lactate <1.3; Hgb men 14–18, women 12–16; platelets 150–450 K/µL; PT 11–13 s; INR 0.9–1.1; aPTT 25–35 s; fibrinogen 200–400. Critical: pH <7.20 or >7.60; pCO2 <20 or >70; pO2 <40; K <2.8 or >6.2; Na <120 or >160; iCa <0.80 or >1.60; glucose <50 or >400; lactate >4.0; Hgb <7.0; platelets <20; INR >5.0; fibrinogen <100.',
+'- Children (term-born, under 18): give "age" with a unit ("3 d", "6 wk", "4 mo", "6 y"; a plain number means years) and, when the case gives it, "heightCm" (optional for adults). The app prints age-specific pediatric ranges from peer-reviewed sources (CALIPER and pediatric literature) and bedside Schwartz eGFR (ages 1-17). Values with no peer-reviewed pediatric range print "No reference available" and are never flagged; this includes arterial blood gas pH, pCO2, pO2, HCO3 and base excess, serum potassium at every age, and most CBC values before 2 months. Pick values that are normal or abnormal for THAT age: a newborn\'s Hgb, glucose, creatinine, ALP, bilirubin and blood gases differ from an adult\'s. Preterm infants are not supported; if the case is preterm, add an AI note.',
+'- Pediatric key ranges (examples): glucose 50-99 mg/dL first 48 h, 72-112 after 6 mo; Hgb 9.3-13.4 g/dL at 2-12 mo, 11.4-14.1 at 4-13 y; creatinine 0.10-0.36 mg/dL at 15 d-2 y, 0.31-0.61 at 5-11 y; ALP 156-369 U/L at 1-9 y.',
 '- In lleap and cues, refer to slips by label, e.g. "Hand ABG 2 slip when sent (LabGen)". Name only the values that drive the case (e.g. "iCa 0.86"); do not copy whole slips into the text.',
 '- In the readable copy, show labs as one short table per stage: label, time, panel, then key value pairs.',
 ''
@@ -2749,16 +3036,30 @@ async function exportSlipPngs(ids){
     toast(e && e.message === 'nozip' ? 'The zip builder did not load. Reload the page and try again.' : 'Could not draw the slip image.');
   } finally { S.pngBusy = false; }
 }
-/* Catalog reference view: every panel with its normal values (healthy 55-year-old man). */
-let catCache = null;
+/* Catalog reference view: every panel with normal values for the chosen age and sex (adult 55 y by default). */
+const CAT_AGES = [['55','Adult (55 y)'],['3 d','3 days'],['10 d','10 days'],['3 wk','3 weeks'],['6 wk','6 weeks'],['4 mo','4 months'],['9 mo','9 months'],['2 y','2 years'],['6 y','6 years'],['10 y','10 years'],['14 y','14 years'],['16 y','16 years']];
+const catCache = new Map();
+const catPt = () => { const age = normAge(S.labCatAge || '55'), sex = S.labCatSex === 'F' ? 'F' : 'M'; return {age, sex}; };
+/* Normal value for this patient: middle of the pediatric band when there is one, else the adult demo value (same rule as the Sim Lab Slip Catalog page). */
+function catDemo(an, p, pt){
+  const LS = window.LabSlip;
+  if (!LS.isPeds(pt) || an.t === 'in' || an.t === 'x' || typeof an.demo !== 'number') return an.demo;
+  const e = LS.eff(an, pt, p), r = (e.rM || e.rF) ? (pt.sex === 'F' ? e.rF : e.rM) : e.r;
+  if (e.noPed || !r || r === an.r) return an.demo;
+  const d = an.d == null ? 0 : an.d;
+  if (r[0] != null && r[1] != null) return Number(((r[0] + r[1]) / 2).toFixed(d));
+  if (r[1] != null) return Number((r[1] * 0.5).toFixed(d));
+  return an.demo;
+}
+function catDemoValues(P, pt){ const v = {}; if (P) P.a.forEach(an => { if (!an.calc && an.demo != null) v[an.k] = catDemo(an, P, pt); }); return v; }
 function catalogSlips(){
-  if (catCache) return catCache;
+  const cp = catPt(), key = cp.age + '|' + cp.sex;
+  if (catCache.has(key)) return catCache.get(key);
   const today = new Date(), dt = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
-  const pt = {name:'CATALOG, Normal', mrn:'REFERENCE', dob:window.LabSlip.dobForAge(55, dt, 'catalog'), age:55, sex:'M'};
-  const demo = id => { const P = labPanel(id), v = {}; if (P) P.a.forEach(an => { if (!an.calc && an.demo != null) v[an.k] = an.demo; }); return v; };
-  const ctx = Object.assign({}, demo('BMP'));
-  catCache = labPanels().map(p => { const r = window.LabSlip.renderSlip({panel:p.id, collected:dt + ' 10:00', values:demo(p.id)}, pt, ctx); return {p, html:noFlag(r.html)}; });
-  return catCache;
+  const pt = {name:'CATALOG, Normal', mrn:'REFERENCE', dob:window.LabSlip.dobForAge(cp.age, dt, 'catalog' + cp.age), age:cp.age, sex:cp.sex};
+  const ctx = Object.assign({}, catDemoValues(labPanel('BMP'), pt));
+  const list = labPanels().map(p => { const r = window.LabSlip.renderSlip({panel:p.id, collected:dt + ' 10:00', values:catDemoValues(p, pt)}, pt, ctx); return {p, html:noFlag(r.html)}; });
+  catCache.set(key, list); return list;
 }
 function catalogBodyHtml(){
   const f = String(S.labCatFilter || '').trim().toLowerCase(), ed = S.canWrite && S.draft.labs, groups = {};
@@ -2768,8 +3069,10 @@ function catalogBodyHtml(){
   return g.map(([name, xs]) => `<div class="catgrp"><h3 class="dphase">${esc(name)} <span class="help">(${xs.length})</span></h3><div class="labcards">${xs.map(x => `<div class="labcard"><div class="labcard-h"><b>${esc(x.p.id)}</b><span class="help">${esc(x.p.title.toLowerCase())}</span><span class="spacer"></span>${ed ? `<button type="button" class="btn small" data-act="labCatAdd" data-panel="${esc(x.p.id)}">Add to case</button>` : ''}</div><div class="labprev">${x.html}</div></div>`).join('')}</div></div>`).join('');
 }
 function catalogHtml(){
-  return `<div class="sec" id="labCatSec"><div class="sec-h"><h2>Catalog: every panel with normal values</h2><span class="help">${labPanels().length} panels · healthy 55-year-old man · ABIM January 2026</span><span class="spacer"></span><button type="button" class="btn small primary" data-act="labCat">Back to slips</button></div>
-    <input type="text" id="lc-search" placeholder="Search panels: coag, ABG, troponin…" value="${esc(S.labCatFilter || '')}" aria-label="Search the catalog">
+  return `<div class="sec" id="labCatSec"><div class="sec-h"><h2>Catalog: every panel with normal values</h2><span class="help">${labPanels().length} panels · ${window.LabSlip.isPeds(catPt()) ? 'pediatric ranges (peer-reviewed sources only)' : 'ABIM January 2026'}</span><span class="spacer"></span><button type="button" class="btn small primary" data-act="labCat">Back to slips</button></div>
+    <div class="catbar"><input type="text" id="lc-search" placeholder="Search panels: coag, ABG, troponin…" value="${esc(S.labCatFilter || '')}" aria-label="Search the catalog">
+      <select id="lc-age" aria-label="Catalog age">${CAT_AGES.map(([v, l]) => `<option value="${esc(v)}" ${String(S.labCatAge || '55') === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
+      <select id="lc-sex" aria-label="Catalog sex"><option value="M" ${S.labCatSex !== 'F' ? 'selected' : ''}>Male</option><option value="F" ${S.labCatSex === 'F' ? 'selected' : ''}>Female</option></select></div>
     <div id="labCat">${catalogBodyHtml()}</div></div>`;
 }
 function labExtraAct(act, b){
@@ -2781,7 +3084,7 @@ function labExtraAct(act, b){
     const c = S.draft, L = c && c.labs; if (!L || !S.canWrite) return true;
     const P = labPanel(b.dataset.panel); if (!P) return true;
     const s = {id:rid(), stage:'before', label:'', panel:P.id, at:'00:00', values:{}, comment:''};
-    P.a.forEach(an => { if (!an.calc && an.demo != null) s.values[an.k] = an.demo; });
+    Object.assign(s.values, catDemoValues(P, catPt()));
     L.slips.push(s); S.labEdit = s.id; S.labCatalog = false; S.labPanelFilter = ''; changed(); renderLabGen();
     const e = $('#labEditor'); if (e) e.scrollIntoView({block:'start'});
     toast(`${P.id} added with normal values. Set its stage, time and values.`); return true;
@@ -3081,7 +3384,7 @@ async function applyImport(asNew){
   if (asNew) { await createCase(null, r.case); S.importText = ''; S.view = 'edit'; renderMain(); return; }
   if (!S.draft) return;
   const keep = {caseNo:S.draft.caseNo || '', author:S.draft.author || '', lleapTheme:S.draft.lleapTheme || '', imagesDone:S.draft.imagesDone || [], createdAt:S.draft.createdAt, llmNotes:S.draft.llmNotes, scenario:(S.draft.scenario||'').trim() ? S.draft.scenario : r.case.scenario, rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy, images:remapImages(S.draft.images, S.draft.stages, r.case.stages), labs: r.case.labs ? r.case.labs : remapLabs(S.draft.labs, S.draft.stages, r.case.stages)};
-  if (keep.labs && S.draft.labs && !keep.labs.patient.dob && keep.labs.patient.age === S.draft.labs.patient.age) keep.labs.patient.dob = S.draft.labs.patient.dob;
+  if (keep.labs && S.draft.labs && !keep.labs.patient.dob && String(keep.labs.patient.age).trim() === String(S.draft.labs.patient.age).trim()) keep.labs.patient.dob = S.draft.labs.patient.dob;
   S.draft = Object.assign(r.case, keep);
   S.importText = ''; S.confirmReplace = false; S.view = 'edit';
   changed(); renderMain(); renderList(); window.scrollTo(0,0);
@@ -3454,6 +3757,7 @@ document.addEventListener('input', e => {
   }
 });
 document.addEventListener('change', e => {
+  if (e.target.id === 'lc-age' || e.target.id === 'lc-sex') { if (e.target.id === 'lc-age') S.labCatAge = e.target.value; else S.labCatSex = e.target.value; renderLabGen(); return; }
   if (e.target.id === 'mobilePick' && e.target.value) requestSwitch(e.target.value);
   if (e.target.id === 'askFirst') { S.askFirst = e.target.checked; ls.set('simcase:askFirst', S.askFirst ? 'on' : 'off'); renderHandoff(); return; }
   if (e.target.classList && e.target.classList.contains('imgdone')) { const k = e.target.dataset.key, d = new Set(S.draft.imagesDone || []); e.target.checked ? d.add(k) : d.delete(k); S.draft.imagesDone = [...d]; changed(); renderEditor(); renderList(); return; }

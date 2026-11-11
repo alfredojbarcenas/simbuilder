@@ -1364,6 +1364,17 @@ window.LAB_CATALOG = {
   for (const p of window.LAB_CATALOG.panels) for (const a of p.a)
     if (Array.isArray(a.ped)) a.ped = a.ped.map(b => WEAK[b.s] ? { to: b.to, none: 1, s: b.s } : b);
   window.LAB_CATALOG.pedsPolicy = "peer-reviewed sources only";
+  /* Author decision (2026-11-10): "No reference available" is too wide for the range column. Show "N/A*" in the cell
+     and one footnote under the table. Display only; flags and checks are unchanged. */
+  const LS = window.LabSlip, render = LS.renderSlip;
+  LS.renderSlip = function () {
+    const r = render.apply(this, arguments);
+    if (r && typeof r.html === "string" && r.html.indexOf(">No reference available<") >= 0) {
+      r.html = r.html.replace(/(<td class="rng">)No reference available(<\/td>)/g, "$1N/A*$2");
+      r.html = r.html.replace("</table>", '</table><div class="nafoot" style="font-size:11px;color:#555;padding:4px 12px 0;font-style:italic">* No reference available</div>');
+    }
+    return r;
+  };
 })();
 </script>
 <script>/* Slip CSS (unchanged from engine v1.1). */
@@ -2616,7 +2627,7 @@ const LAB_RULES = [
   'Calculated fields (HCO3, base excess, anion gap, ABG hematocrit, eGFR, calculated osmolality, osmolar gap, FENa, co-ox sO2) are automatic.',
   'Adults: ABIM ranges (room-air ranges for blood gases, so an intraop pO2 of 140 shows High).',
   'Labs drawn together (same stage and time) must agree, and labs must match the monitor and the story.',
-  'Under 18 (term-born): pediatric ranges by exact age from peer-reviewed sources (CALIPER and pediatric literature). No peer-reviewed range → "No reference available", never flagged (this includes arterial blood gases by age).',
+  'Under 18 (term-born): pediatric ranges by exact age from peer-reviewed sources (CALIPER and pediatric literature). No peer-reviewed range → "N/A*" with "* No reference available" under the table, never flagged (this includes arterial blood gases by age).',
   'Cues and LLEAP lines refer to slips by label, e.g. "Hand ABG 2 when sent".',
   'Red errors block "Ready to run". Amber warnings need a reason in the case.'
 ];
@@ -2922,7 +2933,7 @@ function labPromptBlock(){
 '  - Labs drawn at the same time (same stage and time) agree: K within 0.3, Na within 3, glucose within 10%, iCa within 0.05, Hgb within 0.5, BMP CO2 within 4 of the ABG HCO3.',
 '  - Labs match the monitor and the story: K ≥6.0 needs ECG changes in lleap; low iCa fits hypotension; PaCO2 sits above EtCO2 by a plausible gradient; lactate and Hgb change at physiologic speed and in proportion to the cause; repeat labs after treatment show a partial, plausible change.',
 '- Flags: adults use ABIM ranges; children use pediatric ranges (room-air ranges for blood gases, so an intraop pO2 of 140 shows High). Never describe a value as "normal" or "low-normal" in any text if it falls outside the range. Key ranges: pH 7.38–7.44; pCO2 38–42; pO2 75–100; HCO3 23–26; Na 136–145; K 3.5–5.0; Cl 98–106; iCa 1.16–1.31 mmol/L; glucose 70–99; arterial lactate <1.3; Hgb men 14–18, women 12–16; platelets 150–450 K/µL; PT 11–13 s; INR 0.9–1.1; aPTT 25–35 s; fibrinogen 200–400. Critical: pH <7.20 or >7.60; pCO2 <20 or >70; pO2 <40; K <2.8 or >6.2; Na <120 or >160; iCa <0.80 or >1.60; glucose <50 or >400; lactate >4.0; Hgb <7.0; platelets <20; INR >5.0; fibrinogen <100.',
-'- Children (term-born, under 18): give "age" with a unit ("3 d", "6 wk", "4 mo", "6 y"; a plain number means years) and, when the case gives it, "heightCm" (optional for adults). The app prints age-specific pediatric ranges from peer-reviewed sources (CALIPER and pediatric literature) and bedside Schwartz eGFR (ages 1-17). Values with no peer-reviewed pediatric range print "No reference available" and are never flagged; this includes arterial blood gas pH, pCO2, pO2, HCO3 and base excess, serum potassium at every age, and most CBC values before 2 months. Pick values that are normal or abnormal for THAT age: a newborn\'s Hgb, glucose, creatinine, ALP, bilirubin and blood gases differ from an adult\'s. Preterm infants are not supported; if the case is preterm, add an AI note.',
+'- Children (term-born, under 18): give "age" with a unit ("3 d", "6 wk", "4 mo", "6 y"; a plain number means years) and, when the case gives it, "heightCm" (optional for adults). The app prints age-specific pediatric ranges from peer-reviewed sources (CALIPER and pediatric literature) and bedside Schwartz eGFR (ages 1-17). Values with no peer-reviewed pediatric range print "N/A*" (footnote: No reference available) and are never flagged; this includes arterial blood gas pH, pCO2, pO2, HCO3 and base excess, serum potassium at every age, and most CBC values before 2 months. Pick values that are normal or abnormal for THAT age: a newborn\'s Hgb, glucose, creatinine, ALP, bilirubin and blood gases differ from an adult\'s. Preterm infants are not supported; if the case is preterm, add an AI note.',
 '- Pediatric key ranges (examples): glucose 50-99 mg/dL first 48 h, 72-112 after 6 mo; Hgb 9.3-13.4 g/dL at 2-12 mo, 11.4-14.1 at 4-13 y; creatinine 0.10-0.36 mg/dL at 15 d-2 y, 0.31-0.61 at 5-11 y; ALP 156-369 U/L at 1-9 y.',
 '- In lleap and cues, refer to slips by label, e.g. "Hand ABG 2 slip when sent (LabGen)". Name only the values that drive the case (e.g. "iCa 0.86"); do not copy whole slips into the text.',
 '- In the readable copy, show labs as one short table per stage: label, time, panel, then key value pairs.',

@@ -53,6 +53,8 @@ button{cursor:pointer}
 .item .t{font-weight:600;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
 .item .m{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .rail-note{font-size:12px;color:var(--muted);margin-top:auto;border-top:1px solid var(--line);padding-top:12px}
+/* Desktop: rail header (brand, buttons, search, sort) stays put; only the case list scrolls. */
+@media (min-width:761px){.rail{overflow:hidden}.rail .list{flex:1 1 auto;min-height:0;overflow-y:auto;margin-inline:-6px;padding-inline:6px;overscroll-behavior:contain}}
 .mobile-pick{display:none}
 
 /* ---------- buttons & chips ---------- */
@@ -1633,14 +1635,14 @@ function buildPrompt(c){
 '- Markup to use: <h1> title, a <p> with case number, learner level and duration; <h2> per section; each stage as <div class=st> with <h3>Stage N: name — trigger</h3>, then <div class=g> holding three <div>s (<h4>Patient / clinical event</h4>, <h4>Expected learner actions</h4>, <h4>Facilitator cues</h4>), then <h4>LLEAP & physical actions</h4> below; lists as <ul>/<ol>; Debrief guide with <h3> per phase and each Analysis key moment as <div class=st> holding its Observe, Opener and Teaching point lines; Mannequin orders tables as <table>; AI notes to check in <div class=notes> as an <ol>. No scripts, no inline styles, no images, no external fonts or links.',
 '- Order: title and learner level; Case summary (your abstract of the finished case, not the creator\'s scenario); Objective; Patient handoff (say whether it is written or verbal); Learner role & task; Roles; Setup; Initial settings (vitals and ventilator); then each stage under its own heading "Stage N: <name>" with Trigger, Patient/clinical event, Expected learner actions, Facilitator cues, LLEAP & physical actions; then End point; Debrief guide (Themes, Reactions, Analysis, Summary); References; then Images to prepare (one line each: when, what, made or find); then Mannequin orders; then "AI notes to check" last, right before the closing line (see AI notes to check).',
 '- Use short lines. No JSON in this copy.',
-'- End the reply with exactly this line: "Review the case and tell me what to change. Answer each AI note with fix, keep or later. When everything is correct, reply APPROVED and I will create the import file."',
+'- End the reply with exactly this line, keeping the markdown bold (**) as written: "Review the case and tell me what to change. **The AI notes are at the end of this review, just above: answer each one with fix, keep or later.** When everything is correct, reply APPROVED and I will create the import file."',
 '',
 '## Step ' + (S.askFirst ? 3 : 2) + ': review and revise (repeat until approved)',
 'The author reviews the readable copy and asks for changes.',
 '- Apply every requested change. Keep the whole case consistent: if a change affects vitals, doses, cues, LLEAP lines or the debrief elsewhere, update those too.',
 '- Update the review HTML in place: if your app can edit an open file, artifact or canvas, change only the sections that changed and do not rewrite the rest. If it cannot, reply with ONLY the changed sections as formatted text (a changed state card or table in the Mannequin orders counts as a section), and rebuild the full HTML file only when the author replies "full copy".',
 '- In the chat itself, write only a short list "Changes made this round".',
-'- Still no JSON and no code blocks. End every reply with the open AI notes to check (if any), then this line: "Tell me what else to change, answer the open AI notes (fix, keep or later), reply full copy for a fresh full review file, or reply APPROVED to create the import file."',
+'- Still no JSON and no code blocks. End every reply with the open AI notes to check (if any), then this line, keeping the markdown bold (**) as written: "Tell me what else to change, **answer the open AI notes just above (fix, keep or later)**, reply full copy for a fresh full review file, or reply APPROVED to create the import file."',
 '- Only the word APPROVED (on its own, any capitalization) means approval. "Looks good", "fine", "ok" or approval plus a change request is NOT approval: apply any changes and ask again.',
 '',
 '## Step ' + (S.askFirst ? 4 : 3) + ': the import file (only after the author replies APPROVED)',
@@ -1702,7 +1704,7 @@ function buildUpdatePrompt(c, ask){
 '',
 ...labPromptBlock(),
 '## Step 1: show the changes (no file yet)',
-'Reply with a short list "Changes made", then each changed part written out in full under its usual heading, in readable form. Then list any AI notes to check (assumptions or things to verify), numbered, each with a suggested fix; the author answers each with fix, keep or later. No JSON and no code blocks yet. End with: "Tell me what else to change, answer the AI notes (fix, keep or later), or reply APPROVED to create the update file." If notes are still unanswered at APPROVED, ask about them once more before creating the file.',
+'Reply with a short list "Changes made", then each changed part written out in full under its usual heading, in readable form. Then list any AI notes to check (assumptions or things to verify), numbered, each with a suggested fix; the author answers each with fix, keep or later. No JSON and no code blocks yet. End with this line, keeping the markdown bold (**) as written: "Tell me what else to change, **answer the AI notes just above (fix, keep or later)**, or reply APPROVED to create the update file." If notes are still unanswered at APPROVED, ask about them once more before creating the file.',
 'Revise until the author replies APPROVED. Only that word counts as approval.',
 '',
 '## Step 2: the update file (only after APPROVED)',
@@ -1864,6 +1866,18 @@ function normalize(c){
 /* ---------- completeness ---------- */
 const isTbc = v => !v || !String(v).trim() || /\bTBC\b/i.test(String(v));
 function initialTbc(c){ const v = c.vitals || {}; return ['hr','bp','spo2'].some(k => isTbc(v[k])) || Object.values(v).some(x => x && /\bTBC\b/i.test(x)); }
+/* TBC chip stops: page order, all pending images as one stop (the to-do box at the top), orders last. */
+function tbcStops(c){
+  const l = tbcList(c), out = l.some(k => k.startsWith('img.')) ? ['imgneed'] : [];
+  l.forEach(k => { if (!k.startsWith('img.')) out.push(k); });
+  return out;
+}
+const TBC_NAMES = {scenario:'Case scenario', summary:'Case summary', objective:'Objective', patient:'Patient', learnerBrief:'Learner role & task', roles:'Roles', setup:'Setup', initial:'Initial vitals', vent:'Ventilator', end:'End point', debriefGuide:'Debrief guide', debrief:'References', orders:'Mannequin orders', imgneed:'Images to prepare'};
+const TBC_STAGE = {trigger:'trigger', event:'event', actions:'actions', cues:'cues', lleap:'LLEAP'};
+function tbcLabel(k){
+  const m = String(k).match(/^stages\.(\d+)\.(\w+)$/);
+  return m ? `Stage ${+m[1] + 1} ${TBC_STAGE[m[2]] || m[2]}` : (TBC_NAMES[k] || k);
+}
 function tbcList(c){
   const out = [];
   if (isTbc(c.scenario)) out.push('scenario');
@@ -2116,9 +2130,9 @@ function autosize(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight 
 function renderTop(){
   $('#bar').hidden = !S.draft;
   if (!S.draft) return;
-  const n = tbcList(S.draft).length;
+  const n = tbcList(S.draft).length, stops = tbcStops(S.draft), at = stops.indexOf(S.tbcKey);
   $('#tbcSummary').innerHTML = n
-    ? `<button type="button" class="chip tbc" id="nextTbc" title="Jump to the next field still marked TBC">${n} TBC · next</button>`
+    ? `<button type="button" class="chip tbc" id="nextTbc" title="Each click goes to the next field still marked TBC">${at >= 0 ? `${at + 1} of ${stops.length} TBC · ${esc(tbcLabel(S.tbcKey))}` : `${n} TBC · next`}</button>`
     : `<span class="chip ok">All fields filled</span>`;
   $('#tabEdit').setAttribute('aria-pressed', S.view === 'edit');
   $('#tabSheet').setAttribute('aria-pressed', S.view === 'sheet');
@@ -3483,7 +3497,7 @@ async function openCase(id){
   if (id === S.currentId) return;
   await flush();
   const c = S.cases.get(id); if (!c) return;
-  S.currentId = id; S.draft = normalize(c); S.editSeq = S.savedSeq = 0; S.remoteChanged = false; S.confirmDel = false; S.err = ''; S.undo = null; S.updateText = ''; S.updateAsk = ''; S.labEdit = null; S.labConfirmDel = null; S.labCatalog = false; S.pngShow = null; renderPngModal(); S.confirmApply = false; S.confirmReplace = false;
+  S.currentId = id; S.draft = normalize(c); S.editSeq = S.savedSeq = 0; S.remoteChanged = false; S.confirmDel = false; S.err = ''; S.undo = null; S.updateText = ''; S.updateAsk = ''; S.tbcKey = null; S.tbcIdx = 0; S.labEdit = null; S.labConfirmDel = null; S.labCatalog = false; S.pngShow = null; renderPngModal(); S.confirmApply = false; S.confirmReplace = false;
   ls.set('simcase:last', id);
   renderList(); renderMain(); window.scrollTo(0,0);
 }
@@ -3869,10 +3883,14 @@ document.addEventListener('click', e => {
   if (act === 'todoWord') { flush(); return exportWord('todo'); }
   if (b.id === 'tipsBtn') { const off = !document.body.classList.contains('tips-off'); document.body.classList.toggle('tips-off', off); b.textContent = off ? 'Show tips' : 'Hide tips'; ls.set('simcase:tips', off ? 'off' : 'on'); return; }
   if (b.id === 'nextTbc') {
-    const onlyOrders = tbcList(S.draft).every(k => k === 'orders');
-    if (onlyOrders) { S.view = 'orders'; S.ordersEdit = !!(S.draft.orders || '').trim(); renderMain(); window.scrollTo(0,0); return; }
-    if (S.view !== 'edit') { S.view = 'edit'; renderMain(); }
-    const first = document.querySelector('.field.is-tbc');
+    const stops = tbcStops(S.draft); if (!stops.length) return;
+    let i = stops.indexOf(S.tbcKey);
+    i = i >= 0 ? i + 1 : (S.tbcIdx || 0);
+    if (i >= stops.length) i = 0;
+    const key = stops[i]; S.tbcKey = key; S.tbcIdx = i;
+    if (key === 'orders') { S.view = 'orders'; S.ordersEdit = !!(S.draft.orders || '').trim(); renderMain(); window.scrollTo(0,0); return; }
+    if (S.view !== 'edit') { S.view = 'edit'; renderMain(); } else renderTop();
+    const first = document.querySelector(`[data-field="${CSS.escape(key)}"]`) || document.querySelector('.field.is-tbc');
     if (first) {
       let p = first.closest('[data-sec]');
       while (p) { if (S.collapsed.has(p.dataset.sec)) toggleSec(p.dataset.sec, true); p = p.parentElement && p.parentElement.closest('[data-sec]'); } first.scrollIntoView({block:'center', behavior:'smooth'}); const inp = first.querySelector('textarea,input'); if (inp) setTimeout(() => inp.focus({preventScroll:true}), 300); }

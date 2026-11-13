@@ -1531,6 +1531,16 @@ function caseForAI(c){
     end:c.end, debriefGuide:c.debriefGuide || '', debrief:c.debrief, imagesNeeded:c.imagesNeeded || '', labs:labsForAI(c), orders:c.orders || '', aiNotes:''
   };
 }
+/* Patient name suggestion for the AI: fixed per case (seeded by case number), varied across cases, so the AI stops defaulting to the same name. */
+const NAME_LAST = ['Okafor','Nguyen','Kowalski','Haddad','Fitzgerald','Moreno','Lindqvist','Patel','Abernathy','Castellanos','Yamamoto','Brennan','Adeyemi','Petrov','Silva','MacLeod','Oyelaran','Romano','Chowdhury','Delgado','Novak','Achterberg','Ferreira','Kim','Mensah','Larsen','Iyer','Whitaker','Dubois','Rahman','Szabo','Quintero','Holloway','Takahashi','Ogunleye','Vasquez','Bergström','Desai','Kaczmarek','Thornton','Alvarado','Hashemi','Lindgren','Mbeki','Cavanaugh','Sato','Esposito','Gallagher','Nakamura','Ruiz'];
+const NAME_F = ['Amara','Ingrid','Lucía','Priya','Nadia','Margaret','Thanh','Folasade','Greta','Rosa','Mei','Delphine','Yasmin','Harriet','Ana','Siobhan','Keiko','Beatriz','Olena','Wanda','Imani','Eleanor','Farah','Marisol','Agnes','Leilani','Dorothy','Svetlana','Camila','Josephine'];
+const NAME_M = ['Tomás','Desmond','Hiroshi','Emeka','Anders','Rafael','Kwame','Bernard','Arjun','Dmitri','Leonard','Mateo','Cyrus','Walter','Jun','Declan','Ibrahim','Gustavo','Otis','Nikhil','Floyd','Kofi','Augusto','Sergei','Clarence','Bao','Reginald','Joaquín','Elias','Vernon'];
+function nameHint(c){
+  const key = String((c && (c.caseNo || c.id || c.title)) || 'case');
+  let h = 2166136261; for (const ch of key) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619) >>> 0; }
+  const pick = (a, k) => a[(h >>> k) % a.length];
+  return 'If the author named the patient, keep that name. Otherwise use this one, picked by the app so cases do not all get the same name: last name ' + pick(NAME_LAST, 0).toUpperCase() + '; first name ' + pick(NAME_F, 7) + ' if the patient is female, ' + pick(NAME_M, 13) + ' if male. Use it the same way everywhere (patient handoff, learner and facilitator text, labs patient.name as "LAST, First"). Never fall back on stock placeholder names (Robert, John, Mary, Smith, Jones, Doe).';
+}
 function buildPrompt(c){
   const n = tbcList(c).length;
   return [
@@ -1576,6 +1586,7 @@ function buildPrompt(c){
 '- summary: 3 short paragraphs of prose with a blank line between them: (1) patient and setting; (2) what goes wrong, the hidden cause, and how it evolves; (3) the management you hope to see, how it ends, and the teaching focus. 2–3 sentences each.',
 '- Keep everything above the stages short and easy to scan: a facilitator should read it in about 2 minutes. Too much text will not be read. The stages carry the detail.',
 '- objective: a numbered list, one objective per line ("1. …", "2. …", "3. …"), in order of importance (most important first). Never a paragraph. Usually 1–4 objectives, each starting with an action verb (recognize, manage, communicate, call for help).',
+'- Patient name: ' + nameHint(c),
 '- patient: a verbal handoff the resident would receive, in prose (one short paragraph of about 6 sentences; longer only when the patient needs more detail), e.g. "Mrs. R is a 72-year-old woman, 85 kg, here for a right total shoulder replacement after a fall. She has COPD without home oxygen, hypertension..." Cover age, weight, procedure, history, medications, allergies, airway, labs, prior anesthesia and any block, as they fit. Never reveal the hidden cause. This style is only for a handoff you write because the author provided none; a provided handoff is copied word for word (task 3a).',
 '- learnerBrief: two lines, "Role: ..." and "Task: ...", each a short phrase.',
 '- roles: one short sentence per role, each on its own line and starting with the role, e.g. "Surgeon: in the room and impatient to start."',
@@ -2726,7 +2737,7 @@ function renderLabGen(){
   const head = `<div class="sec">
     <div class="sec-h"><h2>Patient on every slip</h2>${rep.errors ? `<span class="chip lab-err">${rep.errors} lab error${rep.errors === 1 ? '' : 's'}</span>` : ''}${rep.warns ? `<span class="chip tbc">${rep.warns} warning${rep.warns === 1 ? '' : 's'}</span>` : ''}${!rep.errors && !rep.warns && L.slips.length ? '<span class="chip ok">All slips OK</span>' : ''}<span class="spacer"></span><button type="button" class="btn small" data-act="labCat" aria-pressed="${S.labCatalog}">Catalog</button>${L.slips.length ? '<button type="button" class="btn small" data-act="slipPngAll" title="Every slip as a PNG for LLEAP, in one zip">All PNGs (.zip)</button>' : ''}</div>
     <div class="labpt ${labIsPeds(P) ? 'peds' : ''}">
-      <div class="field"><label class="lab" for="lp-name">Name (LAST, First)</label><input type="text" id="lp-name" data-lp="name" value="${esc(P.name)}" placeholder="JONES, Robert" ${dis}></div>
+      <div class="field"><label class="lab" for="lp-name">Name (LAST, First)</label><input type="text" id="lp-name" data-lp="name" value="${esc(P.name)}" placeholder="LAST, First" ${dis}></div>
       <div class="field"><label class="lab" for="lp-age">Age</label><input type="text" id="lp-age" data-lp="age" value="${esc(P.age)}" placeholder="55 or 3 d / 4 mo / 6 y" ${dis}></div>
       ${labIsPeds(P) ? `<div class="field"><label class="lab" for="lp-height">Height (cm, optional)</label><input type="text" inputmode="decimal" id="lp-height" data-lp="heightCm" value="${esc(P.heightCm == null ? '' : P.heightCm)}" placeholder="e.g. 115" ${dis}></div>` : ''}
       <div class="field"><label class="lab" for="lp-sex">Sex</label><select id="lp-sex" data-lp="sex" ${dis}><option value="" ${!P.sex ? 'selected' : ''}>—</option><option value="M" ${P.sex === 'M' ? 'selected' : ''}>M</option><option value="F" ${P.sex === 'F' ? 'selected' : ''}>F</option></select></div>

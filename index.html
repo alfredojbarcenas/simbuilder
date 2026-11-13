@@ -2234,7 +2234,9 @@ function imgLine(c, at, thumbs){
 /* Objectives written inline ("(1) ... (2) ..." or "1. ... 2. ...") show one per paragraph on the facilitator sheet and Word. Display only; numbers kept as typed. */
 function splitNumbered(t){
   t = String(t || '');
-  if (/\bobjective\s*1\b/i.test(t) && /\bobjective\s*2\b/i.test(t)) return t.replace(/[ \t]+(?=objective\s*\d+\s*[:.)\-–])/gi, '\n');
+  /* "Objective 1: x Objective 2: y" → "1. X" / "2. Y" (the section title already says Objective). */
+  if (/\bobjective\s*1\b/i.test(t) && /\bobjective\s*2\b/i.test(t))
+    return t.replace(/[ \t]*\bobjective\s*(\d+)\s*[:.)\-–]\s*(\S)/gi, (m, n, ch, off) => (off ? '\n' : '') + n + '. ' + ch.toUpperCase()).trim();
   if (/\(1\)\s/.test(t) && /\s\(2\)\s/.test(t)) return t.replace(/[ \t]+(?=\(\d+\)\s)/g, '\n');
   if (/(^|\s)1[.)]\s/.test(t) && /\s2[.)]\s/.test(t)) return t.replace(/[ \t]+(?=\d+[.)]\s+\S)/g, '\n');
   return t;

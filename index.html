@@ -252,6 +252,7 @@ textarea.mono{overflow:auto;resize:vertical}
 /* update preview */
 .chgs{display:flex;flex-direction:column;gap:10px}
 .chg{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.keeph{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:600;margin:6px 0 10px}.keeph input{width:auto}
 .chg-l{padding:8px 12px;font-weight:600;font-size:13.5px;background:var(--surface-2)}
 .chg-b{display:grid;grid-template-columns:1fr 1fr}
 .chg-b > div{padding:10px 12px;min-width:0;display:flex;flex-direction:column;gap:4px;max-height:260px;overflow:auto}
@@ -421,75 +422,6 @@ textarea.mono{overflow:auto;resize:vertical}
   </main>
 </div>
 
-<script>
-/* Standalone demo shim: replaces claude.ai capabilities with browser storage.
-   Cases -> localStorage. Images -> IndexedDB. Downloads -> normal file download. */
-(() => {
-  window.__SIM_DEMO = true;
-  const KEY = 'simcase-demo:cases';
-  const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(15)), b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
-  const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; } };
-  const write = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) { const er = new Error('Browser storage is full'); er.code = 'quota_or_state'; throw er; } };
-  const subs = new Set();
-  const emit = () => {
-    const o = read();
-    const snap = { docs: Object.keys(o).map(id => ({ id, exists: true, data: () => JSON.parse(JSON.stringify(o[id])) })), metadata: { fromCache: false } };
-    subs.forEach(cb => { try { cb(snap); } catch (e) { console.error(e); } });
-  };
-  window.addEventListener('storage', e => { if (e.key === KEY) emit(); });
-  const docRef = path => {
-    const id = path.split('/').pop();
-    return {
-      id,
-      async set(body) { const o = read(); o[id] = body; write(o); setTimeout(emit, 0); },
-      async delete() { const o = read(); delete o[id]; write(o); setTimeout(emit, 0); },
-      async get() { const o = read(); return { id, exists: id in o, data: () => o[id] }; }
-    };
-  };
-  const db = {
-    collection: () => ({ doc: () => docRef('cases/' + rid()), onSnapshot(cb) { subs.add(cb); setTimeout(emit, 0); return () => subs.delete(cb); } }),
-    doc: docRef
-  };
-
-  /* images in IndexedDB, exposed as object URLs */
-  window.__simImgUrls = {};
-  const idb = () => new Promise((res, rej) => { const r = indexedDB.open('simcase-demo', 1); r.onupgradeneeded = () => r.result.createObjectStore('images'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-  const tx = async (mode, fn) => { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction('images', mode); const out = fn(t.objectStore('images')); t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); };
-  const loadImages = async () => {
-    try {
-      const d = await idb();
-      await new Promise(res => {
-        const c = d.transaction('images').objectStore('images').openCursor();
-        c.onsuccess = () => { const cur = c.result; if (!cur) return res(); window.__simImgUrls[cur.key] = URL.createObjectURL(cur.value); cur.continue(); };
-        c.onerror = () => res();
-      });
-    } catch (e) {}
-  };
-  const assets = {
-    async upload(file) {
-      const id = 'img_' + rid();
-      try { await tx('readwrite', s => s.put(file, id)); }
-      catch (e) { const er = new Error('storage'); er.code = 'quota_or_state'; throw er; }
-      window.__simImgUrls[id] = URL.createObjectURL(file);
-      return { id };
-    },
-    async delete(id) { try { await tx('readwrite', s => s.delete(id)); } catch (e) {} if (window.__simImgUrls[id]) { URL.revokeObjectURL(window.__simImgUrls[id]); delete window.__simImgUrls[id]; } }
-  };
-
-  const downloads = {
-    async save({ filename, data }) {
-      const blob = data instanceof Blob ? data : new Blob([data], { type: 'text/plain;charset=utf-8' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
-      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    }
-  };
-
-  const user = { async id() { return 'local'; }, async can() { return true; }, async profiles() { return {}; } };
-  const ready = loadImages();
-  const caps = { db, user, assets, downloads };
-  window.claude = { async use(name) { await ready; return caps[name] || null; } };
-})();
-</script>
 <script>/* Lab engine v1.2 (catalog + pediatric ranges + slip renderer), pasted unchanged. */</script>
 <script>/* LAB CATALOG — single source of truth for every simulated lab slip.
    Ranges: ABIM Laboratory Test Reference Ranges, January 2026 (src "A").
@@ -1422,6 +1354,75 @@ window.LAB_SLIP_CSS = `
   `;
 </script>
 <script>
+/* Standalone demo shim: replaces claude.ai capabilities with browser storage.
+   Cases -> localStorage. Images -> IndexedDB. Downloads -> normal file download. */
+(() => {
+  window.__SIM_DEMO = true;
+  const KEY = 'simcase-demo:cases';
+  const rid = () => Array.from(crypto.getRandomValues(new Uint8Array(15)), b => 'abcdefghijklmnopqrstuvwxyz0123456789'[b % 36]).join('');
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { return {}; } };
+  const write = o => { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) { const er = new Error('Browser storage is full'); er.code = 'quota_or_state'; throw er; } };
+  const subs = new Set();
+  const emit = () => {
+    const o = read();
+    const snap = { docs: Object.keys(o).map(id => ({ id, exists: true, data: () => JSON.parse(JSON.stringify(o[id])) })), metadata: { fromCache: false } };
+    subs.forEach(cb => { try { cb(snap); } catch (e) { console.error(e); } });
+  };
+  window.addEventListener('storage', e => { if (e.key === KEY) emit(); });
+  const docRef = path => {
+    const id = path.split('/').pop();
+    return {
+      id,
+      async set(body) { const o = read(); o[id] = body; write(o); setTimeout(emit, 0); },
+      async delete() { const o = read(); delete o[id]; write(o); setTimeout(emit, 0); },
+      async get() { const o = read(); return { id, exists: id in o, data: () => o[id] }; }
+    };
+  };
+  const db = {
+    collection: () => ({ doc: () => docRef('cases/' + rid()), onSnapshot(cb) { subs.add(cb); setTimeout(emit, 0); return () => subs.delete(cb); } }),
+    doc: docRef
+  };
+
+  /* images in IndexedDB, exposed as object URLs */
+  window.__simImgUrls = {};
+  const idb = () => new Promise((res, rej) => { const r = indexedDB.open('simcase-demo', 1); r.onupgradeneeded = () => r.result.createObjectStore('images'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  const tx = async (mode, fn) => { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction('images', mode); const out = fn(t.objectStore('images')); t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); };
+  const loadImages = async () => {
+    try {
+      const d = await idb();
+      await new Promise(res => {
+        const c = d.transaction('images').objectStore('images').openCursor();
+        c.onsuccess = () => { const cur = c.result; if (!cur) return res(); window.__simImgUrls[cur.key] = URL.createObjectURL(cur.value); cur.continue(); };
+        c.onerror = () => res();
+      });
+    } catch (e) {}
+  };
+  const assets = {
+    async upload(file) {
+      const id = 'img_' + rid();
+      try { await tx('readwrite', s => s.put(file, id)); }
+      catch (e) { const er = new Error('storage'); er.code = 'quota_or_state'; throw er; }
+      window.__simImgUrls[id] = URL.createObjectURL(file);
+      return { id };
+    },
+    async delete(id) { try { await tx('readwrite', s => s.delete(id)); } catch (e) {} if (window.__simImgUrls[id]) { URL.revokeObjectURL(window.__simImgUrls[id]); delete window.__simImgUrls[id]; } }
+  };
+
+  const downloads = {
+    async save({ filename, data }) {
+      const blob = data instanceof Blob ? data : new Blob([data], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }
+  };
+
+  const user = { async id() { return 'local'; }, async can() { return true; }, async profiles() { return {}; } };
+  const ready = loadImages();
+  const caps = { db, user, assets, downloads };
+  window.claude = { async use(name) { await ready; return caps[name] || null; } };
+})();
+</script>
+<script>
 (() => {
 'use strict';
 
@@ -1432,7 +1433,7 @@ const HELP = {
   level:'Who this is for: CA-1, CA-2, CA-3, fellow, or mixed.',
   duration:'Scenario minutes + debrief minutes. Example: 15 + 20 min.',
   summary:'For the facilitator only: a short abstract of the whole finished case in 3 short paragraphs (blank line between): 1) patient and setting; 2) what goes wrong, the hidden cause and how it evolves; 3) the management you hope to see, how it ends, and the teaching focus. The AI handoff writes it from the finished case. Learners never see it.',
-  objective:'1–3 objectives the learner should show in the room. Start each with an action verb: recognize, manage, communicate, call for help.',
+  objective:'One objective per line, numbered 1, 2, 3… in order of importance. Start each with an action verb: recognize, manage, communicate, call for help.',
   patient:'The handoff the resident reads before the case, written like a verbal sign-out: age, weight, procedure, history, meds, allergies, airway, labs, prior anesthetics, any block. It becomes the learner pre-brief. Keep the hidden cause out of here. It goes in the stages.',
   roles:'Who is in the room. For each actor (confederate): who they play and what they should or should not do. Example: "Surgeon: pushes to start, asks \'is it the block?\'".',
   setup:'A checklist for setting up the room fast. Put each item on its own line starting with "- ", grouped under short headings: Patient, Monitors & lines, Airway, Drugs, Equipment, Planted error (skip any that do not apply).',
@@ -1457,7 +1458,7 @@ const HELP = {
 };
 const PH = {
   summary:'e.g. A 72-year-old woman with COPD and OSA is induced for a shoulder replacement after an interscalene block.\n\nRapid hand ventilation causes dynamic hyperinflation (auto-PEEP), so BP and EtCO2 fall over two minutes.\n\nThe learner should recognize the pattern, disconnect the circuit and let her exhale; BP then recovers, while pressors alone only buy time. Ends when the cause is treated, or at 15 min. Teaching focus: post-induction hypotension and auto-PEEP in COPD.',
-  objective:'e.g. Recognize hypotension and falling EtCO2 after induction; build a differential; treat and call for help.',
+  objective:'e.g. 1. Recognize hypotension and falling EtCO2 after induction\n2. Build a differential\n3. Treat and call for help',
   patient:'e.g. Mrs. R is a 72-year-old woman, 85 kg, here for a right total shoulder replacement after a fall. She has COPD without home oxygen, hypertension, diabetes and OSA, and uses her CPAP inconsistently. She takes lisinopril (including this morning) and metformin. Her interscalene block was done 30 minutes ago and is working well.',
   roles:'Attending: available by phone, arrives if called\nSurgeon: in the room, impatient to start\nNurse: follows orders, does not volunteer ideas',
   setup:'Patient:\n- Supine, awake, 2 L nasal cannula\nMonitors & lines:\n- Standard ASA monitors\n- 20G IV left hand\nDrugs:\n- Propofol 200 mg/20 mL, labeled\n- Phenylephrine 100 mcg/mL\nEquipment:\n- Bag-valve mask, suction on\nPlanted error:\n- None',
@@ -1543,7 +1544,7 @@ function buildPrompt(c){
 '1. Fill every field that is empty or contains "TBC" (currently ' + n + '). If most fields are empty, build them all from the scenario.',
 '2. Add the detail a facilitator needs: exact vitals at each stage, drug doses and onset times, how fast the physiology changes, IF/THEN branches, and the end point.',
 '3. Keep what the author wrote. Change it only if it is clinically wrong or contradicts the case, and list what you changed in the AI notes to check. The patient handoff is the exception: see 3a.',
-'3a. The patient handoff ("patient": what the residents read or hear) is never changed once the author has provided it, either as text already in the "patient" field or as a written handoff for the residents inside the scenario. Copy it word for word, typos included: do not shorten, reword, reorder, correct or add to it, even if you think something in it is clinically wrong or missing. Do proofread it: put every suggestion (typos, wording, clinical corrections, missing details) in the AI notes to check, quoting the original words and your suggested change. The author answers fix, keep or later, and only a "fix" answer changes the text. The length limit and house style for "patient" apply only when you write a new handoff because none was provided.',
+'3a. The patient handoff ("patient": what the residents read or hear). If the author provided one (text already in the "patient" field, or a written handoff for the residents inside the scenario), copy it word for word, typos included: do not shorten, reword, reorder, correct or add to it, even if you think something in it is clinically wrong or missing. Then make the FIRST AI note: "I see you provided a patient handoff and kept it word for word. Keep it as written, have me write a new one, or modify yours (tell me what)?" Proofread it after reading the whole case, and add one AI note per problem (typos, wording, clinical corrections, missing details), quoting the original words and how it should read; the author answers fix, keep or later, and only a "fix" answer changes the text. If no handoff was provided, write one (house style below) and make the FIRST AI note: "No patient handoff was provided, so I wrote one (see Patient handoff). Read it and change it as needed."',
 '4. Check the whole case for consistency: the hidden cause must explain every vital sign change, and every expected action must have a cue or branch that responds to it.',
 '5. Write the Mannequin orders (section below): everything the operator needs to program the mannequin, with no clinical decision left to make.',
 '',
@@ -1574,8 +1575,8 @@ function buildPrompt(c){
 'Field layouts:',
 '- summary: 3 short paragraphs of prose with a blank line between them: (1) patient and setting; (2) what goes wrong, the hidden cause, and how it evolves; (3) the management you hope to see, how it ends, and the teaching focus. 2–3 sentences each.',
 '- Keep everything above the stages short and easy to scan: a facilitator should read it in about 2 minutes. Too much text will not be read. The stages carry the detail.',
-'- objective: 1–3 short sentences of prose.',
-'- patient: a verbal handoff the resident would receive, in prose (one short paragraph, at most 6 sentences), e.g. "Mrs. R is a 72-year-old woman, 85 kg, here for a right total shoulder replacement after a fall. She has COPD without home oxygen, hypertension..." Cover age, weight, procedure, history, medications, allergies, airway, labs, prior anesthesia and any block, as they fit. Never reveal the hidden cause. This style is only for a handoff you write because the author provided none; a provided handoff is copied word for word (task 3a).',
+'- objective: a numbered list, one objective per line ("1. …", "2. …", "3. …"), in order of importance (most important first). Never a paragraph. Usually 1–4 objectives, each starting with an action verb (recognize, manage, communicate, call for help).',
+'- patient: a verbal handoff the resident would receive, in prose (one short paragraph of about 6 sentences; longer only when the patient needs more detail), e.g. "Mrs. R is a 72-year-old woman, 85 kg, here for a right total shoulder replacement after a fall. She has COPD without home oxygen, hypertension..." Cover age, weight, procedure, history, medications, allergies, airway, labs, prior anesthesia and any block, as they fit. Never reveal the hidden cause. This style is only for a handoff you write because the author provided none; a provided handoff is copied word for word (task 3a).',
 '- learnerBrief: two lines, "Role: ..." and "Task: ...", each a short phrase.',
 '- roles: one short sentence per role, each on its own line and starting with the role, e.g. "Surgeon: in the room and impatient to start."',
 '- setup: a room checklist, not prose, so the room can be set up fast. Group items under these heading lines, each on its own line (skip a group that does not apply): "Patient:", "Monitors & lines:", "Airway:", "Drugs:", "Equipment:", "Planted error:". Under each heading, one short, concrete item per line starting with "- " (e.g. "- Propofol 200 mg/20 mL, labeled syringe").',
@@ -1621,6 +1622,7 @@ function buildPrompt(c){
 'Read the scenario and the current case, then reply ONLY with the questions whose answers would most improve this case. Do not build the case or the file yet.',
 '- Ask 4–8 numbered questions, grouped under: Clinical details, Learners and logistics, Debrief and teaching.',
 '- Ask only what the scenario leaves open and what would change the case: e.g. patient weight, the exact hidden cause or how severe it gets, airway and lines at the start, positioning, which drugs are on the cart, learner level, number of learners, whether the patient handoff is written on the pre-brief or given verbally by a provider in the room, run time, actors available, whether the case may progress to arrest, how the case should end, and which teaching points matter most.',
+'- If the author provided a patient handoff (in the "patient" field or written into the scenario), ask first: "I see you have a patient handoff. Keep it as written, have me write a new one, or modify yours (tell me what)?" Default: keep it word for word.',
 '- Make each question quick to answer: offer 2–3 likely options and say which one you would choose by default.',
 '- End with one line: "Answer what you can, or reply \'go\' and I\'ll use the defaults."',
 'After the author answers (or says "go"), do Step 2. Put the author\'s answers into the case, and list any defaults you used in the AI notes to check.',
@@ -2233,16 +2235,23 @@ function imgLine(c, at, thumbs){
   if (thumbs) return `<div class="imgrow">${ms.map(m => `<a class="imgmini" href="${esc(imgSrc(m.id))}" target="_blank" rel="noopener"><img src="${esc(imgSrc(m.id))}" alt="" loading="lazy"><span>${esc(m.title || 'untitled')}</span></a>`).join('')}</div>`;
   return `<p class="imgnote"><b>Images before the case:</b> ${esc(ms.map(m => m.title || 'untitled').join(', '))}</p>`;
 }
-/* Objectives written inline ("(1) ... (2) ..." or "1. ... 2. ...") show one per paragraph on the facilitator sheet and Word. Display only; numbers kept as typed. */
-function splitNumbered(t){
-  t = String(t || '');
-  /* "Objective 1: x Objective 2: y" → "1. X" / "2. Y" (the section title already says Objective). */
-  if (/\bobjective\s*1\b/i.test(t) && /\bobjective\s*2\b/i.test(t))
-    return t.replace(/[ \t]*\bobjective\s*(\d+)\s*[:.)\-–]\s*(\S)/gi, (m, n, ch, off) => (off ? '\n' : '') + n + '. ' + ch.toUpperCase()).trim();
-  if (/\(1\)\s/.test(t) && /\s\(2\)\s/.test(t)) return t.replace(/[ \t]+(?=\(\d+\)\s)/g, '\n');
-  if (/(^|\s)1[.)]\s/.test(t) && /\s2[.)]\s/.test(t)) return t.replace(/[ \t]+(?=\d+[.)]\s+\S)/g, '\n');
-  return t;
+/* Objectives always show as a numbered list (1. 2. 3.) on the facilitator sheet and Word, whatever way they were typed:
+   one per line, bullets, "(1) … (2)", "1. … 2.", "Objective 1: …", or a paragraph (one item per sentence). Display only; order kept. */
+function objectiveList(t){
+  t = String(t || '').trim(); if (!t) return '';
+  const MARK = /^\s*(?:[-•*]\s+|objective\s*\d+\s*[:.)\-–]\s*|\(?\d+[.)]\s+)/i;
+  let items;
+  const lines = t.split(/\n+/).map(l => l.trim()).filter(Boolean).filter(l => !/^objectives?\s*:?$/i.test(l));
+  if (lines.length > 1) items = lines.map(l => l.replace(MARK, ''));
+  else if (/\bobjective\s*1\b/i.test(t) && /\bobjective\s*2\b/i.test(t)) items = t.split(/\s*\bobjective\s*\d+\s*[:.)\-–]\s*/i);
+  else if (/\(1\)\s/.test(t) && /\s\(2\)\s/.test(t)) items = t.split(/\s*\(\d+\)\s+/);
+  else if (/(^|\s)1[.)]\s/.test(t) && /\s2[.)]\s/.test(t)) items = t.split(/(?:^|\s+)\d+[.)]\s+(?=\S)/);
+  else items = t.replace(MARK, '').split(/(?<=[.!?;])\s+(?=[A-Z(])/);
+  if (items.length === 1 && /;\s/.test(items[0])) items = items[0].split(/;\s+/);
+  items = items.map(x => x.trim().replace(/;$/, '.')).filter(Boolean);
+  return items.map((x, n) => (n + 1) + '. ' + x.charAt(0).toUpperCase() + x.slice(1)).join('\n');
 }
+const splitNumbered = objectiveList;
 /* LLEAP theme: the theme's name in the LLEAP app, bold under the case title so it is easy to find. Author-entered; not sent to the AI. */
 const authorHtml = c => (c.author || '').trim() ? `<div class="cauthor"><span>Author:</span> ${esc(c.author.trim())}</div>` : '';
 const authorDoc = c => (c.author || '').trim() ? para(runs('Author: ', {color:'566472', sz:21}) + runs(c.author.trim(), {sz:21}), {after:20}) : '';
@@ -3304,6 +3313,15 @@ function renderHandoff(){
   v.querySelectorAll('textarea:not(#promptOut)').forEach(autosize);
   renderTop();
 }
+/* Safety net: the AI is told never to change a provided patient handoff. If an import or update changes it anyway, show both versions and offer to keep the original. */
+const handoffChanged = (cur, nw) => !!(String(cur || '').trim() && String(nw || '').trim() !== String(cur || '').trim());
+function handoffWarnHtml(cur, nw){
+  return `<div class="banner warn hcheck"><span><b>The AI changed the patient handoff</b> (what the residents read or hear). It should only suggest changes in the AI notes. Compare the two versions before you apply.</span></div>
+    <div class="chg"><div class="chg-l">Patient handoff</div><div class="chg-b">
+      <div class="chg-old"><span>Yours now</span><p class="pre">${esc(cur)}</p></div>
+      <div class="chg-new"><span>From the AI</span><p class="pre">${String(nw || '').trim() ? esc(nw) : '<i>removed</i>'}</p></div></div></div>
+    <label class="keeph"><input type="checkbox" id="keepHandoff" ${S.keepHandoff ? 'checked' : ''}> Keep my original handoff when applying</label>`;
+}
 const clip = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n).trimEnd() + ' …' : s; };
 function updateResultHtml(){
   const r = parseUpdate(S.updateText, S.draft);
@@ -3312,6 +3330,7 @@ function updateResultHtml(){
   const canApply = S.canWrite && !S.noStore, tc = targetCheck(r.caseId);
   return `<div class="found">
       ${targetHtml(tc, 'update')}
+      ${r.next && handoffChanged(S.draft.patient, r.next.patient) ? handoffWarnHtml(S.draft.patient, r.next.patient) : ''}
       <div class="lab">${r.changes.length} change${r.changes.length===1?'':'s'} to "${esc(S.draft.title)}"</div>
       ${r.full ? '<p class="help">This is a full case file. Only the fields that differ from the current case are listed and will be applied.</p>' : ''}
       ${r.warn.length ? `<div class="banner warn">${esc(r.warn.join(' '))}</div>` : ''}
@@ -3348,6 +3367,8 @@ function applyUpdate(){
   S.confirmApply = false;
   S.undo = {id:S.currentId, draft:clone(S.draft), n:r.changes.length};
   const keep = {rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy, status:S.draft.status};
+  if (S.keepHandoff && handoffChanged(S.draft.patient, r.next.patient)) keep.patient = S.draft.patient;
+  S.keepHandoff = false;
   S.draft = normalize(Object.assign(r.next, keep));
   S.updateText = '';
   changed(); renderList(); renderMain(); window.scrollTo(0,0);
@@ -3375,6 +3396,7 @@ function importResultHtml(){
     : `<button type="button" class="btn primary" data-act="replace">Replace "${esc(S.draft.title)}"</button>`;
   return `<div class="found">
       ${S.draft && tc.level === 'mismatch' ? targetHtml(tc, 'file') + '<p class="help">Replace is blocked. You can still import it as a new case.</p>' : ''}
+      ${S.draft && canReplace && handoffChanged(S.draft.patient, c.patient) ? handoffWarnHtml(S.draft.patient, c.patient) : ''}
       <div class="lab">Found: ${esc(c.title)}</div>
       <div class="m">${c.stages.length} stage${c.stages.length===1?'':'s'} · ${n ? `<span class="chip tbc">${n} TBC left</span>` : '<span class="chip ok">All fields filled</span>'}</div>
       ${labImportHtml(c, r.labMsgs)}
@@ -3417,6 +3439,8 @@ async function applyImport(asNew){
   if (!S.draft) return;
   const keep = {caseNo:S.draft.caseNo || '', author:S.draft.author || '', lleapTheme:S.draft.lleapTheme || '', imagesDone:S.draft.imagesDone || [], createdAt:S.draft.createdAt, llmNotes:S.draft.llmNotes, scenario:(S.draft.scenario||'').trim() ? S.draft.scenario : r.case.scenario, rev:S.draft.rev, updatedAt:S.draft.updatedAt, updatedBy:S.draft.updatedBy, images:remapImages(S.draft.images, S.draft.stages, r.case.stages), labs: r.case.labs ? r.case.labs : remapLabs(S.draft.labs, S.draft.stages, r.case.stages)};
   if (keep.labs && S.draft.labs && !keep.labs.patient.dob && String(keep.labs.patient.age).trim() === String(S.draft.labs.patient.age).trim()) keep.labs.patient.dob = S.draft.labs.patient.dob;
+  if (S.keepHandoff && handoffChanged(S.draft.patient, r.case.patient)) keep.patient = S.draft.patient;
+  S.keepHandoff = false;
   S.draft = Object.assign(r.case, keep);
   S.importText = ''; S.confirmReplace = false; S.view = 'edit';
   changed(); renderMain(); renderList(); window.scrollTo(0,0);
@@ -3502,7 +3526,7 @@ async function openCase(id){
   if (id === S.currentId) return;
   await flush();
   const c = S.cases.get(id); if (!c) return;
-  S.currentId = id; S.draft = normalize(c); S.editSeq = S.savedSeq = 0; S.remoteChanged = false; S.confirmDel = false; S.err = ''; S.undo = null; S.updateText = ''; S.updateAsk = ''; S.tbcKey = null; S.tbcIdx = 0; S.labEdit = null; S.labConfirmDel = null; S.labCatalog = false; S.pngShow = null; renderPngModal(); S.confirmApply = false; S.confirmReplace = false;
+  S.currentId = id; S.draft = normalize(c); S.editSeq = S.savedSeq = 0; S.remoteChanged = false; S.confirmDel = false; S.err = ''; S.undo = null; S.updateText = ''; S.updateAsk = ''; S.tbcKey = null; S.tbcIdx = 0; S.labEdit = null; S.labConfirmDel = null; S.labCatalog = false; S.pngShow = null; renderPngModal(); S.confirmApply = false; S.confirmReplace = false; S.keepHandoff = false;
   ls.set('simcase:last', id);
   renderList(); renderMain(); window.scrollTo(0,0);
 }
@@ -3789,6 +3813,7 @@ document.addEventListener('input', e => {
   }
 });
 document.addEventListener('change', e => {
+  if (e.target.id === 'keepHandoff') { S.keepHandoff = e.target.checked; return; }
   if (e.target.id === 'lc-age' || e.target.id === 'lc-sex') { if (e.target.id === 'lc-age') S.labCatAge = e.target.value; else S.labCatSex = e.target.value; renderLabGen(); return; }
   if (e.target.id === 'mobilePick' && e.target.value) requestSwitch(e.target.value);
   if (e.target.id === 'askFirst') { S.askFirst = e.target.checked; ls.set('simcase:askFirst', S.askFirst ? 'on' : 'off'); renderHandoff(); return; }

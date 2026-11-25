@@ -390,6 +390,47 @@ textarea.mono{overflow:auto;resize:vertical}
   .vitals{grid-template-columns:repeat(2,minmax(0,1fr))}
   .sheet{padding:18px 16px}
 }
+/* iPad view: read-only, full window, portrait first, landscape widens the content */
+.app.ipad{grid-template-columns:1fr}
+.app.ipad .rail,.app.ipad #bar{display:none!important}
+.app.ipad .wrap{max-width:none;padding:0 0 60px;gap:0}
+.ipbar{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));padding-top:max(10px,env(safe-area-inset-top,0px));background:var(--surface);border-bottom:1px solid var(--line)}
+.ipt{flex:1 1 220px;min-width:0;font-weight:700;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iptabs{display:flex;gap:6px;flex:0 1 auto}
+.iptabs button{min-height:48px;padding:0 18px;font:600 17px/1 var(--f-body);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.iptabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ipexit{min-height:48px;min-width:72px;justify-content:center;font-size:16px}
+.ipbody{width:100%;max-width:960px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+.ip-sheet{max-width:1100px}
+.ip-sheet .fsheet{zoom:1.15}
+.ip-learner .lsheet{font-size:19px;line-height:1.55;max-width:none}
+.ip-learner .lsheet p,.ip-learner .lsheet li{font-size:19px;line-height:1.55}
+.ip-learner .lsheet ul,.ip-learner .lsheet ol{gap:10px}
+.ip-learner .lsheet h1{font-size:28px}.ip-learner .lsheet h3{font-size:21px}.ip-learner .lsheet .meta{font-size:16px}
+.ipmedia{display:flex;flex-direction:column;gap:22px}
+.ipfig{margin:0;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;cursor:zoom-in}
+.ipfig figcaption{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;font-size:18px;margin-bottom:10px}
+.ipfig figcaption span{font-size:17px;color:var(--muted)}
+.ipz img{display:block;width:100%;height:auto;border-radius:6px}
+.ipz.slipz{zoom:1}
+.ipz .slip{margin:0 auto}
+.ipnote{text-align:center;margin-top:16px;font-size:15px}
+@media (orientation:landscape){.ip-media,.ip-sheet{max-width:1280px}.ip-learner{max-width:1000px}}
+.izoom{position:fixed;inset:0;z-index:1000;background:#0b0f13}
+.izclose{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:2;min-height:48px;min-width:96px;justify-content:center;font-size:16px}
+.izstage{position:absolute;inset:0;overflow:hidden;touch-action:none;display:flex;align-items:center;justify-content:center}
+.izc{transform-origin:center center;will-change:transform}
+.izc img{display:block;max-width:96vw;max-height:90vh;width:auto;height:auto}
+.izc .slipz{zoom:1}.izc .slip{width:auto;max-width:min(94vw,780px);margin:0}
+.izc .slip:not(.wide){width:min(94vw,540px)}
+.ipin{position:fixed;inset:0;z-index:1100;background:rgba(10,14,18,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.ipin[hidden]{display:none}
+.izoom[hidden]{display:none}
+.ipin-box{background:var(--surface);color:var(--ink);border-radius:14px;padding:24px;width:min(420px,100%);display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.ipin-box h2{margin:0;font-size:21px}
+#pinIn{font-size:30px;letter-spacing:14px;text-align:center;min-height:58px;width:100%}
+.pin-err{color:var(--danger);min-height:1.3em;margin:0}
+.ipin-acts{display:flex;gap:10px;justify-content:flex-end}.ipin-acts .btn{min-height:48px;min-width:96px;justify-content:center;font-size:16px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
 
@@ -422,6 +463,7 @@ textarea.mono{overflow:auto;resize:vertical}
       <span class="save" id="saveState"></span>
       <span class="spacer"></span>
       <button class="btn ghost small" id="tipsBtn" type="button">Hide tips</button>
+      <button class="btn" id="ipadBtn" type="button" title="Read-only view for the iPad: Facilitator, Learner, Images & labs">iPad view</button>
       <button class="btn" id="exportBtn" type="button">Export to Word</button>
     </div>
     <div class="wrap" id="view">
@@ -1953,7 +1995,7 @@ const S = {
   cases:new Map(), loaded:false, currentId:null, draft:null,
   editSeq:0, savedSeq:0, saveTimer:null, saving:null, ownRevs:new Set(),
   view:'edit', filter:'', names:{}, remoteChanged:false, confirmDel:false, err:'',
-  importText:'', updateText:'', importMode:'new', updateAsk:'', undo:null, sortBy:'edited', pendingSwitch:null, confirmApply:false, assets:null, uploading:false, confirmImg:null, confirmReplace:false, collapsed:new Set(), learnerMode:'pre', askFirst:true, ordersEdit:false, labEdit:null, labConfirmDel:null, labPanelFilter:'', labCatalog:false, labCatFilter:'', pngShow:null, pngBusy:false
+  importText:'', updateText:'', importMode:'new', updateAsk:'', undo:null, sortBy:'edited', pendingSwitch:null, confirmApply:false, assets:null, uploading:false, confirmImg:null, confirmReplace:false, collapsed:new Set(), learnerMode:'pre', askFirst:true, ordersEdit:false, labEdit:null, labConfirmDel:null, labPanelFilter:'', labCatalog:false, labCatFilter:'', pngShow:null, pngBusy:false, ipad:null, ipadPin:null, pinMode:null
 };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -2741,8 +2783,12 @@ const oneLine = t => String(t || '').split('\n').map(l => l.trim()).filter(Boole
 const blk = (h, inner, cls='') => `<section class="blk ${cls}"><h4>${esc(h)}</h4>${inner}</section>`;
 function renderSheet(){
   const c = S.draft, v = $('#view');
+  v.innerHTML = banners() + sheetHtml(c);
+  renderTop();
+}
+function sheetHtml(c){
   const meta = [c.caseNo, c.level && 'Learners: '+c.level, c.duration && 'Duration: '+c.duration, (STATUS.find(s=>s[0]===c.status)||STATUS[0])[1]].filter(Boolean).join(' · ');
-  v.innerHTML = `${banners()}<div class="sheet fsheet">
+  return `<div class="sheet fsheet">
     <div><h1>${esc(c.title || 'Untitled case')}</h1>${lthemeHtml(c)}<div class="meta">${esc(meta)}</div></div>
     ${blk('Case summary', fmtHtml(c.summary), 'summary')}
     ${blk('Objective', fmtHtml(splitNumbered(c.objective)))}
@@ -2768,9 +2814,9 @@ function renderSheet(){
     </section>`).join('')}</div>
     ${refsHtml(c)}
   </div>`;
-  renderTop();
 }
 function renderMain(){
+  if (S.ipad) { renderIpad(); return; }
   if (S.view === 'import') { renderImport(); return; }
   if (!S.draft) { renderEmpty(); return; }
   if (S.view === 'sheet') renderSheet();
@@ -2780,6 +2826,119 @@ function renderMain(){
   else if (S.view === 'labgen') renderLabGen();
   else renderEditor();
 }
+/* ---------- iPad view: read-only Facilitator / Learner / Images & labs for reading on an iPad.
+   Nothing is edited or saved here. The exit PIN lives in memory only, so a reload also leaves the view. ---------- */
+const IPAD_TABS = [['sheet', 'Facilitator'], ['learner', 'Learner'], ['media', 'Images & labs']];
+function ipadOpen(){ if (!S.draft) return; flush(); S.pinMode = 'set'; renderPin(); }
+function renderPin(){
+  let el = $('#ipin');
+  if (!el) { el = document.createElement('div'); el.id = 'ipin'; el.className = 'ipin'; document.body.appendChild(el); }
+  if (!S.pinMode) { el.hidden = true; el.innerHTML = ''; return; }
+  const set = S.pinMode === 'set';
+  el.hidden = false;
+  el.innerHTML = `<div class="ipin-box" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+    <h2 id="pinTitle">${set ? 'Choose a 4-digit exit PIN' : 'Enter the PIN to exit'}</h2>
+    <p class="help">${set ? 'You need it to leave the iPad view. It is not saved anywhere: reloading the page also leaves the view.' : 'Back to the builder.'}</p>
+    <input id="pinIn" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="PIN">
+    <p class="pin-err" id="pinErr" role="alert"></p>
+    <div class="ipin-acts"><button type="button" class="btn" data-act="pinCancel">Cancel</button><button type="button" class="btn primary" data-act="pinOk">${set ? 'Open iPad view' : 'Exit'}</button></div>
+  </div>`;
+  setTimeout(() => { const i = $('#pinIn'); if (i) i.focus(); }, 30);
+}
+function pinOk(){
+  const i = $('#pinIn'), v = i ? i.value.trim() : '', err = $('#pinErr');
+  if (!/^\d{4}$/.test(v)) { err.textContent = 'Use exactly 4 digits.'; return; }
+  if (S.pinMode === 'set') { S.ipadPin = v; S.ipad = {tab:'sheet'}; S.pinMode = null; renderPin(); $('#app').classList.add('ipad'); renderIpad(); window.scrollTo(0, 0); return; }
+  if (v !== S.ipadPin) { err.textContent = 'Wrong PIN.'; i.value = ''; i.focus(); return; }
+  S.pinMode = null; renderPin(); ipadLeave();
+}
+function ipadLeave(){
+  S.ipad = null; S.ipadPin = null; closeZoom();
+  $('#app').classList.remove('ipad');
+  renderMain(); renderList(); window.scrollTo(0, 0);
+}
+function renderIpad(){
+  const c = S.draft, v = $('#view');
+  if (!c) { ipadLeave(); return; }
+  const t = S.ipad.tab;
+  const body = t === 'learner' ? ipadLearnerHtml(c) : t === 'media' ? ipadMediaHtml(c) : sheetHtml(c);
+  v.innerHTML = `<div class="ipbar">
+      <div class="ipt">${esc(c.title || 'Untitled case')}</div>
+      <div class="iptabs" role="group" aria-label="iPad view">${IPAD_TABS.map(([k, n]) => `<button type="button" data-act="ipadTab" data-tab="${k}" aria-pressed="${t === k}">${n}</button>`).join('')}</div>
+      <button type="button" class="btn ipexit" data-act="ipadExit">Exit</button>
+    </div>
+    <div class="ipbody ip-${t}">${body}</div>`;
+}
+function ipadLearnerHtml(c){
+  const d = learnerDoc(c, 'pre');
+  return `<div class="sheet lsheet"><div><h1>${esc(d.title)}</h1><div class="meta">${esc(d.sub)}</div></div>
+    ${d.blocks.map(b => `<section class="${b.fixed ? 'lrules' : ''}"><h3>${esc(b.h)}</h3>${b.plain ? `<p>${esc(b.text)}</p>` : fmtHtml(b.text)}</section>`).join('')}</div>`;
+}
+/* Every image and lab slip in case order (before the case, then each stage), with no stage headings. */
+function ipadMediaHtml(c){
+  const items = [], rep = c.labs && LABS_READY() ? labReport(c) : null;
+  const add = (imgKey, slipKey) => {
+    imagesFor(c, imgKey).forEach(m => items.push(`<figure class="ipfig" tabindex="0"><figcaption><b>${esc(m.title || 'Image')}</b>${m.caption ? `<span>${esc(m.caption)}</span>` : ''}</figcaption><div class="ipz"><img src="${esc(imgSrc(m.id))}" alt="${esc(m.title || '')}" loading="lazy"></div></figure>`));
+    if (rep) slipsAt(c, slipKey).forEach(s => { const r = rep.slips[s.id]; if (r) items.push(`<figure class="ipfig${r.wide ? ' wide' : ''}" tabindex="0"><figcaption><b>${esc(s.label || s.panel)}</b></figcaption><div class="ipz slipz">${r.html}</div></figure>`); });
+  };
+  add('pre', 'before');
+  c.stages.forEach(st => add(st.id, st.id));
+  add('', '');
+  return items.length ? `<div class="ipmedia">${items.join('')}</div><p class="help ipnote">Tap an image or slip to open it full screen; pinch to zoom.</p>`
+    : '<div class="empty"><h1>No images or lab slips yet</h1><p>Add images in Learner › Imaging and lab slips in LabGen.</p></div>';
+}
+/* Full-screen viewer with pinch zoom (two fingers), pan when zoomed, double-tap to toggle 2.5x. */
+const ZM = {s:1, x:0, y:0, pts:new Map(), start:null, lastTap:0};
+function openZoom(html){
+  let el = $('#izoom');
+  if (!el) { el = document.createElement('div'); el.id = 'izoom'; el.className = 'izoom'; document.body.appendChild(el); }
+  el.innerHTML = `<button type="button" class="btn izclose" data-act="zoomClose">Close</button><div class="izstage" id="izstage"><div class="izc" id="izc">${html}</div></div>`;
+  el.hidden = false; Object.assign(ZM, {s:1, x:0, y:0, start:null}); ZM.pts.clear(); zoomApply();
+  const st = $('#izstage');
+  st.addEventListener('pointerdown', e => { st.setPointerCapture(e.pointerId); ZM.pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); zoomStart();
+    if (ZM.pts.size === 1) { const now = Date.now(); if (now - ZM.lastTap < 300) { ZM.s = ZM.s > 1 ? 1 : 2.5; if (ZM.s === 1) { ZM.x = 0; ZM.y = 0; } zoomApply(); } ZM.lastTap = now; } });
+  st.addEventListener('pointermove', e => { if (!ZM.pts.has(e.pointerId)) return; ZM.pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); zoomMove(); });
+  const up = e => { ZM.pts.delete(e.pointerId); zoomStart(); };
+  st.addEventListener('pointerup', up); st.addEventListener('pointercancel', up);
+  st.addEventListener('wheel', e => { e.preventDefault(); ZM.s = Math.min(6, Math.max(1, ZM.s * (e.deltaY < 0 ? 1.1 : 0.9))); if (ZM.s === 1) { ZM.x = 0; ZM.y = 0; } zoomApply(); }, {passive:false});
+}
+function zoomStart(){
+  const p = [...ZM.pts.values()];
+  ZM.start = {s:ZM.s, x:ZM.x, y:ZM.y, p:p.map(q => ({...q})), d: p.length > 1 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : 0};
+}
+function zoomMove(){
+  const p = [...ZM.pts.values()], st = ZM.start; if (!st || !st.p.length) return;
+  if (p.length > 1 && st.d) ZM.s = Math.min(6, Math.max(1, st.s * Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) / st.d));
+  const cx = p.reduce((a, q) => a + q.x, 0) / p.length, cy = p.reduce((a, q) => a + q.y, 0) / p.length;
+  const sx = st.p.slice(0, p.length).reduce((a, q) => a + q.x, 0) / Math.min(p.length, st.p.length), sy = st.p.slice(0, p.length).reduce((a, q) => a + q.y, 0) / Math.min(p.length, st.p.length);
+  if (ZM.s > 1) { ZM.x = st.x + cx - sx; ZM.y = st.y + cy - sy; } else { ZM.x = 0; ZM.y = 0; }
+  zoomApply();
+}
+function zoomApply(){ const c = $('#izc'); if (c) c.style.transform = `translate(${ZM.x}px, ${ZM.y}px) scale(${ZM.s})`; }
+function closeZoom(){ const el = $('#izoom'); if (el) { el.hidden = true; el.innerHTML = ''; } }
+/* Clicks while the iPad view or its PIN box is open. Returns true when handled; in the iPad view every other button is ignored so nothing in the builder can be reached. */
+function ipadClick(e){
+  const b = e.target.closest('button');
+  if (b && b.id === 'ipadBtn') { ipadOpen(); return true; }
+  if (S.pinMode) {
+    if (b && b.dataset.act === 'pinOk') pinOk();
+    else if (b && b.dataset.act === 'pinCancel') { S.pinMode = S.pinMode === 'set' ? null : null; renderPin(); }
+    return true;
+  }
+  if (!S.ipad) return false;
+  if (b && b.dataset.act === 'zoomClose') { closeZoom(); return true; }
+  if (b && b.dataset.act === 'ipadTab') { S.ipad.tab = b.dataset.tab; closeZoom(); renderIpad(); window.scrollTo(0, 0); return true; }
+  if (b && b.dataset.act === 'ipadExit') { S.pinMode = 'exit'; renderPin(); return true; }
+  const mini = e.target.closest('.imgmini'); if (mini) { e.preventDefault(); const im = mini.querySelector('img'); if (im) openZoom(`<img src="${esc(im.getAttribute('src'))}" alt="">`); return true; }
+  const fig = e.target.closest('.ipfig'); if (fig && !e.target.closest('#izoom')) { const z = fig.querySelector('.ipz'); if (z) openZoom(z.classList.contains('slipz') ? `<div class="slipz">${z.innerHTML}</div>` : z.innerHTML); return true; }
+  return !!b;
+}
+document.addEventListener('keydown', e => {
+  if (e.target && e.target.id === 'pinIn' && e.key === 'Enter') { e.preventDefault(); pinOk(); }
+  else if (e.key === 'Escape' && S.pinMode) { S.pinMode = null; renderPin(); }
+  else if (e.key === 'Escape' && S.ipad) closeZoom();
+});
+
 /* ---------- learner handout ---------- */
 const PREBRIEF_RULES = [
   '- This simulation is designed for educational purposes and does not involve the collection or evaluation of personal performance information.',
@@ -4388,6 +4547,7 @@ async function downloadPrompt(){
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.pngShow) { S.pngShow = null; renderPngModal(); } });
 document.addEventListener('focusout', () => { if (S.editSeq > S.savedSeq) { clearTimeout(S.saveTimer); S.saveTimer = setTimeout(save, 250); } });
 document.addEventListener('click', e => {
+  if (ipadClick(e)) return;
   const item = e.target.closest('.item[data-id]'); if (item) { requestSwitch(item.dataset.id); return; }
   const tg = e.target.closest('[data-toggle]'); if (tg) { toggleSec(tg.dataset.toggle); return; }
   const ca = e.target.closest('[data-act="collapseAll"],[data-act="expandAll"]');

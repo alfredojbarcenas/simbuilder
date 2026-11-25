@@ -400,6 +400,7 @@ textarea.mono{overflow:auto;resize:vertical}
 .iptabs button{min-height:48px;padding:0 18px;font:600 17px/1 var(--f-body);color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;cursor:pointer}
 .iptabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .ipexit{min-height:48px;min-width:72px;justify-content:center;font-size:16px}
+@media (max-width:1100px){.ipt{order:1}.ipexit{order:2}.iptabs{order:3;flex:1 1 100%}.iptabs button{flex:1 1 0;padding:0 8px}}
 .ipbody{width:100%;max-width:960px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
 .ip-sheet{max-width:1100px}
 .ip-sheet .fsheet{zoom:1.15}
@@ -415,6 +416,15 @@ textarea.mono{overflow:auto;resize:vertical}
 .ipz.slipz{zoom:1}
 .ipz .slip{margin:0 auto}
 .ipnote{text-align:center;margin-top:16px;font-size:15px}
+.ipindex{display:flex;flex-direction:column;gap:14px}
+.ipindex .search{font-size:18px;min-height:50px;padding:0 14px}
+.iplist{display:flex;flex-direction:column;gap:10px}
+.iprow{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;min-height:64px;padding:12px 16px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;color:var(--ink);font:inherit;cursor:pointer}
+.iprow[aria-current="true"]{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
+.iprow-t{font-size:19px;font-weight:600}
+.iprow-m{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:15px;color:var(--muted)}
+.iprow-m b{color:var(--ink)}
+.ipnone{font-size:17px}
 @media (orientation:landscape){.ip-media,.ip-sheet{max-width:1280px}.ip-learner{max-width:1000px}}
 .izoom{position:fixed;inset:0;z-index:1000;background:#0b0f13}
 .izclose{position:absolute;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:2;min-height:48px;min-width:96px;justify-content:center;font-size:16px}
@@ -2828,7 +2838,7 @@ function renderMain(){
 }
 /* ---------- iPad view: read-only Facilitator / Learner / Images & labs for reading on an iPad.
    Nothing is edited or saved here. The exit PIN lives in memory only, so a reload also leaves the view. ---------- */
-const IPAD_TABS = [['sheet', 'Facilitator'], ['learner', 'Learner'], ['media', 'Images & labs']];
+const IPAD_TABS = [['index', 'All cases'], ['sheet', 'Facilitator'], ['learner', 'Learner'], ['media', 'Images & labs']];
 function ipadOpen(){ if (!S.draft) return; flush(); S.pinMode = 'set'; renderPin(); }
 function renderPin(){
   let el = $('#ipin');
@@ -2861,13 +2871,32 @@ function renderIpad(){
   const c = S.draft, v = $('#view');
   if (!c) { ipadLeave(); return; }
   const t = S.ipad.tab;
-  const body = t === 'learner' ? ipadLearnerHtml(c) : t === 'media' ? ipadMediaHtml(c) : sheetHtml(c);
+  const body = t === 'index' ? ipadIndexHtml() : t === 'learner' ? ipadLearnerHtml(c) : t === 'media' ? ipadMediaHtml(c) : sheetHtml(c);
   v.innerHTML = `<div class="ipbar">
-      <div class="ipt">${esc(c.title || 'Untitled case')}</div>
+      <div class="ipt">${t === 'index' ? 'All cases' : esc(c.title || 'Untitled case')}</div>
       <div class="iptabs" role="group" aria-label="iPad view">${IPAD_TABS.map(([k, n]) => `<button type="button" data-act="ipadTab" data-tab="${k}" aria-pressed="${t === k}">${n}</button>`).join('')}</div>
       <button type="button" class="btn ipexit" data-act="ipadExit">Exit</button>
     </div>
     <div class="ipbody ip-${t}">${body}</div>`;
+}
+/* Index of every case (by case number); tapping one opens it on the Facilitator tab. */
+function ipadIndexRows(){
+  const f = String(S.ipFilter || '').trim().toLowerCase();
+  const rows = [...S.cases.entries()].map(([id, c]) => ({id, c: id === S.currentId && S.draft ? S.draft : c}))
+    .filter(({c}) => !f || [c.caseNo, c.title, c.lleapTheme, c.level, c.author].join(' ').toLowerCase().includes(f))
+    .sort((a, b) => (b.c.caseNo ? 1 : 0) - (a.c.caseNo ? 1 : 0) || String(a.c.caseNo || '').localeCompare(String(b.c.caseNo || '')) || String(a.c.title || '').localeCompare(String(b.c.title || '')));
+  if (!rows.length) return '<p class="help ipnone">No case matches.</p>';
+  return rows.map(({id, c}) => {
+    const st = STATUS.find(x => x[0] === c.status) || STATUS[0];
+    return `<button type="button" class="iprow" data-act="ipadCase" data-id="${esc(id)}" aria-current="${id === S.currentId}">
+      <span class="iprow-t">${esc(c.title || 'Untitled case')}</span>
+      <span class="iprow-m">${c.caseNo ? `<span class="cno">${esc(c.caseNo)}</span>` : ''}${c.lleapTheme ? `<b>${esc(c.lleapTheme)}</b>` : ''}${c.level ? `<span>${esc(c.level)}</span>` : ''}<span class="chip st-${esc(st[0])}">${esc(st[1])}</span></span>
+    </button>`;
+  }).join('');
+}
+function ipadIndexHtml(){
+  return `<div class="ipindex"><input id="ipSearch" class="search" type="search" placeholder="Search title, case number, LLEAP theme" aria-label="Search cases" value="${esc(S.ipFilter || '')}">
+    <div class="iplist" id="ipList">${ipadIndexRows()}</div></div>`;
 }
 function ipadLearnerHtml(c){
   const d = learnerDoc(c, 'pre');
@@ -2929,6 +2958,7 @@ function ipadClick(e){
   if (b && b.dataset.act === 'zoomClose') { closeZoom(); return true; }
   if (b && b.dataset.act === 'ipadTab') { S.ipad.tab = b.dataset.tab; closeZoom(); renderIpad(); window.scrollTo(0, 0); return true; }
   if (b && b.dataset.act === 'ipadExit') { S.pinMode = 'exit'; renderPin(); return true; }
+  if (b && b.dataset.act === 'ipadCase') { const id = b.dataset.id; S.ipad.tab = 'sheet'; openCase(id).then(() => { if (S.ipad) { renderIpad(); window.scrollTo(0, 0); } }); return true; }
   const mini = e.target.closest('.imgmini'); if (mini) { e.preventDefault(); const im = mini.querySelector('img'); if (im) openZoom(`<img src="${esc(im.getAttribute('src'))}" alt="">`); return true; }
   const fig = e.target.closest('.ipfig'); if (fig && !e.target.closest('#izoom')) { const z = fig.querySelector('.ipz'); if (z) openZoom(z.classList.contains('slipz') ? `<div class="slipz">${z.innerHTML}</div>` : z.innerHTML); return true; }
   return !!b;
@@ -4491,6 +4521,7 @@ function toast(msg){
 document.addEventListener('input', e => {
   const el = e.target;
   if (el.id === 'search') { S.filter = el.value; renderList(); return; }
+  if (el.id === 'ipSearch') { S.ipFilter = el.value; const l = $('#ipList'); if (l) l.innerHTML = ipadIndexRows(); return; }
   if (el.id === 'importIn') { if (S.importMode === 'update') S.updateText = el.value; else S.importText = el.value; S.confirmReplace = false; refreshImport(); return; }
   if (el.id === 'updateAsk') { S.updateAsk = el.value; autosize(el); return; }
   if (el.id === 'lc-search') { S.labCatFilter = el.value; const b = $('#labCat'); if (b) b.innerHTML = catalogBodyHtml(); return; }
